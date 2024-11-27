@@ -314,8 +314,11 @@ SetUIView::SetUIView(NavigationView& nav) {
                   &options_bloff,
                   &checkbox_showsplash,
                   &checkbox_showclock,
+                  &checkbox_use_rgb_waterfall,
+
                   &options_clockformat,
                   &checkbox_guireturnflag,
+                  
                   &labels,
                   &toggle_camera,
                   &toggle_sleep,
@@ -325,6 +328,7 @@ SetUIView::SetUIView(NavigationView& nav) {
                   &toggle_clock,
                   &toggle_mute,
                   &toggle_sd_card,
+                  
                   &button_save,
                   &button_cancel});
 
@@ -341,6 +345,7 @@ SetUIView::SetUIView(NavigationView& nav) {
     checkbox_showsplash.set_value(pmem::config_splash());
     checkbox_showclock.set_value(!pmem::hide_clock());
     checkbox_guireturnflag.set_value(pmem::show_gui_return_icon());
+    checkbox_use_rgb_waterfall.set_value(pmem::ui_use_rgb_waterfall());
 
     const auto backlight_config = pmem::config_backlight_timer();
     checkbox_bloff.set_value(backlight_config.timeout_enabled());
@@ -380,6 +385,7 @@ SetUIView::SetUIView(NavigationView& nav) {
         pmem::set_clock_hidden(!checkbox_showclock.value());
         pmem::set_gui_return_icon(checkbox_guireturnflag.value());
         pmem::set_disable_touchscreen(checkbox_disable_touchscreen.value());
+        pmem::set_ui_use_rgb_waterfall(checkbox_use_rgb_waterfall.value());
 
         pmem::set_ui_hide_camera(!toggle_camera.value());
         pmem::set_ui_hide_sleep(!toggle_sleep.value());

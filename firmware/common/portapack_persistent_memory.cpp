@@ -128,9 +128,9 @@ struct ui_config2_t {
     bool hide_bias_tee : 1;
     bool hide_clock : 1;
     bool hide_sd_card : 1;
-
+    
     bool hide_mute : 1;
-    bool UNUSED_3 : 1;
+    bool use_rgb_waterfall: 1;
     bool hide_numeric_battery : 1;
     bool hide_battery_icon : 1;
     bool override_batt_calc : 1;
@@ -947,6 +947,9 @@ uint8_t ui_theme_id() {
 bool ui_override_batt_calc() {
     return data->ui_config2.override_batt_calc;
 }
+bool ui_use_rgb_waterfall() {
+    return data->ui_config2.use_rgb_waterfall;
+}
 
 void set_ui_hide_speaker(bool v) {
     data->ui_config2.hide_speaker = v;
@@ -989,6 +992,10 @@ void set_ui_theme_id(uint8_t theme_id) {
 void set_ui_override_batt_calc(bool v) {
     data->ui_config2.override_batt_calc = v;
 }
+void set_ui_use_rgb_waterfall(bool v) {
+    data->ui_config2.use_rgb_waterfall = v;
+}
+
 
 /* Converter */
 bool config_converter() {
@@ -1245,6 +1252,7 @@ bool debug_dump() {
     pmem_dump_file.write_line("ui_config2 hide_numeric_battery: " + to_string_dec_uint(data->ui_config2.hide_numeric_battery));
     pmem_dump_file.write_line("ui_config2 theme_id: " + to_string_dec_uint(data->ui_config2.theme_id));
     pmem_dump_file.write_line("ui_config2 override_batt_calc: " + to_string_dec_uint(data->ui_config2.override_batt_calc));
+    pmem_dump_file.write_line("ui_config2 use_rgb_waterfall: " + to_string_dec_uint(data->ui_config2.use_rgb_waterfall));
 
     // misc_config bits
     pmem_dump_file.write_line("misc_config config_audio_mute: " + to_string_dec_int(config_audio_mute()));

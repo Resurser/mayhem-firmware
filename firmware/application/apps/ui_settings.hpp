@@ -307,7 +307,7 @@ class SetUIView : public View {
         {3 * 8, 8 * 16},
         20,
         "Show clock with:"};
-
+    
     OptionsField options_clockformat{
         {60, 9 * 16 + 8},
         20,
@@ -367,12 +367,18 @@ class SetUIView : public View {
         {21 * 8, 14 * 16 + 2, 16, 16},
         &bitmap_sd_card_ok};
 
+    Checkbox checkbox_use_rgb_waterfall{
+        {3 * 8, 15 * 16},
+        20,
+        "Use RGB waterfall"};
+
+
     Button button_save{
-        {2 * 8, 16 * 16, 12 * 8, 32},
+        {2 * 8, 17 * 16, 12 * 8, 32},
         "Save"};
 
     Button button_cancel{
-        {16 * 8, 16 * 16, 12 * 8, 32},
+        {16 * 8, 17 * 16, 12 * 8, 32},
         "Cancel"};
 };
 
