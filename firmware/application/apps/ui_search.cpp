@@ -28,6 +28,7 @@
 #include "ui_freqman.hpp"
 
 using namespace portapack;
+namespace pmem = portapack::persistent_memory;
 
 namespace ui {
 
@@ -289,8 +290,11 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
             else
                 power = spectrum.db[bin - 128];
         }
-
-        add_spectrum_pixel(spectrum_rgb3_lut[power]);
+        if (pmem::ui_use_rgb_waterfall()){
+            add_spectrum_pixel(spectrum_rgb3_lut[power]);
+        }else{
+            add_spectrum_pixel(spectrum_rgb3v_lut[power]);
+        }
 
         mean_acc += power;
         if (power > max_power) {

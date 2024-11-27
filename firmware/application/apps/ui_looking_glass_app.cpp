@@ -29,6 +29,8 @@
 #include "file_path.hpp"
 
 using namespace portapack;
+namespace pmem = portapack::persistent_memory;
+
 
 namespace ui {
 void GlassView::focus() {
@@ -126,7 +128,12 @@ void GlassView::reset_live_view() {
 }
 
 void GlassView::add_spectrum_pixel(uint8_t power) {
-    spectrum_row[pixel_index] = spectrum_rgb3_lut[power];                                                                           // row of colors
+    if (pmem::ui_use_rgb_waterfall()){
+        spectrum_row[pixel_index] = spectrum_rgb3_lut[power];                                                                           // row of colors
+    }else{
+        spectrum_row[pixel_index] = spectrum_rgb3v_lut[power];                                                                           // row of colors
+    }
+    
     spectrum_data[pixel_index] = (live_frequency_integrate * spectrum_data[pixel_index] + power) / (live_frequency_integrate + 1);  // smoothing
     pixel_index++;
 
