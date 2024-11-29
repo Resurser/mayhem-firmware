@@ -46,7 +46,7 @@ class SpectrumCollector {
         const int32_t filter_low_frequency,
         const int32_t filter_high_frequency,
         const int32_t filter_transition);
-
+	
    private:
     BlockDecimator<complex16_t, 256> channel_spectrum_decimator{1};
     ChannelSpectrum fifo_data[1 << ChannelSpectrumConfigMessage::fifo_k]{};

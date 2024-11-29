@@ -91,17 +91,25 @@ void FrequencyScale::set_spectrum_sampling_rate(const int new_sampling_rate) {
 }
 
 void FrequencyScale::set_channel_filter(
-    const int low_frequency,
-    const int high_frequency,
-    const int transition) {
-    if ((channel_filter_low_frequency != low_frequency) ||
-        (channel_filter_high_frequency != high_frequency) ||
-        (channel_filter_transition != transition)) {
-        channel_filter_low_frequency = low_frequency;
-        channel_filter_high_frequency = high_frequency;
-        channel_filter_transition = transition;
-        set_dirty();
-    }
+	const int low_frequency, 
+	const int high_frequency, 
+	const int transition
+) {
+	if( (channel_filter_low_frequency != low_frequency) ||
+		(channel_filter_high_frequency != high_frequency) ||
+		(channel_filter_transition != transition) ) {
+		channel_filter_low_frequency = low_frequency;
+		channel_filter_high_frequency = high_frequency;
+		channel_filter_transition = transition;
+		set_dirty();
+	}
+}
+
+void FrequencyScale::set_ddc_freq(const int freq) {
+	if (ddc_freq != freq) {
+		ddc_freq = freq;
+		set_dirty();
+	}
 }
 
 void FrequencyScale::paint(Painter& painter) {
@@ -139,8 +147,11 @@ void FrequencyScale::clear_background(Painter& painter, const Rect r) {
 void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
     const auto x_center = r.width() / 2;
 
-    const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
-    painter.fill_rectangle(tick, Theme::getInstance()->bg_darkest->foreground);
+	const Rect tick {
+		r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate, r.bottom() - filter_band_height * 2,
+		1, filter_band_height * 2 
+	};
+	 painter.fill_rectangle(tick, Theme::getInstance()->bg_darkest->foreground);
 
     constexpr int tick_count_max = 4;
     float rough_tick_interval = float(spectrum_sampling_rate) / tick_count_max;
@@ -181,8 +192,8 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
 }
 
 void FrequencyScale::draw_filter_ranges(Painter& painter, const Rect r) {
-    if (channel_filter_low_frequency != channel_filter_high_frequency) {
-        const auto x_center = r.width() / 2;
+	if( channel_filter_low_frequency != channel_filter_high_frequency ) {
+		const auto x_center = r.width() / 2 + ddc_freq * spectrum_bins / spectrum_sampling_rate;
 
         const auto x_low = x_center + channel_filter_low_frequency * spectrum_bins / spectrum_sampling_rate;
         const auto x_high = x_center + channel_filter_high_frequency * spectrum_bins / spectrum_sampling_rate;

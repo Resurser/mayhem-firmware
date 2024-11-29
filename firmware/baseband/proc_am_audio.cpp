@@ -29,17 +29,22 @@
 #include <array>
 
 void NarrowbandAMAudio::execute(const buffer_c8_t& buffer) {
-    if (!configured) {
-        return;
-    }
+	if (!configured) {
+		return;
+	}
 
-    const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
-    const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
+	const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
 
-    channel_spectrum.feed(decim_1_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
+	spectrum_samples += decim_0_out.count;
+	if( spectrum_samples >= spectrum_interval_samples ) {
+		spectrum_samples -= spectrum_interval_samples;
+		channel_spectrum.feed(decim_0_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
+	}
 
-    const auto decim_2_out = decim_2.execute(decim_1_out, dst_buffer);
-    const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);
+	const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
+	const auto ddc_out = ddc.execute(decim_1_out, dst_buffer);
+	const auto decim_2_out = decim_2.execute(ddc_out, dst_buffer);
+	const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);
 
     // TODO: Feed channel_stats post-decimation data?
     feed_channel_stats(channel_out);
@@ -72,6 +77,10 @@ void NarrowbandAMAudio::on_message(const Message* const message) {
             capture_config(*reinterpret_cast<const CaptureConfigMessage*>(message));
             break;
 
+	case Message::ID::DDCConfig:
+		ddc_config(*reinterpret_cast<const DDCConfigMessage*>(message));
+		break;
+		
         default:
             break;
     }
@@ -87,19 +96,22 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     constexpr size_t decim_2_input_fs = decim_1_output_fs;
     constexpr size_t decim_2_output_fs = decim_2_input_fs / decim_2_decimation_factor;
 
-    constexpr size_t channel_filter_input_fs = decim_2_output_fs;
-    // const size_t channel_filter_output_fs = channel_filter_input_fs / channel_filter_decimation_factor;
+	constexpr size_t channel_filter_input_fs = decim_2_output_fs;
 
-    decim_0.configure(message.decim_0_filter.taps);
-    decim_1.configure(message.decim_1_filter.taps);
-    decim_2.configure(message.decim_2_filter.taps, decim_2_decimation_factor);
-    channel_filter.configure(message.channel_filter.taps, channel_filter_decimation_factor);
-    channel_filter_low_f = message.channel_filter.low_frequency_normalized * channel_filter_input_fs;
-    channel_filter_high_f = message.channel_filter.high_frequency_normalized * channel_filter_input_fs;
-    channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
-    channel_spectrum.set_decimation_factor(1.0f);
-    modulation_ssb = (message.modulation == AMConfigureMessage::Modulation::SSB);
-    audio_output.configure(message.audio_hpf_config);
+	decim_0.configure(message.decim_0_filter.taps, 33554432);
+	decim_1.configure(message.decim_1_filter.taps, 131072);
+	decim_2.configure(message.decim_2_filter.taps, decim_2_decimation_factor);
+	channel_filter.configure(message.channel_filter.taps, channel_filter_decimation_factor);
+	channel_filter_low_f = message.channel_filter.low_frequency_normalized * channel_filter_input_fs;
+	channel_filter_high_f = message.channel_filter.high_frequency_normalized * channel_filter_input_fs;
+	channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
+	modulation_ssb = (message.modulation == AMConfigureMessage::Modulation::SSB);
+	audio_output.configure(message.audio_hpf_config);
+
+	channel_spectrum.set_decimation_factor(spectrum_zoom);
+	spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
+
+	ddc.set_sample_rate(decim_1_output_fs);
 
     configured = true;
 }
@@ -110,6 +122,10 @@ void NarrowbandAMAudio::capture_config(const CaptureConfigMessage& message) {
     } else {
         audio_output.set_stream(nullptr);
     }
+}
+
+void NarrowbandAMAudio::ddc_config(const DDCConfigMessage& message) {
+	ddc.set_freq(message.freq);
 }
 
 int main() {
