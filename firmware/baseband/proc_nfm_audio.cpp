@@ -32,23 +32,18 @@
 #include <cstddef>
 
 void NarrowbandFMAudio::execute(const buffer_c8_t& buffer) {
-	//bool new_state;
-	
-	if( !configured ) {
-		return;
-	}
-	
-	const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
+    // bool new_state;
 
-	spectrum_samples += decim_0_out.count;
-	if( spectrum_samples >= spectrum_interval_samples ) {
-		spectrum_samples -= spectrum_interval_samples;
-		channel_spectrum.feed(decim_0_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
-	}
+    if (!configured) {
+        return;
+    }
 
-	const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
-	const auto ddc_out = ddc.execute(decim_1_out, dst_buffer);
-	const auto channel_out = channel_filter.execute(ddc_out, dst_buffer);
+    const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
+    const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
+
+    channel_spectrum.feed(decim_1_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
+
+    const auto channel_out = channel_filter.execute(decim_1_out, dst_buffer);
 
     feed_channel_stats(channel_out);
 
@@ -134,10 +129,6 @@ void NarrowbandFMAudio::on_message(const Message* const message) {
             pitch_rssi_config(*reinterpret_cast<const PitchRSSIConfigureMessage*>(message));
             break;
 
-	case Message::ID::DDCConfig:
-		ddc_config(*reinterpret_cast<const DDCConfigMessage*>(message));
-		break;
-
         default:
             break;
     }
@@ -162,17 +153,11 @@ void NarrowbandFMAudio::configure(const NBFMConfigureMessage& message) {
     channel_filter_low_f = message.channel_filter.low_frequency_normalized * channel_filter_input_fs;
     channel_filter_high_f = message.channel_filter.high_frequency_normalized * channel_filter_input_fs;
     channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
-
-    channel_spectrum.set_decimation_factor(spectrum_zoom);
-	spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
-
+    channel_spectrum.set_decimation_factor(1.0f);
     audio_output.configure(message.audio_hpf_config, message.audio_deemph_config, (float)message.squelch_level / 100.0);
 
     hpf.configure(audio_24k_hpf_30hz_config);
     ctcss_filter.configure(taps_64_lp_025_025.taps);
-
-	ddc.set_sample_rate(decim_1_output_fs);
-	ddc.set_freq(0.0f);
 
     configured = true;
 }
@@ -188,10 +173,6 @@ void NarrowbandFMAudio::capture_config(const CaptureConfigMessage& message) {
     } else {
         audio_output.set_stream(nullptr);
     }
-}
-
-void NarrowbandFMAudio::ddc_config(const DDCConfigMessage& message) {
-	ddc.set_freq(message.freq);
 }
 
 int main() {

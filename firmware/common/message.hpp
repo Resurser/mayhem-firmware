@@ -127,7 +127,6 @@ class Message {
         FreqChangeCommand = 70,
         I2CDevListChanged = 71,
         LightData = 72,
-		DDCConfig = 73,
         MAX
     };
 
@@ -1219,17 +1218,6 @@ class ReplayThreadDoneMessage : public Message {
     uint32_t return_code;
 };
 
-class DDCConfigMessage : public Message {
-public:
-	constexpr DDCConfigMessage(
-		int32_t freq
-	) : Message { ID::DDCConfig },
-		freq { freq }
-	{
-	}
-
-	int32_t freq = 0;
-};
 class SpectrumPainterBufferConfigureRequestMessage : public Message {
    public:
     constexpr SpectrumPainterBufferConfigureRequestMessage(

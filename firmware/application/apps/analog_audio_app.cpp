@@ -159,36 +159,8 @@ AnalogAudioView::AnalogAudioView(
                   &record_view,
                   &waterfall});
 
-	// load app settings
-	auto rc = settings.load("rx_audio", &app_settings);
-	if(rc == SETTINGS_OK) {
-		field_lna.set_value(app_settings.lna);
-		field_vga.set_value(app_settings.vga);
-		receiver_model.set_rf_amp(app_settings.rx_amp);
-		field_frequency.set_value(app_settings.rx_frequency);
-		current_freq = app_settings.rx_frequency;
-		center_freq = current_freq;
-	} else {
-		field_frequency.set_value(receiver_model.tuning_frequency());
-		current_freq = receiver_model.tuning_frequency();
-		center_freq = current_freq;
-	}
-	
-	//Filename Datetime and Frequency
-	record_view.set_filename_date_frequency(true);
-
-	field_frequency.set_step(receiver_model.frequency_step());
-	field_frequency.on_change = [this](rf::Frequency f) {
-		this->on_field_frequency_changed(f);
-	};
-	field_frequency.on_edit = [this, &nav]() {
-		// TODO: Provide separate modal method/scheme?
-		auto new_view = nav.push<FrequencyKeypadView>(receiver_model.tuning_frequency());
-		new_view->on_changed = [this](rf::Frequency f) {
-			this->on_tuning_frequency_changed(f);
-			this->field_frequency.set_value(f);
-		};
-	};
+    // Filename Datetime and Frequency
+    record_view.set_filename_date_frequency(true);
 
     field_frequency.on_show_options = [this]() {
         this->on_show_options_frequency();
@@ -290,47 +262,6 @@ void AnalogAudioView::focus() {
     field_frequency.focus();
 }
 
-void AnalogAudioView::update_ddc(int32_t f) {
-	DDCConfigMessage packet_message { f };
-	shared_memory.application_queue.push(packet_message);
-
-	baseband::set_ddc_freq(f);
-}
-
-void AnalogAudioView::on_tuning_frequency_changed(rf::Frequency f) {
-	current_freq = f;
-	center_freq = f;
-
-	update_ddc(0);
-	receiver_model.set_tuning_frequency(center_freq);
-}
-
-void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
-	if (!ddc_enable) {
-		on_tuning_frequency_changed(f);
-		return;
-	}
-
-	current_freq = f;
-	static const int32_t limit = 40000;
-	
-	int32_t ddc_freq = f - center_freq;
-	
-	if (ddc_freq < -limit) {
-		center_freq = center_freq + ddc_freq + limit;
-		receiver_model.set_tuning_frequency(center_freq);
-
-		ddc_freq = -limit;
-	} else if (ddc_freq > limit) {
-		center_freq = center_freq + ddc_freq - limit;
-		receiver_model.set_tuning_frequency(center_freq);
-
-		ddc_freq = limit;
-	}
-
-	update_ddc(ddc_freq);
-}
-
 void AnalogAudioView::on_baseband_bandwidth_changed(uint32_t bandwidth_hz) {
     receiver_model.set_baseband_bandwidth(bandwidth_hz);
 }
@@ -397,32 +328,28 @@ void AnalogAudioView::on_show_options_modulation() {
 
     const auto modulation = receiver_model.modulation();
     switch (modulation) {
-    case ReceiverModel::Mode::AMAudio:
-        widget = std::make_unique<AMOptionsView>(options_view_rect, Theme::getInstance()->option_active);
-        waterfall.show_audio_spectrum_view(false);
-        text_ctcss.hidden(true);
-        ddc_enable = true;
-        break;
+        case ReceiverModel::Mode::AMAudio:
+            widget = std::make_unique<AMOptionsView>(options_view_rect, Theme::getInstance()->option_active);
+            waterfall.show_audio_spectrum_view(false);
+            text_ctcss.hidden(true);
+            break;
 
         case ReceiverModel::Mode::NarrowbandFMAudio:
             widget = std::make_unique<NBFMOptionsView>(nbfm_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(false);
-		ddc_enable = true;
             break;
 
         case ReceiverModel::Mode::WidebandFMAudio:
             widget = std::make_unique<WFMOptionsView>(options_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(true);
             text_ctcss.hidden(true);
-		ddc_enable = false;
             break;
 
         case ReceiverModel::Mode::SpectrumAnalysis:
             widget = std::make_unique<SPECOptionsView>(this, nbfm_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(true);
-		ddc_enable = false;
             break;
 
         default:
@@ -498,10 +425,6 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
             break;
     }
     record_view.set_sampling_rate(sampling_rate);
-
-	center_freq = current_freq;	
-	receiver_model.set_tuning_frequency(center_freq);
-	update_ddc(0);
 
     if (!is_wideband_spectrum_mode) {
         audio::output::unmute();

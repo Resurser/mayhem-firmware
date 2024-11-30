@@ -183,10 +183,6 @@ class AnalogAudioView : public View {
     size_t spec_bw_index = 0;
     uint32_t spec_bw = 20000000;
     uint16_t spec_trigger = 63;
-	
-	rf::Frequency current_freq = 0;
-	rf::Frequency center_freq = 0;
-	bool ddc_enable = false;
 
     RSSI rssi{
         {21 * 8, 0, 6 * 8, 4}};
@@ -236,18 +232,13 @@ class AnalogAudioView : public View {
 
     spectrum::WaterfallView waterfall{true};
 
-	void update_ddc(int32_t f);
-	void on_tuning_frequency_changed(rf::Frequency f);
-	void on_field_frequency_changed(rf::Frequency f);
-	void on_baseband_bandwidth_changed(uint32_t bandwidth_hz);
-	void on_modulation_changed(const ReceiverModel::Mode modulation);
-	void on_show_options_frequency();
-	void on_show_options_rf_gain();
-	void on_show_options_modulation();
-	void on_frequency_step_changed(rf::Frequency f);
-	void on_reference_ppm_correction_changed(int32_t v);
-	void on_headphone_volume_changed(int32_t v);
-	void on_edit_frequency();
+    void on_baseband_bandwidth_changed(uint32_t bandwidth_hz);
+    void on_modulation_changed(ReceiverModel::Mode modulation);
+    void on_show_options_frequency();
+    void on_show_options_rf_gain();
+    void on_show_options_modulation();
+    void on_frequency_step_changed(rf::Frequency f);
+    void on_reference_ppm_correction_changed(int32_t v);
 
     void remove_options_widget();
     void set_options_widget(std::unique_ptr<Widget> new_widget);

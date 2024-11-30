@@ -80,7 +80,6 @@ class FrequencyScale : public Widget {
 
     void set_spectrum_sampling_rate(const int new_sampling_rate);
     void set_channel_filter(const int low_frequency, const int high_frequency, const int transition);
-	void set_ddc_freq(const int freq);
 
     void paint(Painter& painter) override;
 
@@ -97,7 +96,6 @@ class FrequencyScale : public Widget {
     int channel_filter_low_frequency{0};
     int channel_filter_high_frequency{0};
     int channel_filter_transition{0};
-	int ddc_freq { 0 };
 
     void clear();
     void clear_background(Painter& painter, const Rect r);
@@ -171,13 +169,6 @@ class WaterfallView : public View {
             const auto message = *reinterpret_cast<const ChannelSpectrumConfigMessage*>(p);
             this->channel_fifo = message.fifo;
         }};
-	MessageHandlerRegistration message_handler_ddc_config {
-		Message::ID::DDCConfig,
-		[this](const Message* const p) {
-			const auto message = *reinterpret_cast<const DDCConfigMessage*>(p);
-			this->frequency_scale.set_ddc_freq(message.freq);
-		}
-	};
     MessageHandlerRegistration message_handler_audio_spectrum{
         Message::ID::AudioSpectrum,
         [this](const Message* const p) {
