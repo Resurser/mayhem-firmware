@@ -162,7 +162,8 @@ AnalogAudioView::AnalogAudioView(
 	record_view.set_filename_date_frequency(true);
 
 	field_frequency.updated = [this](rf::Frequency f) {
-		this->on_field_frequency_changed(f);
+		this->on_tuning_frequency_changed(f);
+		this->field_frequency.set_value(f);
 	};
 	
     field_frequency.on_show_options = [this]() {
@@ -476,7 +477,7 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
 
 	center_freq = current_freq;	
 	receiver_model.set_target_frequency(center_freq);
-	update_ddc(0);\
+	update_ddc(0);
 
     if (!is_wideband_spectrum_mode) {
         audio::output::unmute();
