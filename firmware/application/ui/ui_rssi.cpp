@@ -117,13 +117,13 @@ void RSSI::paint(Painter& painter) {
         const Rect r0{r.left(), r.bottom() - y_min, r.width(), y_min};
         painter.fill_rectangle(
             r0,
-            Color::blue());
+            Color::cyan());
 
         // y_avg
         const Rect r1{r.left(), r.bottom() - y_avg, r.width(), y_avg - y_min};
         painter.fill_rectangle(
             r1,
-            Color::red());
+            Color::magenta());
 
         // y_avg middle marker
         const Rect r2{r.left(), r.bottom() - y_avg, r.width(), 1};
@@ -136,7 +136,7 @@ void RSSI::paint(Painter& painter) {
         // const Rect r3 {  r.left(), r.bottom() - y_max , r.width() , y_max - y_avg - 1 };
         painter.fill_rectangle(
             r3,
-            Color::red());
+            Color::magenta());
 
         // fill last part of level in black
         const Rect r4{r.left(), r.top(), r.width(), r.height() - y_max};

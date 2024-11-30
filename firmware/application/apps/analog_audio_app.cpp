@@ -157,39 +157,14 @@ AnalogAudioView::AnalogAudioView(
                   &field_volume,
                   &text_ctcss,
                   &record_view,
-                  &waterfall});
-
-	// load app settings
-	auto rc = settings.load("rx_audio", &app_settings);
-	if(rc == SETTINGS_OK) {
-		field_lna.set_value(app_settings.lna);
-		field_vga.set_value(app_settings.vga);
-		receiver_model.set_rf_amp(app_settings.rx_amp);
-		field_frequency.set_value(app_settings.rx_frequency);
-		current_freq = app_settings.rx_frequency;
-		center_freq = current_freq;
-	} else {
-		field_frequency.set_value(receiver_model.tuning_frequency());
-		current_freq = receiver_model.tuning_frequency();
-		center_freq = current_freq;
-	}
-	
+                  &waterfall});	
 	//Filename Datetime and Frequency
 	record_view.set_filename_date_frequency(true);
 
-	field_frequency.set_step(receiver_model.frequency_step());
-	field_frequency.on_change = [this](rf::Frequency f) {
+	field_frequency.updated = [this](rf::Frequency f) {
 		this->on_field_frequency_changed(f);
 	};
-	field_frequency.on_edit = [this, &nav]() {
-		// TODO: Provide separate modal method/scheme?
-		auto new_view = nav.push<FrequencyKeypadView>(receiver_model.tuning_frequency());
-		new_view->on_changed = [this](rf::Frequency f) {
-			this->on_tuning_frequency_changed(f);
-			this->field_frequency.set_value(f);
-		};
-	};
-
+	
     field_frequency.on_show_options = [this]() {
         this->on_show_options_frequency();
     };
@@ -302,7 +277,7 @@ void AnalogAudioView::on_tuning_frequency_changed(rf::Frequency f) {
 	center_freq = f;
 
 	update_ddc(0);
-	receiver_model.set_tuning_frequency(center_freq);
+	receiver_model.set_target_frequency(center_freq);
 }
 
 void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
@@ -318,12 +293,12 @@ void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
 	
 	if (ddc_freq < -limit) {
 		center_freq = center_freq + ddc_freq + limit;
-		receiver_model.set_tuning_frequency(center_freq);
+		receiver_model.set_target_frequency(center_freq);
 
 		ddc_freq = -limit;
 	} else if (ddc_freq > limit) {
 		center_freq = center_freq + ddc_freq - limit;
-		receiver_model.set_tuning_frequency(center_freq);
+		receiver_model.set_target_frequency(center_freq);
 
 		ddc_freq = limit;
 	}
@@ -500,8 +475,8 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
     record_view.set_sampling_rate(sampling_rate);
 
 	center_freq = current_freq;	
-	receiver_model.set_tuning_frequency(center_freq);
-	update_ddc(0);
+	receiver_model.set_target_frequency(center_freq);
+	update_ddc(0);\
 
     if (!is_wideband_spectrum_mode) {
         audio::output::unmute();
