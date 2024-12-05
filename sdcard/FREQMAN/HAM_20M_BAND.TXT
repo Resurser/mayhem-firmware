@@ -1,0 +1,2 @@
+a=14000000,b=14400000,m=AM,bw=USB+3k,s=100,d=20M HAM radio|Amateur
+

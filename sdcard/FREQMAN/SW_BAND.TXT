@@ -1,0 +1,72 @@
+f=187362500,d=unknown signal
+f=307175000,d=20241119030438
+f=21074000,d=ft8
+f=1800000,d=CW
+f=1810000,d=Digital Modes
+f=1810000,d=CW QRP calling 
+f=1845000,d=SSTV and wideband
+f=1910000,d=SSB QRP
+f=1995000,d=Experimental
+f=1997000,d=Beacons
+f=2000000,d=Beacons
+f=3500000,d=CW DX window
+f=3560000,d=QRP CW calling 
+f=3570000,d=FT8
+f=3575000,d=RTTY / FieldHELL
+f=3585000,d=auto controlled data 
+f=3590000,d=RTTY/Data DX
+f=3600000,d=RTTY/Data DX
+f=3790000,d=DX window
+f=3845000,d=SSTV
+f=3885000,d=AM calling 
+f=3985000,d=QRP SSB calling 
+f=7030000,d=QRP CW calling 
+f=7040000,d=RTTY / Field HELL
+f=7070000,d=RTTY/Data
+f=7074000,d=auto controlled data
+f=7100000,d=SSTV
+f=7171000,d=D-SSTV
+f=7285000,d=QRP SSB calling 
+f=7290000,d=RTTY 
+f=7686000,d=RTTY 
+f=10100800,d=RTTY 
+f=10110000,d=AM calling 
+f=10150000,d=RTTY/Data
+f=14060000,d=auto controlled data 
+f=14070000,d=FieldHELL
+f=14080000,d=QRP CW calling 
+f=14095000,d=RTTY/Data
+f=14100000,d=auto controlled data 
+f=14100500,d=IBP/NCDXF beacons
+f=14230000,d=auto controlled data 
+f=14233000,d=D-SSTV
+f=14236000,d=Digital Voice
+f=14285000,d=QRP SSB calling 
+f=14286000,d=AM calling 
+f=18100000,d=RTTY / FieldHELL
+f=18107000,d=auto controlled data 
+f=18110000,d=IBP/NCDXF beacons
+f=18162500,d=Digital Voice
+f=21060000,d=QRP CW calling 
+f=21070000,d=FieldHELL
+f=21070000,d=RTTY/Data
+f=21100000,d=auto data stations
+f=21150000,d=IBP/NCDXF beacons
+f=21340000,d=SSTV
+f=21385000,d=QRP SSB calling 
+f=24920000,d=RTTY/Data
+f=24930000,d=auto controlled data
+f=24930000,d=IBP/NCDXF beacons
+f=28060000,d=QRP CW calling 
+f=28063000,d=FieldHELL
+f=28070000,d=RTTY/Data
+f=28145000,d=auto controlled data
+f=28190000,d=Beacons
+f=28200000,d=IBP/NCDXF beacons
+f=28385000,d=QRP SSB calling 
+f=28680000,d=SSTV
+f=29100000,d=AM
+f=29400000,d=Satellite downlinks
+f=29545000,d=Repeater inputs
+f=29600000,d=FM simplex
+f=29660000,d=Repeater outputs

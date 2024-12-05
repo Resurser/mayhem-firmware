@@ -1,0 +1,149 @@
+f=1025000,m=AM,bw=DSB 9k,d=AM broadcast band|BCB (EU & J)
+f=1025000,m=AM,bw=DSB 9k,d=AM broadcast band|BCB (US)
+f=2435000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=4870000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=13570000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=23950000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=23955000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=23960000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=23965000,m=AM,bw=LSB-3k,d=Amateur_radio|Amateur
+f=108475000,m=NFM,bw=16k,d=Aircraft
+f=108480000,m=NFM,bw=16k,d=Aircraft
+f=108485000,m=NFM,bw=16k,d=Aircraft
+f=108490000,m=NFM,bw=16k,d=Aircraft
+f=108495000,m=NFM,bw=16k,d=Aircraft
+f=108500000,m=NFM,bw=16k,d=Aircraft
+f=108505000,m=NFM,bw=16k,d=Aircraft
+f=108510000,m=NFM,bw=16k,d=Aircraft
+f=108515000,m=NFM,bw=16k,d=Aircraft
+f=108520000,m=NFM,bw=16k,d=Aircraft
+f=108525000,m=NFM,bw=16k,d=Aircraft
+f=108530000,m=NFM,bw=16k,d=Aircraft
+f=108535000,m=NFM,bw=16k,d=Aircraft
+f=108540000,m=NFM,bw=16k,d=Aircraft
+f=108545000,m=NFM,bw=16k,d=Aircraft
+f=108550000,m=NFM,bw=16k,d=Aircraft
+f=108555000,m=NFM,bw=16k,d=Aircraft
+f=108560000,m=NFM,bw=16k,d=Aircraft
+f=108565000,m=NFM,bw=16k,d=Aircraft
+f=108570000,m=NFM,bw=16k,d=Aircraft
+f=108575000,m=NFM,bw=16k,d=Aircraft
+f=108580000,m=NFM,bw=16k,d=Aircraft
+f=108585000,m=NFM,bw=16k,d=Aircraft
+f=108590000,m=NFM,bw=16k,d=Aircraft
+f=111430000,m=NFM,bw=16k,d=Aircraft
+f=114285000,m=NFM,bw=16k,d=Aircraft
+f=119995000,m=NFM,bw=16k,d=Aircraft
+f=120000000,m=NFM,bw=16k,d=Aircraft
+f=120005000,m=NFM,bw=16k,d=Aircraft
+f=125710000,m=NFM,bw=16k,d=Aircraft
+f=125715000,m=NFM,bw=16k,d=Aircraft
+f=131425000,m=NFM,bw=16k,d=Aircraft
+f=131430000,m=NFM,bw=16k,d=Aircraft
+f=120000000,m=NFM,bw=16k,d=Land mobile (EU)
+f=140000000,m=NFM,bw=16k,d=Land mobile (EU)
+f=145700000,m=NFM,bw=16k,d=Land mobile (EU)
+f=157150000,m=NFM,bw=16k,d=Land mobile (EU)
+f=160000000,m=NFM,bw=16k,d=Land mobile (EU)
+f=140000000,m=NFM,bw=16k,d=Land mobile
+f=145700000,m=NFM,bw=16k,d=Land mobile
+f=153100000,m=NFM,bw=16k,d=Land mobile
+f=154050000,m=NFM,bw=16k,d=Land mobile
+f=157150000,m=NFM,bw=16k,d=Land mobile
+f=160000000,m=NFM,bw=16k,d=Land mobile
+f=160650000,m=NFM,bw=16k,d=Land mobile
+f=160900000,m=NFM,bw=16k,d=Land mobile
+f=161500000,m=NFM,bw=16k,d=Land mobile
+f=161600000,m=NFM,bw=16k,d=Land mobile
+f=161650000,m=NFM,bw=16k,d=Land mobile
+f=161750000,m=NFM,bw=16k,d=Land mobile
+f=162550000,m=NFM,bw=16k,d=Land mobile
+f=162600000,m=NFM,bw=16k,d=Land mobile
+f=162850000,m=NFM,bw=16k,d=Land mobile
+f=163500000,m=NFM,bw=16k,d=Land mobile
+f=164450000,m=NFM,bw=16k,d=Land mobile
+f=165700000,m=NFM,bw=16k,d=Land mobile
+f=165850000,m=NFM,bw=16k,d=Land mobile
+f=165900000,m=NFM,bw=16k,d=Land mobile
+f=165950000,m=NFM,bw=16k,d=Land mobile
+f=168200000,m=NFM,bw=16k,d=Land mobile
+f=168250000,m=NFM,bw=16k,d=Land mobile
+f=169100000,m=NFM,bw=16k,d=Land mobile
+f=169200000,m=NFM,bw=16k,d=Land mobile
+f=169350000,m=NFM,bw=16k,d=Land mobile
+f=170100000,m=NFM,bw=16k,d=Land mobile
+f=170150000,m=NFM,bw=16k,d=Land mobile
+f=171100000,m=NFM,bw=16k,d=Land mobile
+f=171450000,m=NFM,bw=16k,d=Land mobile
+f=172050000,m=NFM,bw=16k,d=Land mobile
+f=145700000,m=NFM,bw=16k,d=Land mobile (J)
+f=151450000,m=NFM,bw=16k,d=Land mobile (J)
+f=154050000,m=NFM,bw=16k,d=Land mobile (J)
+f=154300000,m=NFM,bw=16k,d=Land mobile (J)
+f=157150000,m=NFM,bw=16k,d=Land mobile (J)
+f=160000000,m=NFM,bw=16k,d=Land mobile (J)
+f=160650000,m=NFM,bw=16k,d=Land mobile (J)
+f=160700000,m=NFM,bw=16k,d=Land mobile (J)
+f=161500000,m=NFM,bw=16k,d=Land mobile (J)
+f=162550000,m=NFM,bw=16k,d=Land mobile (J)
+f=162600000,m=NFM,bw=16k,d=Land mobile (J)
+f=162850000,m=NFM,bw=16k,d=Land mobile (J)
+f=163500000,m=NFM,bw=16k,d=Land mobile (J)
+f=165700000,m=NFM,bw=16k,d=Land mobile (J)
+f=165850000,m=NFM,bw=16k,d=Land mobile (J)
+f=165900000,m=NFM,bw=16k,d=Land mobile (J)
+f=167300000,m=NFM,bw=16k,d=Land mobile (J)
+f=168200000,m=NFM,bw=16k,d=Land mobile (J)
+f=168250000,m=NFM,bw=16k,d=Land mobile (J)
+f=169100000,m=NFM,bw=16k,d=Land mobile (J)
+f=169200000,m=NFM,bw=16k,d=Land mobile (J)
+f=169350000,m=NFM,bw=16k,d=Land mobile (J)
+f=145700000,m=NFM,bw=16k,d=Amateur_radio|Amateur
+f=216650000,m=NFM,bw=16k,d=Land mobile
+f=216700000,m=NFM,bw=16k,d=Land mobile
+f=217150000,m=NFM,bw=16k,d=Land mobile
+f=219050000,m=NFM,bw=16k,d=Land mobile
+f=219100000,m=NFM,bw=16k,d=Land mobile
+f=221500000,m=NFM,bw=16k,d=Land mobile
+f=221550000,m=NFM,bw=16k,d=Land mobile
+f=221600000,m=NFM,bw=16k,d=Land mobile
+f=222850000,m=NFM,bw=16k,d=Amateur_radio|Amateur
+f=223950000,m=NFM,bw=16k,d=Amateur_radio|Amateur
+f=224000000,m=NFM,bw=16k,d=Amateur_radio|Amateur
+f=337800000,m=NFM,bw=16k,d=Land mobile (J)
+f=337850000,m=NFM,bw=16k,d=Land mobile (J)
+f=337900000,m=NFM,bw=16k,d=Land mobile (J)
+f=337950000,m=NFM,bw=16k,d=Land mobile (J)
+f=338000000,m=NFM,bw=16k,d=Land mobile (J)
+f=338050000,m=NFM,bw=16k,d=Land mobile (J)
+f=350100000,m=NFM,bw=16k,d=Land mobile (J)
+f=350150000,m=NFM,bw=16k,d=Land mobile (J)
+f=350200000,m=NFM,bw=16k,d=Land mobile (J)
+f=350250000,m=NFM,bw=16k,d=Land mobile (J)
+f=350300000,m=NFM,bw=16k,d=Land mobile (J)
+f=350350000,m=NFM,bw=16k,d=Land mobile (J)
+f=350400000,m=NFM,bw=16k,d=Land mobile (J)
+f=356350000,m=NFM,bw=16k,d=Land mobile (J)
+f=360000000,m=NFM,bw=16k,d=Land mobile (J)
+f=362350000,m=NFM,bw=16k,d=Land mobile (J)
+f=362400000,m=NFM,bw=16k,d=Land mobile (J)
+f=362450000,m=NFM,bw=16k,d=Land mobile (J)
+f=362500000,m=NFM,bw=16k,d=Land mobile (J)
+f=362550000,m=NFM,bw=16k,d=Land mobile (J)
+f=362600000,m=NFM,bw=16k,d=Land mobile (J)
+f=362650000,m=NFM,bw=16k,d=Land mobile (J)
+f=374650000,m=NFM,bw=16k,d=Land mobile (J)
+f=374700000,m=NFM,bw=16k,d=Land mobile (J)
+f=374750000,m=NFM,bw=16k,d=Land mobile (J)
+f=374800000,m=NFM,bw=16k,d=Land mobile (J)
+f=374850000,m=NFM,bw=16k,d=Land mobile (J)
+f=374900000,m=NFM,bw=16k,d=Land mobile (J)
+f=500000000,m=NFM,bw=16k,d=Land mobile
+f=900000000,m=NFM,bw=16k,d=Land mobile
+f=900800000,m=NFM,bw=16k,d=Land mobile
+f=900900000,m=NFM,bw=16k,d=Land mobile
+f=901050000,m=NFM,bw=16k,d=Land mobile
+f=902150000,m=NFM,bw=16k,d=Land mobile
+f=904300000,m=NFM,bw=16k,d=Land mobile
+f=904400000,m=NFM,bw=16k,d=Land mobile
+f=1200000000,m=NFM,bw=16k,d=Amateur|Land mobile|GPS

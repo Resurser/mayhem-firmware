@@ -1,0 +1,2 @@
+f=1025000,m=AM,bw=DSB 9k,d=AM broadcast band|BCB (EU & J)
+f=1025000,m=AM,bw=DSB 9k,d=AM broadcast band|BCB (US)

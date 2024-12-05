@@ -368,8 +368,8 @@ class SetUIView : public View {
         &bitmap_sd_card_ok};
 
     Checkbox checkbox_use_rgb_waterfall{
-        {3 * 8, 15 * 16},
-        20,
+        {3 * 8, 15 * 16+3},
+        18,
         "Use RGB waterfall"};
 
 
