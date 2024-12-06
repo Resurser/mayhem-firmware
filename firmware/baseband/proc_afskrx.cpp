@@ -92,11 +92,13 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
                         bit_counter = 0;
 
                         data_message.is_data = true;
-                        data_message.value = word_bits & word_mask;
+                        //data_message.value = word_bits & word_mask;
+                        data_message.value = word_bits ;
                         shared_memory.application_queue.push(data_message);
                     }
                 } else {
-                    if ((word_bits & word_mask) == trigger_value) {
+                    //if ((word_bits & word_mask) == trigger_value) {
+                    if (word_bits == trigger_value) {
                         triggered = !triggered;
                         bit_counter = 0;
 

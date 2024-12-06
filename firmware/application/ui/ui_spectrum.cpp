@@ -271,28 +271,32 @@ void WaterfallWidget::on_channel_spectrum(
     const ChannelSpectrum& spectrum) {
     /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
     auto pixel_color = spectrum_rgb3v_lut[0];
+    auto pixel_color2 = spectrum_rgb3v_lut[0];
         
     std::array<Color, 240> pixel_row;
     for (size_t i = 0; i < 120; i++) {
         
         if (pmem::ui_use_rgb_waterfall()){
             pixel_color = spectrum_rgb3_lut[spectrum.db[256 - 120 + i]];
+            pixel_color2 = spectrum_rgb3_lut[spectrum.db[i]];
         }else{
             pixel_color = spectrum_rgb3v_lut[spectrum.db[256 - 120 + i]];
+            pixel_color2 = spectrum_rgb3v_lut[spectrum.db[i]];
         }
         
         pixel_row[i] = pixel_color;
+        pixel_row[120 + i] = pixel_color2;
     }
 
-    for (size_t i = 120; i < 240; i++) {
+    //for (size_t i = 120; i < 240; i++) {
     
-        pixel_color = spectrum_rgb3v_lut[spectrum.db[i - 120]];
-        if (pmem::ui_use_rgb_waterfall()){
-            pixel_color = spectrum_rgb3_lut[spectrum.db[i - 120]];
-        }
+    //    pixel_color = spectrum_rgb3v_lut[spectrum.db[i - 120]];
+    //    if (pmem::ui_use_rgb_waterfall()){
+    //        pixel_color = spectrum_rgb3_lut[spectrum.db[i - 120]];
+    //    }
         
-        pixel_row[i] = pixel_color;
-    }
+    //    pixel_row[i] = pixel_color;
+    //}
 
     const auto draw_y = display.scroll(1);
 
