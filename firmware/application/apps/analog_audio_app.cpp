@@ -178,9 +178,9 @@ AnalogAudioView::AnalogAudioView(
 	};
 	field_frequency.on_edit = [this, &nav]() {
 		// TODO: Provide separate modal method/scheme?
-		auto new_view = nav.push<FrequencyKeypadView>(receiver_model.tuning_frequency());
+		auto new_view = nav.push<FrequencyKeypadView>(receiver_model.target_frequency());
 		new_view->on_changed = [this](rf::Frequency f) {
-			this->on_tuning_frequency_changed(f);
+			//this->on_field_frequency_changed(f);
 			this->field_frequency.set_value(f);
 		};
 	};
@@ -327,17 +327,13 @@ void AnalogAudioView::update_ddc(int32_t f) {
 	baseband::set_ddc_freq(f);
 }
 
-void AnalogAudioView::on_tuning_frequency_changed(rf::Frequency f) {
-	current_freq = f;
-	center_freq = f;
-
-	update_ddc(0);
-	receiver_model.set_target_frequency(center_freq);
-}
-
 void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
 	if (!ddc_enable) {
-		on_tuning_frequency_changed(f);
+		current_freq = f;
+        center_freq = f;
+
+        update_ddc(0);
+        receiver_model.set_target_frequency(center_freq);
 		return;
 	}
 
@@ -492,7 +488,7 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
     record_view.set_sampling_rate(sampling_rate);
 
     center_freq = current_freq;	
-	receiver_model.set_tuning_frequency(center_freq);
+	receiver_model.set_target_frequency(center_freq);
 	update_ddc(0);
 
     if (!is_wideband_spectrum_mode) {
