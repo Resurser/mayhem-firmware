@@ -134,6 +134,8 @@ set(CPPSRC
 	${COMMON}/dsp_fir_taps.cpp
 	${COMMON}/dsp_iir.cpp
 	${COMMON}/dsp_sos.cpp
+	${COMMON}/dsp_ddc.cpp
+	${COMMON}/cordic.cpp
 	fxpt_atan2.cpp
 	rssi.cpp
 	rssi_dma.cpp

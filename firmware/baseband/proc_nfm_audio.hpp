@@ -30,6 +30,7 @@
 #include "dsp_decimate.hpp"
 #include "dsp_demodulate.hpp"
 #include "dsp_iir.hpp"
+#include "dsp_ddc.hpp"
 
 #include "audio_output.hpp"
 #include "spectrum_collector.hpp"
@@ -46,7 +47,8 @@ class NarrowbandFMAudio : public BasebandProcessor {
 
    private:
     static constexpr size_t baseband_fs = 3072000;
-
+    static constexpr auto spectrum_rate_hz = 50.0f;
+   
     std::array<complex16_t, 512> dst{};
     const buffer_c16_t dst_buffer{
         dst.data(),
@@ -65,13 +67,15 @@ class NarrowbandFMAudio : public BasebandProcessor {
         (int16_t*)tone.data(),
         sizeof(tone) / sizeof(int16_t)};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    //dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 {};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
     int32_t channel_filter_low_f = 0;
     int32_t channel_filter_high_f = 0;
     int32_t channel_filter_transition = 0;
 
+    dsp::DDC ddc { };
     // For CTCSS decoding
     dsp::decimate::FIR64AndDecimateBy2Real ctcss_filter{};
     IIRBiquadFilter hpf{};
@@ -81,7 +85,11 @@ class NarrowbandFMAudio : public BasebandProcessor {
     AudioOutput audio_output{};
 
     SpectrumCollector channel_spectrum{};
-
+    
+    size_t spectrum_interval_samples = 0;
+	size_t spectrum_samples = 0;
+	float spectrum_zoom = 4.0f;
+    
     uint32_t tone_phase{0};
     uint32_t tone_delta{0};
     bool pitch_rssi_enabled{false};
@@ -103,6 +111,7 @@ class NarrowbandFMAudio : public BasebandProcessor {
     void pitch_rssi_config(const PitchRSSIConfigureMessage& message);
     void configure(const NBFMConfigureMessage& message);
     void capture_config(const CaptureConfigMessage& message);
+    void ddc_config(const DDCConfigMessage& message);
 };
 
 #endif /*__PROC_NFM_AUDIO_H__*/

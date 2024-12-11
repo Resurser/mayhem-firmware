@@ -29,6 +29,7 @@
 #include "dsp_decimate.hpp"
 #include "dsp_demodulate.hpp"
 #include "audio_compressor.hpp"
+#include "dsp_ddc.hpp"
 
 #include "audio_output.hpp"
 #include "spectrum_collector.hpp"
@@ -42,7 +43,8 @@ class NarrowbandAMAudio : public BasebandProcessor {
 
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr size_t decim_2_decimation_factor = 4;
+    static constexpr auto spectrum_rate_hz = 50.0f;
+	static constexpr size_t decim_2_decimation_factor = 8;
     static constexpr size_t channel_filter_decimation_factor = 1;
 
     std::array<complex16_t, 512> dst{};
@@ -54,7 +56,7 @@ class NarrowbandAMAudio : public BasebandProcessor {
         audio.data(),
         audio.size()};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
@@ -63,6 +65,8 @@ class NarrowbandAMAudio : public BasebandProcessor {
     int32_t channel_filter_transition = 0;
     bool configured{false};
 
+    dsp::DDC ddc { };
+    
     bool modulation_ssb = false;
     dsp::demodulate::AM demod_am{};
     dsp::demodulate::SSB demod_ssb{};
@@ -70,13 +74,18 @@ class NarrowbandAMAudio : public BasebandProcessor {
     AudioOutput audio_output{};
 
     SpectrumCollector channel_spectrum{};
+    size_t spectrum_interval_samples = 0;
+	size_t spectrum_samples = 0;
+	float spectrum_zoom = 4.0f;
 
+	void set_spectrum_zoom(float x);
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
     RSSIThread rssi_thread{};
 
     void configure(const AMConfigureMessage& message);
     void capture_config(const CaptureConfigMessage& message);
+    void ddc_config(const DDCConfigMessage& message);
 
     buffer_f32_t demodulate(const buffer_c16_t& channel);
 };

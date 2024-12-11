@@ -127,6 +127,7 @@ class Message {
         FreqChangeCommand = 70,
         I2CDevListChanged = 71,
         LightData = 72,
+        DDCConfig = 73,
         MAX
     };
 
@@ -1435,6 +1436,18 @@ class I2CDevListChangedMessage : public Message {
    public:
     constexpr I2CDevListChangedMessage()
         : Message{ID::I2CDevListChanged} {}
+};
+
+class DDCConfigMessage : public Message {
+   public:
+	constexpr DDCConfigMessage(
+		int32_t freq
+	) : Message { ID::DDCConfig },
+		freq { freq }
+	{
+	}
+
+	int32_t freq = 0;
 };
 
 #endif /*__MESSAGE_H__*/
