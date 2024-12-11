@@ -157,31 +157,28 @@ AnalogAudioView::AnalogAudioView(
                   &field_volume,
                   &text_ctcss,
                   &record_view,
-                  &waterfall});
-
+                  &waterfall}
+                );
     // Filename Datetime and Frequency
     record_view.set_filename_date_frequency(true);
 
     field_frequency.on_show_options = [this]() {
         this->on_show_options_frequency();
     };
-    field_frequency.on_show_options = [this]() {
-        this->on_show_options_frequency();
-    };
-    field_frequency.on_change = [this](rf::Frequency f) {
-		//this->on_tuning_frequency_changed(f);
-		this->on_field_frequency_changed(f);
-	};
 	field_frequency.on_change = [this](rf::Frequency f) {
 		//this->on_tuning_frequency_changed(f);
 		this->on_field_frequency_changed(f);
 	};
 	field_frequency.on_edit = [this, &nav]() {
-		// TODO: Provide separate modal method/scheme?
-		auto new_view = nav.push<FrequencyKeypadView>(receiver_model.tuning_frequency());
+		 //TODO: Provide separate modal method/scheme?
+        auto new_view = nav.push<FrequencyKeypadView>(receiver_model.target_frequency());
 		new_view->on_changed = [this](rf::Frequency f) {
-			this->on_tuning_frequency_changed(f);
+			this->current_freq = f;
+            this->center_freq = f;
+            this->update_ddc(0);
+            receiver_model.set_target_frequency(center_freq);
 			this->field_frequency.set_value(f);
+			//on_field_frequency_changed(f);
 		};
 	};
 
@@ -215,6 +212,9 @@ AnalogAudioView::AnalogAudioView(
     };
 
     audio::output::start();
+    
+    current_freq = receiver_model.target_frequency();
+	center_freq = current_freq;
 
     // This call starts the correct baseband image to run
     // and sets the radio up as necessary for the given modulation.
@@ -230,7 +230,6 @@ AnalogAudioView::AnalogAudioView(
     field_frequency.set_value(override.frequency_app_override);
     on_frequency_step_changed(override.frequency_step);
     options_modulation.set_by_value(toUType(override.mode));
-    current_freq = override.frequency_app_override;
 }
 
 size_t AnalogAudioView::get_spec_bw_index() {
@@ -327,17 +326,13 @@ void AnalogAudioView::update_ddc(int32_t f) {
 	baseband::set_ddc_freq(f);
 }
 
-void AnalogAudioView::on_tuning_frequency_changed(rf::Frequency f) {
-	current_freq = f;
-	center_freq = f;
-
-	update_ddc(0);
-	receiver_model.set_target_frequency(center_freq);
-}
-
 void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
 	if (!ddc_enable) {
-		on_tuning_frequency_changed(f);
+		current_freq = f;
+        center_freq = f;
+
+        update_ddc(0);
+        receiver_model.set_target_frequency(center_freq);
 		return;
 	}
 
@@ -492,7 +487,7 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
     record_view.set_sampling_rate(sampling_rate);
 
     center_freq = current_freq;	
-	receiver_model.set_tuning_frequency(center_freq);
+	receiver_model.set_target_frequency(center_freq);
 	update_ddc(0);
 
     if (!is_wideband_spectrum_mode) {
