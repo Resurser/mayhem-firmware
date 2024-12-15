@@ -148,8 +148,10 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
 
     //const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
     const Rect tick {
-		r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate, r.bottom() - filter_band_height * 2,
-		1, filter_band_height * 2 
+		r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate, 
+		r.bottom() - filter_band_height * 2,
+		1, 
+		filter_band_height * 2 
 	};
     painter.fill_rectangle(tick, Theme::getInstance()->bg_darkest->foreground);
 
@@ -171,9 +173,9 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const std::string zero_pad =
             ((magnitude_n % 3) == 0) ? "" : ((magnitude_n % 3) == 1) ? "0"
                                                                      : "00";
-        const std::string unit =
-            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k"
-                                                          : "";
+        const std::string unit = 
+            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k" : "";
+
         const std::string label = to_string_dec_uint(tick_offset) + zero_pad + unit;
         const auto label_width = style().font.size_of(label).width();
 

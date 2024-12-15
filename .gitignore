@@ -1,4 +1,7 @@
 /firmware/baseband/*.img
+/firmware/baseband/*.lz4
+/firmware/baseband/*.cmake
+/firmware/test
 /firmware/application/application.bin
 /CMakeCache.txt
 /Makefile
@@ -82,3 +85,6 @@ venv/
 # TODO: generate bitmap during build, since we use python during build anyway, lemme know if this is a bad idea @zxkmm
 /firmware/tools/bitmap.hpp
 *Zone.Identifier
+firmware/application/portapack_cpld_20150901_data.cpp
+firmware/application/portapack_cpld_20170522_data.cpp
+flashing/utils/hackrf_one_usb.dfu
