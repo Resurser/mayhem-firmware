@@ -162,6 +162,11 @@ AnalogAudioView::AnalogAudioView(
     // Filename Datetime and Frequency
     record_view.set_filename_date_frequency(true);
 
+	//field_frequency.updated = [this](rf::Frequency f) {
+	//	this->on_tuning_frequency_changed(f);
+	//	this->field_frequency.set_value(f);
+	//};
+	
     field_frequency.on_show_options = [this]() {
         this->on_show_options_frequency();
     };
