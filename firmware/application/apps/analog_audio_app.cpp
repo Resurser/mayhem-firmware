@@ -159,6 +159,8 @@ AnalogAudioView::AnalogAudioView(
                   &record_view,
                   &waterfall}
                 );
+                  &waterfall}
+                );
     // Filename Datetime and Frequency
     record_view.set_filename_date_frequency(true);
 
@@ -178,6 +180,7 @@ AnalogAudioView::AnalogAudioView(
             this->update_ddc(0);
             receiver_model.set_target_frequency(center_freq);
 			this->field_frequency.set_value(f);
+			//on_field_frequency_changed(f);
 			//on_field_frequency_changed(f);
 		};
 	};
@@ -212,6 +215,9 @@ AnalogAudioView::AnalogAudioView(
     };
 
     audio::output::start();
+    
+    current_freq = receiver_model.target_frequency();
+	center_freq = current_freq;
     
     current_freq = receiver_model.target_frequency();
 	center_freq = current_freq;

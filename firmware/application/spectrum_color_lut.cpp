@@ -279,7 +279,6 @@ const std::array<ui::Color, 256> spectrum_rgb2_lut{{
     {136, 0, 0},
     {132, 0, 0},
 }};
-
 const std::array<ui::Color, 256> spectrum_rgb3v_lut{{
     { 0x00, 0x00, 0x02 },
 	{ 0x00, 0x00, 0x04 },
