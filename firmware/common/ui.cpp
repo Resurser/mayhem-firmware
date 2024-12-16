@@ -46,7 +46,8 @@ Color term_colors[16] = {
     Color::red(),
     Color::magenta(),
     Color::yellow(),
-    Color::white()};
+    Color::white()
+};
 
 bool Rect::contains(const Point p) const {
     return (p.x() >= left()) && (p.y() >= top()) &&

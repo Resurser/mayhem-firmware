@@ -237,20 +237,23 @@ class SetRadioView : public View {
         {{26 * 8, 6 * 16}, "kHz", Theme::getInstance()->fg_light->foreground}};
 
     Labels labels_bias{
-        {{4 * 8 + 4, 8 * 16}, "CAUTION: Ensure that all", Theme::getInstance()->error_dark->foreground},
-        {{5 * 8 + 0, 9 * 16}, "devices attached to the", Theme::getInstance()->error_dark->foreground},
-        {{6 * 8 + 0, 10 * 16}, "antenna connector can", Theme::getInstance()->error_dark->foreground},
-        {{6 * 8 + 4, 11 * 16}, "accept a DC voltage!", Theme::getInstance()->error_dark->foreground}};
+        {{4 * 8 + 4, 8 * 16}, "CAUTION: device must", Theme::getInstance()->error_dark->foreground},
+        {{6 * 8 + 4, 9 * 16}, "accept a DC voltage!", Theme::getInstance()->error_dark->foreground}};
 
     Checkbox check_bias{
-        {18, 12 * 16},
+        {18, 10 * 16},
         5,
         "Enable DC bias voltage"};
 
     Checkbox disable_external_tcxo{
-        {18, 14 * 16},
+        {18, 12 * 16},
         5,
         "Disable external TCXO"};
+
+    Checkbox check_ddc_enabled{
+        {18, 14 * 16},
+        5,
+        "Use AM|NFM sliding freq."};
 
     Button button_save{
         {2 * 8, 16 * 16, 12 * 8, 32},
@@ -371,7 +374,6 @@ class SetUIView : public View {
         {3 * 8, 15 * 16+3},
         18,
         "Use RGB waterfall"};
-
 
     Button button_save{
         {2 * 8, 17 * 16, 12 * 8, 32},

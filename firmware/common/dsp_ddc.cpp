@@ -37,13 +37,13 @@ buffer_c16_t DDC::execute(const buffer_c16_t& src, const buffer_c16_t& dst) {
 	auto dst_p = dst.p;
 
 	for (size_t count = 0; count < src.count; count++) {
-		int32_t i = src_p->real() * 0.607252935 * 16384;
-		int32_t q = src_p->imag() * 0.607252935 * 16384;
+		int32_t i = src_p->real() * 0.607252935 * CORDIC_SCALE;
+		int32_t q = src_p->imag() * 0.607252935 * CORDIC_SCALE;
 		
 		cordic(phase, &i, &q);
 		
-		dst_p->real(i / 16384);
-		dst_p->imag(q / 16384);
+		dst_p->real(i / CORDIC_SCALE);
+		dst_p->imag(q / CORDIC_SCALE);
 		
 		phase += phase_inc;
 

@@ -134,7 +134,7 @@ struct ui_config2_t {
     bool hide_numeric_battery : 1;
     bool hide_battery_icon : 1;
     bool override_batt_calc : 1;
-    bool UNUSED_4 : 1;
+    bool ddc_enabled : 1;
     bool UNUSED_5 : 1;
     bool UNUSED_6 : 1;
 
@@ -950,7 +950,9 @@ bool ui_override_batt_calc() {
 bool ui_use_rgb_waterfall() {
     return data->ui_config2.use_rgb_waterfall;
 }
-
+bool ddc_enabled() {
+    return data->ui_config2.ddc_enabled;
+}
 void set_ui_hide_speaker(bool v) {
     data->ui_config2.hide_speaker = v;
 }
@@ -995,7 +997,9 @@ void set_ui_override_batt_calc(bool v) {
 void set_ui_use_rgb_waterfall(bool v) {
     data->ui_config2.use_rgb_waterfall = v;
 }
-
+void set_ddc_enabled(bool v) {
+    data->ui_config2.ddc_enabled = v;
+}
 
 /* Converter */
 bool config_converter() {

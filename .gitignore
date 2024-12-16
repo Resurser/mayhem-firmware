@@ -88,3 +88,4 @@ venv/
 firmware/application/portapack_cpld_20150901_data.cpp
 firmware/application/portapack_cpld_20170522_data.cpp
 flashing/utils/hackrf_one_usb.dfu
+mayhem-firmware.code-workspace

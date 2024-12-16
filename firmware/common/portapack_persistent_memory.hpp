@@ -323,6 +323,7 @@ bool ui_hide_numeric_battery();
 bool ui_hide_battery_icon();
 bool ui_hide_sd_card();
 bool ui_use_rgb_waterfall();
+bool ddc_enabled();
 uint8_t ui_theme_id();
 bool ui_override_batt_calc();
 void set_ui_hide_speaker(bool v);
@@ -339,6 +340,8 @@ void set_ui_hide_sd_card(bool v);
 void set_ui_theme_id(uint8_t v);
 void set_ui_override_batt_calc(bool v);
 void set_ui_use_rgb_waterfall(bool v);
+void set_ddc_enabled(bool v);
+
 
 // sd persisting settings
 bool should_use_sdcard_for_pmem();

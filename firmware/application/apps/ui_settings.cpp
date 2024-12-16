@@ -213,6 +213,7 @@ SetRadioView::SetRadioView(
         &labels_bias,
         &check_bias,
         &disable_external_tcxo,  // TODO: always show?
+        &check_ddc_enabled,
         &button_save,
         &button_cancel,
     });
@@ -281,11 +282,13 @@ SetRadioView::SetRadioView(
 
     disable_external_tcxo.set_value(pmem::config_disable_external_tcxo());
 
+    check_ddc_enabled.set_value(pmem::ddc_enabled());
     button_save.on_select = [this, &nav](Button&) {
         const auto model = this->form_collect();
         pmem::set_correction_ppb(model.ppm * 1000);
         pmem::set_clkout_freq(model.freq);
         pmem::set_config_disable_external_tcxo(disable_external_tcxo.value());
+        pmem::set_ddc_enabled(check_ddc_enabled.value());
         clock_manager.enable_clock_output(pmem::clkout_enabled());
         nav.pop();
     };

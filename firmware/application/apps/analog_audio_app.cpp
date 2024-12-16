@@ -159,8 +159,6 @@ AnalogAudioView::AnalogAudioView(
                   &record_view,
                   &waterfall}
                 );
-                  &waterfall}
-                );
     // Filename Datetime and Frequency
     record_view.set_filename_date_frequency(true);
 
@@ -180,16 +178,10 @@ AnalogAudioView::AnalogAudioView(
             this->update_ddc(0);
             receiver_model.set_target_frequency(center_freq);
 			this->field_frequency.set_value(f);
-			//on_field_frequency_changed(f);
-			//on_field_frequency_changed(f);
 		};
 	};
 
     field_lna.on_show_options = [this]() {
-        this->on_show_options_rf_gain();
-    };
-
-    field_vga.on_show_options = [this]() {
         this->on_show_options_rf_gain();
     };
 
@@ -219,9 +211,6 @@ AnalogAudioView::AnalogAudioView(
     current_freq = receiver_model.target_frequency();
 	center_freq = current_freq;
     
-    current_freq = receiver_model.target_frequency();
-	center_freq = current_freq;
-
     // This call starts the correct baseband image to run
     // and sets the radio up as necessary for the given modulation.
     on_modulation_changed(modulation);
@@ -394,14 +383,14 @@ void AnalogAudioView::on_show_options_modulation() {
             widget = std::make_unique<AMOptionsView>(options_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(false);
-            ddc_enable = true;
+            ddc_enable = persistent_memory::ddc_enabled();
             break;
 
         case ReceiverModel::Mode::NarrowbandFMAudio:
             widget = std::make_unique<NBFMOptionsView>(nbfm_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(false);
-            ddc_enable = true;
+            ddc_enable = persistent_memory::ddc_enabled();
             break;
 
         case ReceiverModel::Mode::WidebandFMAudio:
@@ -422,7 +411,7 @@ void AnalogAudioView::on_show_options_modulation() {
             chDbgPanic("Unhandled Mode");
             break;
     }
-
+    
     set_options_widget(std::move(widget));
     options_modulation.set_style(Theme::getInstance()->option_active);
 }
@@ -469,7 +458,6 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
 
     const auto is_wideband_spectrum_mode = (modulation == ReceiverModel::Mode::SpectrumAnalysis);
     receiver_model.set_modulation(modulation);
-
     receiver_model.set_sampling_rate(is_wideband_spectrum_mode ? spec_bw : 3072000);
     receiver_model.set_baseband_bandwidth(is_wideband_spectrum_mode ? spec_bw / 2 : 1750000);
 
@@ -490,8 +478,8 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
         default:
             break;
     }
-    record_view.set_sampling_rate(sampling_rate);
 
+    record_view.set_sampling_rate(sampling_rate);
     center_freq = current_freq;	
 	receiver_model.set_target_frequency(center_freq);
 	update_ddc(0);
