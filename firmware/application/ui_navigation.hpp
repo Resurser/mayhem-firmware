@@ -197,6 +197,7 @@ class SystemStatusView : public View {
     static constexpr auto default_title = "";
     bool batt_was_inited = false;  // if the battery was off on tart, but later turned on.
     bool batt_info_up = false;     // to prevent show multiple batt info dialog
+
     NavigationView& nav_;
 
     Rectangle backdrop{
@@ -322,7 +323,7 @@ class InformationView : public View {
 
     Rectangle backdrop{
         {0, 0 * 16, 240, 16},
-        {33, 33, 33}};
+        Theme::getInstance()->bg_darker->background};
 
     Text version{
         {2, 0, 11 * 8, 16},
