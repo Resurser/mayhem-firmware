@@ -253,7 +253,7 @@ class SetRadioView : public View {
     Checkbox check_ddc_enabled{
         {18, 14 * 16},
         5,
-        "Use AM|NFM sliding freq."};
+        "Slide tune freq. (AM, NFM)"};
 
     Button button_save{
         {2 * 8, 16 * 16, 12 * 8, 32},
