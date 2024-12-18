@@ -27,7 +27,7 @@
 #include "ui_receiver.hpp"
 #include "ui_freq_field.hpp"
 #include "ui_rssi.hpp"
-
+#include "radio_state.hpp"
 #include "event_m0.hpp"
 
 #include "test_packet.hpp"

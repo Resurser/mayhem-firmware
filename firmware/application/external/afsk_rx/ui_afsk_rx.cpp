@@ -62,7 +62,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
                   &console});
 
     // Auto-configure modem for LCR RX (TODO remove)
-    field_frequency.set_value(467225500);
+    field_frequency.set_value(settings_.raw().rx_frequency);
     auto def_bell202 = &modem_defs[0];
     persistent_memory::set_modem_baudrate(def_bell202->baudrate);
     serial_format_t serial_format;
@@ -72,7 +72,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     serial_format.bit_order = LSB_FIRST;
     persistent_memory::set_serial_format(serial_format);
 
-    field_frequency.set_step(100);
+    field_frequency.set_step(settings_.raw().step);
 
     check_log.set_value(logging);
     check_log.on_select = [this](Checkbox&, bool v) {
@@ -116,8 +116,8 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
             str_console += (char)value;  // Printable
             str_byte += (char)value;
         } else {
-            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            str_byte += "[" + to_string_hex(value, 2) + "]";
+            // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+            // str_byte += "[" + to_string_hex(value, 2) + "]";
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
