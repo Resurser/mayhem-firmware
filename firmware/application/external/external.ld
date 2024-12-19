@@ -57,7 +57,8 @@ MEMORY
     ram_external_app_mcu_temperature(rwx) : org = 0xADD00000, len = 32k 
     ram_external_app_fmradio(rwx) : org = 0xADD10000, len = 32k 
     ram_external_app_tuner(rwx) : org = 0xADD20000, len = 32k
-    ram_external_app_metronome(rwx) : org = 0xADD30000, len = 32k 
+    ram_external_app_metronome(rwx) : org = 0xADD30000, len = 32k
+    ram_external_app_rtty_rx(rwx) : org = 0xADD40000, len = 32k 
 }
 
 SECTIONS
@@ -188,7 +189,6 @@ SECTIONS
         *(*ui*external_app*adsbtx*);
     } > ram_external_app_adsbtx
 
-
    .external_app_morse_tx : ALIGN(4) SUBALIGN(4)
     {
         KEEP(*(.external_app.app_morse_tx.application_information));
@@ -272,4 +272,11 @@ SECTIONS
         KEEP(*(.external_app.app_metronome.application_information));
         *(*ui*external_app*metronome*);
     } > ram_external_app_metronome
+
+    .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_rtty_rx.application_information));
+        *(*ui*external_app*rtty_rx*);
+    } > ram_external_app_rtty_rx
+
 }

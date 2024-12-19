@@ -41,7 +41,7 @@ void NarrowbandAMAudio::execute(const buffer_c8_t& buffer) {
 		channel_spectrum.feed(decim_0_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
 	}
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
-	const auto ddc_out = ddc.execute(decim_1_out, dst_buffer);
+	const auto ddc_out     = ddc.execute(decim_1_out, dst_buffer);
 	const auto decim_2_out = decim_2.execute(ddc_out, dst_buffer);
     const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);
 

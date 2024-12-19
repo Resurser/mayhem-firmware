@@ -146,6 +146,10 @@ set(EXTCPPSRC
 	#metronome
 	external/metronome/main.cpp
 	external/metronome/ui_metronome.cpp
+
+	#rtty_rx
+	external/rtty_rx/main.cpp
+	external/rtty_rx/ui_rtty_rx.cpp
 )
 
 set(EXTAPPLIST
@@ -184,4 +188,5 @@ set(EXTAPPLIST
 	fmradio
 	tuner
 	metronome
+	rtty_rx
 )

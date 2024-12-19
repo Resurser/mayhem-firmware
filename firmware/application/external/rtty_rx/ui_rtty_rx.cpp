@@ -20,7 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "ui_afsk_rx.hpp"
+#include "ui_rtty_rx.hpp"
 #include "ui_modemsetup.hpp"
 
 #include "modems.hpp"
@@ -35,17 +35,17 @@ using namespace portapack;
 using namespace modems;
 using namespace ui;
 
-namespace ui::external_app::afsk_rx {
+namespace ui::external_app::rtty_rx {
 
-void AFSKLogger::log_raw_data(const std::string& data) {
+void RTTYLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
 
-void AFSKRxView::focus() {
+void RTTYRxView::focus() {
     field_frequency.focus();
 }
 
-AFSKRxView::AFSKRxView(NavigationView& nav)
+RTTYRxView::RTTYRxView(NavigationView& nav)
     : nav_{nav} {
     baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
@@ -90,9 +90,9 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
         nav.push<ModemSetupView>();
     };
 
-    logger = std::make_unique<AFSKLogger>();
+    logger = std::make_unique<RTTYLogger>();
     if (logger)
-        logger->append(logs_dir / u"AFSK.TXT");
+        logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 7, 0, false);
@@ -103,7 +103,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     receiver_model.enable();
 }
 
-void AFSKRxView::on_data(uint32_t value, bool is_data) {
+void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
 
@@ -150,11 +150,11 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
     }
 }
 
-void AFSKRxView::on_freqchg(int64_t freq) {
+void RTTYRxView::on_freqchg(int64_t freq) {
     field_frequency.set_value(freq);
 }
 
-AFSKRxView::~AFSKRxView() {
+RTTYRxView::~RTTYRxView() {
     audio::output::stop();
     receiver_model.disable();
     baseband::shutdown();

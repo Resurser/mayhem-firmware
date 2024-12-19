@@ -462,8 +462,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PSIG siggen)
 
-
-
 ### Tones
 
 set(MODE_CPPSRC
@@ -664,6 +662,13 @@ set(MODE_CPPSRC
 	proc_ook_stream_tx.cpp
 )
 DeclareTargets(POSK ookstream)
+
+### RTTY
+
+set(MODE_CPPSRC
+	proc_rtty_rx.cpp
+)
+DeclareTargets(PRTY rttyrx)
 
 
 
