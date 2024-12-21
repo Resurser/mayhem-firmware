@@ -20,14 +20,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "proc_afskrx.hpp"
+#include "proc_rtty_rx.hpp"
 #include "portapack_shared_memory.hpp"
 
 #include "audio_dma.hpp"
 
 #include "event_m4.hpp"
 
-void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
+void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     // This is called at 3072000 / 2048 = 1500Hz
 
     if (!configured) return;
@@ -93,7 +93,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 
                         data_message.is_data = true;
                         data_message.value = word_bits & word_mask;
-                        data_message.value = word_bits ;
+                        // data_message.value = word_bits;
                         shared_memory.application_queue.push(data_message);
                     }
                 } else {
@@ -141,12 +141,12 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
     }
 }
 
-void AFSKRxProcessor::on_message(const Message* const message) {
-    if (message->id == Message::ID::AFSKRxConfigure)
-        configure(*reinterpret_cast<const AFSKRxConfigureMessage*>(message));
+void RTTYRxProcessor::on_message(const Message* const message) {
+    if (message->id == Message::ID::RTTYRxConfigure)
+        configure(*reinterpret_cast<const RTTYRxConfigureMessage*>(message));
 }
 
-void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
+void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     /*constexpr size_t decim_0_input_fs = baseband_fs;
         constexpr size_t decim_0_output_fs = decim_0_input_fs / decim_0.decimation_factor;
 
@@ -161,9 +161,10 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
     decim_0.configure(taps_11k0_decim_0.taps);
     decim_1.configure(taps_11k0_decim_1.taps);
     channel_filter.configure(taps_11k0_channel.taps, 2);
-    demod.configure(audio_fs, 5000);
+    
+    // demod.configure(audio_fs, 5000);
 
-    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
+    audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
 
     samples_per_bit = audio_fs / message.baudrate;
 
@@ -187,7 +188,7 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
 int main() {
     audio::dma::init_audio_out();
 
-    EventDispatcher event_dispatcher{std::make_unique<AFSKRxProcessor>()};
+    EventDispatcher event_dispatcher{std::make_unique<RTTYRxProcessor>()};
     event_dispatcher.run();
     return 0;
 }

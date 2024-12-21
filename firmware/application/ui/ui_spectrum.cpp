@@ -104,6 +104,13 @@ void FrequencyScale::set_channel_filter(
     }
 }
 
+void FrequencyScale::set_ddc_freq(const int freq) {
+	if (ddc_freq != freq) {
+		ddc_freq = freq;
+		set_dirty();
+	}
+}
+
 void FrequencyScale::paint(Painter& painter) {
     const auto r = screen_rect();
 
@@ -139,7 +146,13 @@ void FrequencyScale::clear_background(Painter& painter, const Rect r) {
 void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
     const auto x_center = r.width() / 2;
 
-    const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
+    //const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
+    const Rect tick {
+		r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate, 
+		r.bottom() - filter_band_height * 2,
+		1, 
+		filter_band_height * 2 
+	};
     painter.fill_rectangle(tick, Theme::getInstance()->bg_darkest->foreground);
 
     constexpr int tick_count_max = 4;
@@ -160,9 +173,9 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const std::string zero_pad =
             ((magnitude_n % 3) == 0) ? "" : ((magnitude_n % 3) == 1) ? "0"
                                                                      : "00";
-        const std::string unit =
-            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k"
-                                                          : "";
+        const std::string unit = 
+            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k" : "";
+
         const std::string label = to_string_dec_uint(tick_offset) + zero_pad + unit;
         const auto label_width = style().font.size_of(label).width();
 
@@ -182,7 +195,8 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
 
 void FrequencyScale::draw_filter_ranges(Painter& painter, const Rect r) {
     if (channel_filter_low_frequency != channel_filter_high_frequency) {
-        const auto x_center = r.width() / 2;
+        //const auto x_center = r.width() / 2;
+        const auto x_center = r.width() / 2 + ddc_freq * spectrum_bins / spectrum_sampling_rate;
 
         const auto x_low = x_center + channel_filter_low_frequency * spectrum_bins / spectrum_sampling_rate;
         const auto x_high = x_center + channel_filter_high_frequency * spectrum_bins / spectrum_sampling_rate;

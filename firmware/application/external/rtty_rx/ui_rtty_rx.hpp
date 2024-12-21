@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __UI_AFSK_RX_H__
-#define __UI_AFSK_RX_H__
+#ifndef __UI_RTTY_RX_H__
+#define __UI_RTTY_RX_H__
 
 #include "ui.hpp"
 #include "ui_language.hpp"
@@ -36,7 +36,7 @@
 
 using namespace ui;
 
-namespace ui::external_app::afsk_rx {
+namespace ui::external_app::rtty_rx {
 // static char letters [32] = {
 // 	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
 // 	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
@@ -71,7 +71,7 @@ namespace ui::external_app::afsk_rx {
 // 	'5',	'+',	')',	'2',	'H',	'6',	'0',	'1',
 // 	'9',	'?',	'&',	'·',	'.',	'/',	'=',	'·'
 // };
-class AFSKLogger {
+class RTTYLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {
         return log_file.append(filename);
@@ -83,14 +83,14 @@ class AFSKLogger {
     LogFile log_file{};
 };
 
-class AFSKRxView : public View {
+class RTTYRxView : public View {
    public:
-    AFSKRxView(NavigationView& nav);
-    ~AFSKRxView();
+    RTTYRxView(NavigationView& nav);
+    ~RTTYRxView();
 
     void focus() override;
 
-    std::string title() const override { return "AFSK RX"; };
+    std::string title() const override { return "RTTY RX"; };
 
    private:
     void on_data(uint32_t value, bool is_data);
@@ -98,7 +98,7 @@ class AFSKRxView : public View {
     NavigationView& nav_;
     RxRadioState radio_state_{};
     app_settings::SettingsManager settings_{
-        "rx_afsk", app_settings::Mode::RX};
+        "rx_rtty", app_settings::Mode::RX};
 
     uint8_t console_color{0};
     uint32_t prev_value{0};
@@ -140,14 +140,14 @@ class AFSKRxView : public View {
     Console console{
         {0, 4 * 16, 240, screen_width}};
 
-    void on_data_afsk(const AFSKDataMessage& message);
+    void on_data_rtty(const RTTYDataMessage& message);
 
-    std::unique_ptr<AFSKLogger> logger{};
+    std::unique_ptr<RTTYLogger> logger{};
 
     MessageHandlerRegistration message_handler_packet{
-        Message::ID::AFSKData,
+        Message::ID::RTTYData,
         [this](Message* const p) {
-            const auto message = static_cast<const AFSKDataMessage*>(p);
+            const auto message = static_cast<const RTTYDataMessage*>(p);
             this->on_data(message->value, message->is_data);
         }};
 
@@ -161,6 +161,6 @@ class AFSKRxView : public View {
     void on_freqchg(int64_t freq);
 };
 
-}  // namespace ui::external_app::afsk_rx
+}  // namespace ui::external_app::rtty_rx
 
-#endif /*__UI_AFSK_RX_H__*/
+#endif /*__UI_RTTY_RX_H__*/

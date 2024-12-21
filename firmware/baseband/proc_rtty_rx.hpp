@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
+ * Copyright (C) 2015 Jared Boone, ShareBrained Technology, Inc.
+ * Copyright (C) 2016 Furrtek
  *
  * This file is part of PortaPack.
  *
@@ -19,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __PROC_AM_AUDIO_H__
-#define __PROC_AM_AUDIO_H__
+#ifndef __PROC_RTTYRX_H__
+#define __PROC_RTTYRX_H__
 
 #include "baseband_processor.hpp"
 #include "baseband_thread.hpp"
@@ -28,24 +29,28 @@
 
 #include "dsp_decimate.hpp"
 #include "dsp_demodulate.hpp"
-#include "audio_compressor.hpp"
-#include "dsp_ddc.hpp"
 
 #include "audio_output.hpp"
-#include "spectrum_collector.hpp"
 
-#include <cstdint>
+#include "fifo.hpp"
+#include "message.hpp"
 
-class NarrowbandAMAudio : public BasebandProcessor {
+class RTTYRxProcessor : public BasebandProcessor {
    public:
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
 
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr auto spectrum_rate_hz = 50.0f;
-	static constexpr size_t decim_2_decimation_factor = 8;
-    static constexpr size_t channel_filter_decimation_factor = 1;
+    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
+
+    size_t samples_per_bit{};
+
+    enum State {
+        WAIT_START = 0,
+        WAIT_STOP,
+        RECEIVE
+    };
 
     std::array<complex16_t, 512> dst{};
     const buffer_c16_t dst_buffer{
@@ -56,38 +61,41 @@ class NarrowbandAMAudio : public BasebandProcessor {
         audio.data(),
         audio.size()};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
-    dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
-    dsp::decimate::FIRAndDecimateComplex decim_2{};
-    dsp::decimate::FIRAndDecimateComplex channel_filter{};
-    int32_t channel_filter_low_f = 0;
-    int32_t channel_filter_high_f = 0;
-    int32_t channel_filter_transition = 0;
-    bool configured{false};
+    // Array size ok down to 375 bauds (24000 / 375)
+    std::array<int32_t, 64> delay_line{0};
 
-    dsp::DDC ddc { };
-    
-    bool modulation_ssb = false;
-    dsp::demodulate::AM demod_am{};
-    dsp::demodulate::SSB demod_ssb{};
-    FeedForwardCompressor audio_compressor{};
+    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
+    dsp::decimate::FIRAndDecimateComplex channel_filter{};
+
+    dsp::demodulate::SSB demod{};
+
     AudioOutput audio_output{};
 
-    SpectrumCollector channel_spectrum{};
-    size_t spectrum_interval_samples = 0;
-	size_t spectrum_samples = 0;
-	float spectrum_zoom = 4.0f;
+    State state{};
+    size_t delay_line_index{};
+    uint32_t bit_counter{0};
+    uint32_t word_bits{0};
+    uint32_t sample_bits{0};
+    uint32_t phase{}, phase_inc{};
+    int32_t sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
+    uint32_t word_length{};
+    uint32_t word_mask{};
+    uint32_t trigger_value{};
 
-	void set_spectrum_zoom(float x);
+    bool configured{false};
+    bool wait_start{};
+    bool bit_value{};
+    bool trigger_word{};
+    bool triggered{};
+
+    RTTYDataMessage data_message{false, 0};
+
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
     RSSIThread rssi_thread{};
 
-    void configure(const AMConfigureMessage& message);
-    void capture_config(const CaptureConfigMessage& message);
-    void ddc_config(const DDCConfigMessage& message);
-
-    buffer_f32_t demodulate(const buffer_c16_t& channel);
+    void configure(const RTTYRxConfigureMessage& message);
 };
 
-#endif /*__PROC_AM_AUDIO_H__*/
+#endif /*__PROC_RTTYRX_H__*/

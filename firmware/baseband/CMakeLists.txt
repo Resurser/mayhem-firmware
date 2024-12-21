@@ -134,6 +134,8 @@ set(CPPSRC
 	${COMMON}/dsp_fir_taps.cpp
 	${COMMON}/dsp_iir.cpp
 	${COMMON}/dsp_sos.cpp
+	${COMMON}/dsp_ddc.cpp
+	${COMMON}/cordic.cpp
 	fxpt_atan2.cpp
 	rssi.cpp
 	rssi_dma.cpp
@@ -460,8 +462,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PSIG siggen)
 
-
-
 ### Tones
 
 set(MODE_CPPSRC
@@ -662,6 +662,13 @@ set(MODE_CPPSRC
 	proc_ook_stream_tx.cpp
 )
 DeclareTargets(POSK ookstream)
+
+### RTTY
+
+set(MODE_CPPSRC
+	proc_rtty_rx.cpp
+)
+DeclareTargets(PRTY rttyrx)
 
 
 

@@ -81,7 +81,7 @@ void NBFMConfig::apply(const uint8_t squelch_level) const {
         decim_0,
         decim_1,
         channel,
-        2,
+        4,
         deviation,
         audio_24k_hpf_300hz_config,
         audio_24k_deemph_300_6_config,
@@ -406,6 +406,11 @@ void spectrum_streaming_stop() {
 void set_sample_rate(uint32_t sample_rate, OversampleRate oversample_rate) {
     SampleRateConfigMessage message{sample_rate, oversample_rate};
     send_message(&message);
+}
+
+void set_ddc_freq(const int32_t freq) {
+	DDCConfigMessage message { freq };
+	send_message(&message);
 }
 
 void capture_start(CaptureConfig* const config) {

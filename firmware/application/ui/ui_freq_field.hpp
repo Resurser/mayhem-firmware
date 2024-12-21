@@ -33,11 +33,9 @@ namespace ui {
  * that can manage its own editing UX. */
 template <typename TModel, TModel* model>
 class BoundFrequencyField : public FrequencyField {
-   private:
-    using FrequencyField::on_change;
-    using FrequencyField::on_edit;
-
    public:
+    using FrequencyField::on_edit;
+    using FrequencyField::on_change;
     decltype(FrequencyField::on_change) updated{};
 
     BoundFrequencyField(Point parent_pos, NavigationView& nav)

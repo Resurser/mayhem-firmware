@@ -127,6 +127,9 @@ class Message {
         FreqChangeCommand = 70,
         I2CDevListChanged = 71,
         LightData = 72,
+        DDCConfig = 73,
+        RTTYRxConfigure = 74,
+        RTTYData = 75,
         MAX
     };
 
@@ -1436,5 +1439,53 @@ class I2CDevListChangedMessage : public Message {
     constexpr I2CDevListChangedMessage()
         : Message{ID::I2CDevListChanged} {}
 };
+
+class DDCConfigMessage : public Message {
+   public:
+	constexpr DDCConfigMessage(
+		int32_t freq
+	) : Message { ID::DDCConfig },
+		freq { freq }
+	{
+	}
+
+	int32_t freq = 0;
+};
+
+
+class RTTYRxConfigureMessage : public Message {
+   public:
+    constexpr RTTYRxConfigureMessage (
+        const uint32_t baudrate,
+        const uint32_t word_length,
+        const uint32_t trigger_value,
+        const bool trigger_word)
+        : Message{ID::RTTYRxConfigure},
+          baudrate(baudrate),
+          word_length(word_length),
+          trigger_value(trigger_value),
+          trigger_word(trigger_word) {
+    }
+
+    const uint32_t baudrate;
+    const uint32_t word_length;
+    const uint32_t trigger_value;
+    const bool trigger_word;
+};
+
+class RTTYDataMessage : public Message {
+   public:
+    constexpr RTTYDataMessage(
+        const bool is_data,
+        const uint32_t value)
+        : Message{ID::RTTYData},
+          is_data{is_data},
+          value{value} {
+    }
+
+    bool is_data;
+    uint32_t value;
+};
+
 
 #endif /*__MESSAGE_H__*/
