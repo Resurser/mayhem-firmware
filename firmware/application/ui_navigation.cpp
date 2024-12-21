@@ -60,7 +60,7 @@
 #include "ui_siggen.hpp"
 #include "ui_sonde.hpp"
 #include "ui_ss_viewer.hpp"
-// #include "ui_test.hpp"
+ #include "ui_test.hpp"
 #include "ui_text_editor.hpp"
 #include "ui_touchtunes.hpp"
 #include "ui_view_wav.hpp"
@@ -170,7 +170,7 @@ const NavigationView::AppList NavigationView::appList = {
     {"iqtrim", "IQ Trim", UTILITIES, Color::orange(), &bitmap_icon_trim, new ViewFactory<IQTrimView>()},
     {nullptr, "SD Over USB", UTILITIES, Color::yellow(), &bitmap_icon_hackrf, new ViewFactory<SdOverUsbView>()},
     {"signalgen", "Signal Gen", UTILITIES, Color::green(), &bitmap_icon_cwgen, new ViewFactory<SigGenView>()},
-    // {"testapp", "Test App", UTILITIES, Color::dark_grey(), nullptr, new ViewFactory<TestView>()},
+    {"testapp", "Test App", UTILITIES, Color::dark_grey(), nullptr, new ViewFactory<TestView>()},
     {"wavview", "Wav View", UTILITIES, Color::yellow(), &bitmap_icon_soundboard, new ViewFactory<ViewWavView>()},
     // Dangerous apps.
     {nullptr, "Flash Utility", UTILITIES, Color::red(), &bitmap_icon_peripherals_details, new ViewFactory<FlashUtilityView>()},

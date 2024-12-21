@@ -169,7 +169,7 @@ set(CPPSRC
 	${COMMON}/portapack_persistent_memory.cpp
 	${COMMON}/portapack_shared_memory.cpp
 	${COMMON}/sonde_packet.cpp
-	# ${COMMON}/test_packet.cpp
+	${COMMON}/test_packet.cpp
 	${COMMON}/tpms_packet.cpp
 	${COMMON}/ui.cpp
 	${COMMON}/ui_focus.cpp
@@ -313,7 +313,7 @@ set(CPPSRC
 	apps/ui_ss_viewer.cpp
 	apps/ui_standalone_view.cpp
 	apps/ui_subghzd.cpp
-	# apps/ui_test.cpp
+	apps/ui_test.cpp
 	apps/ui_text_editor.cpp
 	apps/ui_touch_calibration.cpp
 	apps/ui_touchtunes.cpp
