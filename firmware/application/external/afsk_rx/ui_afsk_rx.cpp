@@ -64,18 +64,18 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
    
-    auto def_bell202 = &modem_defs[7];
+    auto def_bell202 = &modem_defs[0];
     persistent_memory::set_modem_baudrate(def_bell202->baudrate);
     serial_format_t serial_format;
 
-    // serial_format.data_bits = 7;
-    // serial_format.parity = EVEN;
-    // serial_format.stop_bits = 2;
-    // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 5;
-    serial_format.parity = NONE;
-    serial_format.stop_bits = 1;
+serial_format.data_bits = 7;
+    serial_format.parity = EVEN;
+    serial_format.stop_bits = 2;
     serial_format.bit_order = LSB_FIRST;
+    // serial_format.data_bits = 5;
+    // serial_format.parity = NONE;
+    // serial_format.stop_bits = 1;
+    // serial_format.bit_order = LSB_FIRST;
     
     persistent_memory::set_serial_format(serial_format);
 
@@ -97,7 +97,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 7, 0, false);
 
-    audio::set_rate(audio::Rate::Hz_12000);
+    audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();
 
     receiver_model.enable();
@@ -122,9 +122,9 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         if ((value >= 32) && (value < 127)) {
             str_console += (char)value;  // Printable
             str_byte += (char)value;
-        } else {
-            // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            // str_byte += "[" + to_string_hex(value, 2) + "]";
+        } else if (logger && logging) {
+            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+            str_byte += "[" + to_string_hex(value, 2) + "]";
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";

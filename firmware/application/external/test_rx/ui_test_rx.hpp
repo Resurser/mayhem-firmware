@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Jared Boone, ShareBrained Technology, Inc.
+ * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
  * Copyright (C) 2017 Furrtek
  *
  * This file is part of PortaPack.
@@ -20,23 +20,26 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __UI_TEST_H__
-#define __UI_TEST_H__
+#ifndef __UI_TEST_RX_H__
+#define __UI_TEST_RX_H__
 
+#include "ui.hpp"
+#include "ui_language.hpp"
 #include "ui_navigation.hpp"
 #include "ui_receiver.hpp"
 #include "ui_freq_field.hpp"
-#include "ui_rssi.hpp"
+#include "ui_record_view.hpp"
+#include "app_settings.hpp"
 #include "radio_state.hpp"
-#include "event_m0.hpp"
 
 #include "test_packet.hpp"
 #include "log_file.hpp"
+#include "utility.hpp"
 
-#include <cstddef>
-#include <string>
+using namespace ui;
 
-class TestLogger {
+namespace ui::external_app::test_rx {
+class TestRxLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {
         return log_file.append(filename);
@@ -48,21 +51,19 @@ class TestLogger {
     LogFile log_file{};
 };
 
-namespace ui {
-
-class TestView : public View {
+class TestRxView : public View {
    public:
-    TestView(NavigationView& nav);
-    ~TestView();
+    TestRxView(NavigationView& nav);
+    ~TestRxView();
 
     void focus() override;
 
-    std::string title() const override { return "Test app"; };
+    std::string title() const override { return "TEST RX"; };
 
    private:
     NavigationView& nav_;
     RxRadioState radio_state_{
-        0 /* frequency */,
+        10100000 /* frequency */,
         1750000 /* bandwidth */,
         2457600 * 2 /* sampling rate */
     };
@@ -109,12 +110,12 @@ class TestView : public View {
         3,
         "LOG"};
 
-    std::unique_ptr<TestLogger> logger{};
+    std::unique_ptr<TestRxLogger> logger{};
 
     MessageHandlerRegistration message_handler_packet{
-        Message::ID::TestAppPacket,
+        Message::ID::TestRxPacket,
         [this](Message* const p) {
-            const auto message = static_cast<const TestAppPacketMessage*>(p);
+            const auto message = static_cast<const TestRxPacketMessage*>(p);
             const testapp::Packet packet{message->packet};
             on_packet(packet);
         }};
@@ -122,6 +123,7 @@ class TestView : public View {
     void on_packet(const testapp::Packet& packet);
 };
 
-} /* namespace ui */
 
-#endif /*__UI_TEST_H__*/
+}  // namespace ui::external_app::test_rx
+
+#endif /*__UI_TEST_RX_H__*/

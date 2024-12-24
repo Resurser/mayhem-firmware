@@ -74,7 +74,7 @@ class TestProcessor : public BasebandProcessor {
         {},
         {22 * 8},
         [this](const baseband::Packet& packet) {
-            const TestAppPacketMessage message{packet};
+            const TestRxPacketMessage message{packet};
             shared_memory.application_queue.push(message);
         }};
 

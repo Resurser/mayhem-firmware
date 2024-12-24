@@ -147,7 +147,7 @@ void RSSI::paint(Painter& painter) {
         // const Rect r3 {  r.left(), r.bottom() - y_max , r.width() , y_max - y_avg - 1 };
         painter.fill_rectangle(
             r3,
-            Color::magenta());
+            Color::red());
 
         // fill last part of level in black
         const Rect r4{r.left(), r.top(), r.width(), r.height() - y_max};
@@ -160,7 +160,7 @@ void RSSI::paint(Painter& painter) {
             const Rect r5{r.left(), r.bottom() - peak - 3, r.width(), 3};
             painter.fill_rectangle(
                 r5,
-                Color::orange());
+                Color::green());
         }
 
         // dB - y
@@ -291,12 +291,12 @@ void RSSIGraph::paint(Painter& painter) {
         painter.draw_vline(
             p1v,
             width_y,
-            Color::magenta());
+            Color::red());
         const Point p1h{r.right() - prev_xpos, r.bottom() - entry.rssi_max};
         painter.draw_hline(
             p1h,
             size,
-            Color::magenta());
+            Color::red());
 
         // y_avg
         top_y_val = max(entry.rssi_avg, prev_entry.rssi_avg);
@@ -323,12 +323,12 @@ void RSSIGraph::paint(Painter& painter) {
         painter.draw_vline(
             p3v,
             width_y,
-            Color::cyan());
+            Color::green());
         const Point p3h{r.right() - prev_xpos, r.bottom() - entry.rssi_min};
         painter.draw_hline(
             p3h,
             size,
-            Color::cyan());
+            Color::green());
 
         // hack to display db
         top_y_val = max(entry.db, prev_entry.db);

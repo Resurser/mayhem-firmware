@@ -22,10 +22,38 @@
 
 #include "proc_rtty_rx.hpp"
 #include "portapack_shared_memory.hpp"
-
 #include "audio_dma.hpp"
-
 #include "event_m4.hpp"
+#include "utility.hpp"
+
+
+RTTYRxProcessor::RTTYRxProcessor() {
+    // decim_0.configure(taps_6k0_decim_0.taps);
+    // decim_1.configure(taps_6k0_decim_1.taps);
+    // channel_filter.configure(taps_2k8_lsb_channel.taps, 2);
+    
+    // // demod.configure(audio_fs, 5000);
+
+    // audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
+
+    // samples_per_bit = audio_fs / message.baudrate;
+
+    // phase_inc = (0x10000 * message.baudrate) / audio_fs;
+    // phase = 0;
+
+    // trigger_word = message.trigger_word;
+    // word_length = message.word_length;
+    // trigger_value = message.trigger_value;
+    // word_mask = (1 << word_length) - 1;
+
+    // // Delay line
+    // delay_line_index = 0;
+
+    // triggered = false;
+    // state = WAIT_START;
+
+    // configured = true;
+}
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     // This is called at 3072000 / 2048 = 1500Hz
@@ -92,13 +120,13 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
                         bit_counter = 0;
 
                         data_message.is_data = true;
-                        data_message.value = word_bits & word_mask;
-                        // data_message.value = word_bits;
+                        // data_message.value = word_bits & word_mask;
+                        data_message.value = word_bits;
                         shared_memory.application_queue.push(data_message);
                     }
                 } else {
-                    if ((word_bits & word_mask) == trigger_value) {
-                    // if (word_bits == trigger_value) {
+                    // if ((word_bits & word_mask) == trigger_value) {
+                    if (word_bits == trigger_value) {
                         triggered = !triggered;
                         bit_counter = 0;
 
@@ -157,10 +185,9 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
         const size_t channel_filter_output_fs = channel_filter_input_fs / 2;
 
         const size_t demod_input_fs = channel_filter_output_fs;*/
-
-    decim_0.configure(taps_11k0_decim_0.taps);
-    decim_1.configure(taps_11k0_decim_1.taps);
-    channel_filter.configure(taps_11k0_channel.taps, 2);
+    decim_0.configure(taps_6k0_decim_0.taps);
+    decim_1.configure(taps_6k0_decim_1.taps);
+    channel_filter.configure(taps_2k8_lsb_channel.taps, 2);
     
     // demod.configure(audio_fs, 5000);
 
@@ -183,6 +210,7 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     state = WAIT_START;
 
     configured = true;
+    
 }
 
 int main() {

@@ -72,10 +72,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = EVEN;
     // serial_format.stop_bits = 2;
     // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 5;
+    serial_format.data_bits = 4;
     serial_format.parity = NONE;
     serial_format.stop_bits = 1;
-    serial_format.bit_order = LSB_FIRST;
+    serial_format.bit_order = MSB_FIRST;
     
     persistent_memory::set_serial_format(serial_format);
 
@@ -95,9 +95,9 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_afsk(persistent_memory::modem_baudrate(), 7, 0, false);
+    baseband::set_rtty(persistent_memory::modem_baudrate(), 4, 0, false);
 
-    audio::set_rate(audio::Rate::Hz_12000);
+    audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();
 
     receiver_model.enable();
@@ -123,12 +123,13 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
             str_console += (char)value;  // Printable
             str_byte += (char)value;
         } else {
-            // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            // str_byte += "[" + to_string_hex(value, 2) + "]";
+            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+            str_byte += "[" + to_string_hex(value, 2) + "]";
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
-
+        // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+        // str_byte += "[" + to_string_hex(value, 2) + "]";
         console.write(str_console);
 
         if (logger && logging) str_log += str_byte;

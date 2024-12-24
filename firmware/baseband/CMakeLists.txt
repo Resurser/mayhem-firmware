@@ -614,13 +614,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PSPT spectrum_painter)
 
-### Test
-
-set(MODE_CPPSRC
-	proc_test.cpp
-)
-DeclareTargets(PTST test)
-
 ### Audio Beep
 
 set(MODE_CPPSRC
@@ -673,6 +666,12 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PRTY rttyrx)
 
+### Test
+
+set(MODE_CPPSRC
+	proc_test.cpp
+)
+DeclareTargets(PTST testrx)
 
 
 ### HackRF "factory" firmware

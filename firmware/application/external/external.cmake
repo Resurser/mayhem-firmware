@@ -150,6 +150,10 @@ set(EXTCPPSRC
 	#rtty_rx
 	external/rtty_rx/main.cpp
 	external/rtty_rx/ui_rtty_rx.cpp
+
+	#test_rx
+	external/test_rx/main.cpp
+	external/test_rx/ui_test_rx.cpp
 )
 
 set(EXTAPPLIST
@@ -189,4 +193,5 @@ set(EXTAPPLIST
 	tuner
 	metronome
 	rtty_rx
+	test_rx
 )

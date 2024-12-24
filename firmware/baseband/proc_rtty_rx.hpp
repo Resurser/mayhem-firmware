@@ -39,9 +39,12 @@ class RTTYRxProcessor : public BasebandProcessor {
    public:
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
-
+    RTTYRxProcessor ();
    private:
+   
     static constexpr size_t baseband_fs = 3072000;
+    static constexpr size_t decim_2_decimation_factor = 4;
+    static constexpr size_t channel_filter_decimation_factor = 1;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
 
     size_t samples_per_bit{};
@@ -59,13 +62,15 @@ class RTTYRxProcessor : public BasebandProcessor {
     std::array<float, 32> audio{};
     const buffer_f32_t audio_buffer{
         audio.data(),
-        audio.size()};
-
+        audio.size()
+    };
+    
     // Array size ok down to 375 bauds (24000 / 375)
     std::array<int32_t, 64> delay_line{0};
 
     dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
+    dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
 
     dsp::demodulate::SSB demod{};
@@ -90,12 +95,11 @@ class RTTYRxProcessor : public BasebandProcessor {
     bool triggered{};
 
     RTTYDataMessage data_message{false, 0};
-
-    /* NB: Threads should be the last members in the class definition. */
-    BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
     RSSIThread rssi_thread{};
 
     void configure(const RTTYRxConfigureMessage& message);
+    /* NB: Threads should be the last members in the class definition. */
+    BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
 };
 
 #endif /*__PROC_RTTYRX_H__*/

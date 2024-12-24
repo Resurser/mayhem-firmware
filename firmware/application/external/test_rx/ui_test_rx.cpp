@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Jared Boone, ShareBrained Technology, Inc.
+ * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
  * Copyright (C) 2017 Furrtek
  *
  * This file is part of PortaPack.
@@ -20,15 +20,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "ui_test.hpp"
+#include "ui_test_rx.hpp"
+#include "ui_modemsetup.hpp"
+
+#include "modems.hpp"
+#include "audio.hpp"
+#include "rtc_time.hpp"
 #include "baseband_api.hpp"
-
 #include "portapack.hpp"
-using namespace portapack;
-
+#include "portapack_persistent_memory.hpp"
 #include "string_format.hpp"
+#include "file_path.hpp"
 
-void TestLogger::log_raw_data(const testapp::Packet& packet, const int32_t alt) {
+using namespace portapack;
+using namespace modems;
+using namespace ui;
+
+namespace ui::external_app::test_rx {
+
+void TestRxLogger::log_raw_data(const testapp::Packet& packet, const int32_t alt) {
     std::string entry = to_string_dec_uint(packet.value()) + " " + to_string_dec_int(alt);
 
     // Raw hex dump
@@ -38,11 +48,9 @@ void TestLogger::log_raw_data(const testapp::Packet& packet, const int32_t alt) 
     log_file.write_entry(packet.received_at(), entry);
 }
 
-namespace ui {
-
-TestView::TestView(NavigationView& nav)
+TestRxView::TestRxView(NavigationView& nav)
     : nav_{nav} {
-    baseband::run_image(portapack::spi_flash::image_tag_test);
+    baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
     add_children({&labels,
                   &field_frequency,
@@ -65,23 +73,23 @@ TestView::TestView(NavigationView& nav)
         cal_value = raw_alt - 0x80;
     };
 
-    logger = std::make_unique<TestLogger>();
+    logger = std::make_unique<TestRxLogger>();
     if (logger)
         logger->append("saucepan.txt");
 
     receiver_model.enable();
 }
 
-TestView::~TestView() {
+TestRxView::~TestRxView() {
     receiver_model.disable();
     baseband::shutdown();
 }
 
-void TestView::focus() {
+void TestRxView::focus() {
     field_vga.focus();
 }
 
-void TestView::on_packet(const testapp::Packet& packet) {
+void TestRxView::on_packet(const testapp::Packet& packet) {
     const auto hex_formatted = packet.symbols_formatted();
     auto v = packet.value();
 
@@ -115,4 +123,4 @@ void TestView::on_packet(const testapp::Packet& packet) {
         longitude = packet.GPS_longitude();*/
 }
 
-} /* namespace ui */
+}  // namespace ui::external_app::afsk_rx

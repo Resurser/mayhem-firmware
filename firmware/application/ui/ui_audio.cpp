@@ -51,7 +51,7 @@ void Audio::paint(Painter& painter) {
     const Rect r2{r.left() + x_rms + 1, r.top(), x_max - (x_rms + 1), r.height()};
     painter.fill_rectangle(
         r2,
-        Color::magenta());
+        Color::dark_magenta());
 
     const Rect r3{r.left() + x_max, r.top(), r.width() - x_max, r.height()};
     painter.fill_rectangle(

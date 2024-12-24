@@ -57,7 +57,7 @@ ModemSetupView::ModemSetupView(
 
     // Only list AFSK modems for now
     for (size_t i = 0; i < MODEM_DEF_COUNT; i++) {
-        if (modem_defs[i].modulation == AFSK)
+        // if (modem_defs[i].modulation == AFSK)
             modem_options.emplace_back(std::make_pair(modem_defs[i].name, i));
     }
     options_modem.set_options(modem_options);

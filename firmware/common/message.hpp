@@ -100,7 +100,7 @@ class Message {
         POCSAGPacket = 44,
         ADSBFrame = 45,
         AFSKData = 46,
-        TestAppPacket = 47,
+        TestRxPacket = 47,
         RequestSignal = 48,
         FIFOData = 49,
         AudioLevelReport = 50,
@@ -507,11 +507,11 @@ class SondePacketMessage : public Message {
     baseband::Packet packet;
 };
 
-class TestAppPacketMessage : public Message {
+class TestRxPacketMessage : public Message {
    public:
-    constexpr TestAppPacketMessage(
+    constexpr TestRxPacketMessage(
         const baseband::Packet& packet)
-        : Message{ID::TestAppPacket},
+        : Message{ID::TestRxPacket},
           packet{packet} {
     }
 
