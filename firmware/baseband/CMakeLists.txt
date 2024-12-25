@@ -669,7 +669,7 @@ DeclareTargets(PRTY rttyrx)
 ### Test
 
 set(MODE_CPPSRC
-	proc_test.cpp
+	proc_test_rx.cpp
 )
 DeclareTargets(PTST testrx)
 

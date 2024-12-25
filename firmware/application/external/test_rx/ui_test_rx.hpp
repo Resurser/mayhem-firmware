@@ -65,7 +65,7 @@ class TestRxView : public View {
     RxRadioState radio_state_{
         10100000 /* frequency */,
         1750000 /* bandwidth */,
-        2457600 * 2 /* sampling rate */
+        3072000 /* sampling rate */
     };
 
     Coord cur_x{0};

@@ -51,6 +51,16 @@ class AMOptionsView : public View {
         {
             // Using common messages from freqman_ui.cpp
         }};
+    Text text_zoom{
+        {10 * 8, 0 * 16, 8 * 8, 1 * 16},
+        "W: "};
+    NumberField field_zoom{
+        {13 * 8, 0 * 16},
+        1,
+        {3, 6},
+        1,
+        ' ',
+    };
 };
 
 class NBFMOptionsView : public View {

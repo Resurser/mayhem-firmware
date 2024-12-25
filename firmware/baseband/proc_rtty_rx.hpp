@@ -37,9 +37,10 @@
 
 class RTTYRxProcessor : public BasebandProcessor {
    public:
+    RTTYRxProcessor ();
+
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
-    RTTYRxProcessor ();
    private:
    
     static constexpr size_t baseband_fs = 3072000;
@@ -59,6 +60,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     const buffer_c16_t dst_buffer{
         dst.data(),
         dst.size()};
+
     std::array<float, 32> audio{};
     const buffer_f32_t audio_buffer{
         audio.data(),
@@ -70,7 +72,6 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
-    dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
 
     dsp::demodulate::SSB demod{};

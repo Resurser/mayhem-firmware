@@ -78,6 +78,7 @@ TestRxView::TestRxView(NavigationView& nav)
         logger->append("saucepan.txt");
 
     receiver_model.enable();
+    
 }
 
 TestRxView::~TestRxView() {

@@ -20,19 +20,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "proc_test.hpp"
-
+#include "proc_test_rx.hpp"
 #include "dsp_fir_taps.hpp"
 
 #include "event_m4.hpp"
 
-TestProcessor::TestProcessor() {
+TestRxProcessor::TestRxProcessor() {
     decim_0.configure(taps_11k0_decim_0.taps);
     decim_1.configure(taps_11k0_decim_1.taps);
     baseband_thread.start();
 }
 
-void TestProcessor::execute(const buffer_c8_t& buffer) {
+void TestRxProcessor::execute(const buffer_c8_t& buffer) {
     /* 2.4576MHz, 2048 samples */
 
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
@@ -45,12 +44,14 @@ void TestProcessor::execute(const buffer_c8_t& buffer) {
     for (size_t i = 0; i < decimator_out.count; i++) {
         if (mf.execute_once(decimator_out.p[i])) {
             clock_recovery_fsk_9600(mf.get_output());
+        } else {
+            // packet_builder_fsk_9600_CC1101(decimator_out.p[i]);
         }
     }
 }
 
 int main() {
-    EventDispatcher event_dispatcher{std::make_unique<TestProcessor>()};
+    EventDispatcher event_dispatcher{std::make_unique<TestRxProcessor>()};
     event_dispatcher.run();
     return 0;
 }

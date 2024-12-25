@@ -41,6 +41,7 @@ class NarrowbandAMAudio : public BasebandProcessor {
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
 
+	void set_spectrum_zoom(const float x);
    private:
     static constexpr size_t baseband_fs = 3072000;
     static constexpr auto spectrum_rate_hz = 50.0f;
@@ -78,7 +79,6 @@ class NarrowbandAMAudio : public BasebandProcessor {
 	size_t spectrum_samples = 0;
 	float spectrum_zoom = 4.0f;
 
-	void set_spectrum_zoom(float x);
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
     RSSIThread rssi_thread{};

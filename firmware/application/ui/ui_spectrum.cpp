@@ -284,33 +284,14 @@ void WaterfallWidget::on_hide() {
 void WaterfallWidget::on_channel_spectrum(
     const ChannelSpectrum& spectrum) {
     /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
-    auto pixel_color = spectrum_rgb3v_lut[0];
-    auto pixel_color2 = spectrum_rgb3v_lut[0];
         
     std::array<Color, 240> pixel_row;
-    for (size_t i = 0; i < 120; i++) {
-        
-        if (pmem::ui_use_rgb_waterfall()){
-            pixel_color = spectrum_rgb3_lut[spectrum.db[256 - 120 + i]];
-            pixel_color2 = spectrum_rgb3_lut[spectrum.db[i]];
-        }else{
-            pixel_color = spectrum_rgb3v_lut[spectrum.db[256 - 120 + i]];
-            pixel_color2 = spectrum_rgb3v_lut[spectrum.db[i]];
-        }
-        
-        pixel_row[i] = pixel_color;
-        pixel_row[120 + i] = pixel_color2;
-    }
+    std::array<ui::Color, 256> curr_spectrum_lut = pmem::ui_use_rgb_waterfall() ? spectrum_rgb3_lut : spectrum_rgb3v_lut;
 
-    //for (size_t i = 120; i < 240; i++) {
-    
-    //    pixel_color = spectrum_rgb3v_lut[spectrum.db[i - 120]];
-    //    if (pmem::ui_use_rgb_waterfall()){
-    //        pixel_color = spectrum_rgb3_lut[spectrum.db[i - 120]];
-    //    }
-        
-    //    pixel_row[i] = pixel_color;
-    //}
+    for (size_t i = 0; i < 120; i++) {
+        pixel_row[i]       = curr_spectrum_lut[spectrum.db[256 - 120 + i]];
+        pixel_row[120 + i] = curr_spectrum_lut[spectrum.db[i]];
+    }
 
     const auto draw_y = display.scroll(1);
 

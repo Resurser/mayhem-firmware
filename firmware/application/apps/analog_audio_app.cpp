@@ -48,12 +48,19 @@ AMOptionsView::AMOptionsView(
     add_children({
         &label_config,
         &options_config,
+        &text_zoom,
+        &field_zoom,        
     });
 
     freqman_set_bandwidth_option(AM_MODULATION, options_config);  // adding the common message from freqman.cpp to the options_config
     options_config.set_by_value(receiver_model.am_configuration());
     options_config.on_change = [this](size_t, OptionsField::value_t n) {
         receiver_model.set_am_configuration(n);
+    };
+
+    field_zoom.set_value(receiver_model.spectrum_zoom());
+    field_zoom.on_change = [this](int32_t v) {
+       receiver_model.set_spectrum_zoom(v);
     };
 }
 

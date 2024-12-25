@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __PROC_TEST_H__
-#define __PROC_TEST_H__
+#ifndef __PROC_TESTRX_H__
+#define __PROC_TESTRX_H__
 
 #include "baseband_processor.hpp"
 #include "baseband_thread.hpp"
@@ -43,9 +43,9 @@
 #include <cstddef>
 #include <bitset>
 
-class TestProcessor : public BasebandProcessor {
+class TestRxProcessor : public BasebandProcessor {
    public:
-    TestProcessor();
+    TestRxProcessor();
 
     void execute(const buffer_c8_t& buffer) override;
 
@@ -79,9 +79,8 @@ class TestProcessor : public BasebandProcessor {
         }};
 
     /* NB: Threads should be the last members in the class definition. */
-    BasebandThread baseband_thread{
-        baseband_fs, this, baseband::Direction::Receive, /*auto_start*/ false};
+    BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive, false};
     RSSIThread rssi_thread{};
 };
 
-#endif /*__PROC_TEST_H__*/
+#endif /*__PROC_TESTRX_H__*/

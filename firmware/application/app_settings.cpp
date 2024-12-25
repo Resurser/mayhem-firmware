@@ -188,7 +188,8 @@ void copy_to_radio_model(const AppSettings& settings) {
             settings.am_config_index,
             settings.nbfm_config_index,
             settings.wfm_config_index,
-            settings.squelch);
+            settings.squelch,
+            settings.spectrum_zoom);
     }
 
     receiver_model.set_frequency_step(settings.step);
@@ -213,6 +214,7 @@ void copy_from_radio_model(AppSettings& settings) {
         settings.vga = receiver_model.vga();
         settings.rx_amp = receiver_model.rf_amp();
         settings.squelch = receiver_model.squelch_level();
+        settings.spectrum_zoom = receiver_model.spectrum_zoom();
 
         settings.modulation = static_cast<uint8_t>(receiver_model.modulation());
         settings.am_config_index = receiver_model.am_configuration();
@@ -272,6 +274,7 @@ SettingsManager::SettingsManager(
         bindings_.emplace_back("nbfm_config_index"sv, &settings_.nbfm_config_index);
         bindings_.emplace_back("wfm_config_index"sv, &settings_.wfm_config_index);
         bindings_.emplace_back("squelch"sv, &settings_.squelch);
+        bindings_.emplace_back("spectrum_zoom"sv, &settings_.spectrum_zoom);
     }
 
     // Common model settings.

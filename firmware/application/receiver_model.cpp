@@ -167,6 +167,15 @@ void ReceiverModel::set_wfm_configuration(uint8_t n) {
     }
 }
 
+float ReceiverModel::spectrum_zoom() const {
+    return settings_.spectrum_zoom;
+}
+
+void ReceiverModel::set_spectrum_zoom(float v) {
+    settings_.spectrum_zoom = v;
+    update_modulation();
+}
+
 uint8_t ReceiverModel::squelch_level() const {
     return settings_.squelch_level;
 }
@@ -238,13 +247,15 @@ void ReceiverModel::set_configuration_without_update(
     size_t new_am_config_index,
     size_t new_nbfm_config_index,
     size_t new_wfm_config_index,
-    uint8_t new_squelch_level) {
+    uint8_t new_squelch_level,
+    const float new_spectrum_zoom) {
     settings_.mode = new_mode;
     settings_.frequency_step = new_frequency_step;
     settings_.am_config_index = new_am_config_index;
     settings_.nbfm_config_index = new_nbfm_config_index;
     settings_.wfm_config_index = new_wfm_config_index;
     settings_.squelch_level = new_squelch_level;
+    settings_.spectrum_zoom = new_spectrum_zoom;
 }
 
 void ReceiverModel::configure_from_app_settings(
@@ -255,6 +266,7 @@ void ReceiverModel::configure_from_app_settings(
     settings_.vga_gain_db = settings.vga;
     settings_.rf_amp = settings.rx_amp;
     settings_.squelch_level = settings.squelch;
+    settings_.spectrum_zoom = settings.spectrum_zoom;
 }
 
 int32_t ReceiverModel::tuning_offset() {
@@ -318,7 +330,7 @@ void ReceiverModel::update_modulation() {
 }
 
 void ReceiverModel::update_am_configuration() {
-    am_configs[am_configuration()].apply();
+    am_configs[am_configuration()].apply(spectrum_zoom());
 }
 
 void ReceiverModel::update_nbfm_configuration() {

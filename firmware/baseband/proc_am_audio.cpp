@@ -108,7 +108,9 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     //channel_spectrum.set_decimation_factor(1.0f);
     modulation_ssb = (message.modulation == AMConfigureMessage::Modulation::SSB);
     audio_output.configure(message.audio_hpf_config);
-    
+    if (message.spectrum_zoom){
+        spectrum_zoom = message.spectrum_zoom;
+    }
     channel_spectrum.set_decimation_factor(spectrum_zoom);
 	spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
 

@@ -191,7 +191,7 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     
     // demod.configure(audio_fs, 5000);
 
-    audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
 
     samples_per_bit = audio_fs / message.baudrate;
 
