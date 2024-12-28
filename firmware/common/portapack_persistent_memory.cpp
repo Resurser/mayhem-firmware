@@ -136,7 +136,6 @@ struct ui_config2_t {
     bool override_batt_calc : 1;
     bool use_rgb_waterfall: 1;
     bool ddc_enabled : 1;
-    bool UNUSED_5 : 1;
     bool UNUSED_6 : 1;
 
     uint8_t theme_id;
@@ -232,8 +231,6 @@ struct data_t {
 
     // Encoder rotation rate multiplier for larger increments when rotated rapidly
     uint16_t encoder_rate_multiplier : 4;
-    bool use_rgb_waterfall: 0;
-    bool ddc_enabled: 0;
     uint16_t UNUSED : 4;
 
     // Headphone volume in centibels.
