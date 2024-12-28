@@ -58,8 +58,9 @@ MEMORY
     ram_external_app_fmradio(rwx) : org = 0xADD10000, len = 32k 
     ram_external_app_tuner(rwx) : org = 0xADD20000, len = 32k
     ram_external_app_metronome(rwx) : org = 0xADD30000, len = 32k
-    ram_external_app_rtty_rx(rwx) : org = 0xADD40000, len = 32k 
-    ram_external_app_test_rx(rwx) : org = 0xADD50000, len = 32k 
+    ram_external_app_app_manager(rwx) : org = 0xADD40000, len = 32k 
+    ram_external_app_rtty_rx(rwx) : org = 0xADD50000, len = 32k 
+    ram_external_app_test_rx(rwx) : org = 0xADD60000, len = 32k 
 }
 
 SECTIONS
@@ -273,6 +274,12 @@ SECTIONS
         KEEP(*(.external_app.app_metronome.application_information));
         *(*ui*external_app*metronome*);
     } > ram_external_app_metronome
+
+    .external_app_app_manager : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_app_manager.application_information));
+        *(*ui*external_app*app_manager*);
+    } > ram_external_app_app_manager
 
     .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
     {

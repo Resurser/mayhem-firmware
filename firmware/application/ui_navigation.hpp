@@ -59,6 +59,10 @@ using namespace sd_card;
 
 namespace ui {
 
+void add_apps(NavigationView& nav, BtnGridView& grid, app_location_t loc);
+void add_external_items(NavigationView& nav, app_location_t location, BtnGridView& grid, uint8_t error_tile_pos);
+bool verify_sdcard_format();
+
 enum modal_t {
     INFO = 0,
     YESNO,
@@ -278,6 +282,12 @@ class SystemStatusView : public View {
         {0, 0 * 16, 8, 1 * 16},
         &bitmap_icon_clk_int,
         Theme::getInstance()->fg_light->foreground,
+        Theme::getInstance()->bg_dark->background};
+
+    ImageButton button_fake_brightness{
+        {0, 0, 2 * 8, 1 * 16},
+        &bitmap_icon_brightness,
+        *Theme::getInstance()->status_active,
         Theme::getInstance()->bg_dark->background};
 
     SDCardStatusView sd_card_status_view{
