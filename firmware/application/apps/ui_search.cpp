@@ -290,11 +290,23 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
             else
                 power = spectrum.db[bin - 128];
         }
-        if (pmem::ui_use_rgb_waterfall()){
-            add_spectrum_pixel(spectrum_rgb3_lut[power]);
-        }else{
-            add_spectrum_pixel(spectrum_rgb3v_lut[power]);
+
+        ui::Color pixel;
+        switch (pmem::spectrum_lut_id())
+        {
+        case 0:
+            pixel = spectrum_rgb3_lut[power];
+            break;
+        
+        case 1:
+            pixel = spectrum_magma_lut[power];// row of colors
+            break;
+        
+        default:
+            pixel = spectrum_turbo_lut[power];// row of colors
+            break;
         }
+        add_spectrum_pixel(pixel);
 
         mean_acc += power;
         if (power > max_power) {

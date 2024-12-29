@@ -50,7 +50,7 @@ class TestRxProcessor : public BasebandProcessor {
     void execute(const buffer_c8_t& buffer) override;
 
    private:
-    static constexpr size_t baseband_fs = 2457600 * 2;
+    static constexpr size_t baseband_fs = 3072000;
 
     std::array<complex16_t, 512> dst{};
     const buffer_c16_t dst_buffer{

@@ -373,11 +373,15 @@ class SetUIView : public View {
     ImageToggle toggle_sd_card{
         {23 * 8, 14 * 16 + 2, 16, 16},
         &bitmap_sd_card_ok};
-
-    Checkbox checkbox_use_rgb_waterfall{
-        {3 * 8, 15 * 16+3},
+    
+    OptionsField options_spectrum_lut_id{
+        {3 * 8, 15 * 16 + 4},
         18,
-        "Use RGB waterfall"};
+        {
+            {"RGB3 lut", 0},
+            {"Sunrise lut", 1},
+            {"Turbo lut", 2}
+        }};
 
     Button button_save{
         {2 * 8, 17 * 16, 12 * 8, 32},

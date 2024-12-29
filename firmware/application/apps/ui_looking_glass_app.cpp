@@ -128,10 +128,19 @@ void GlassView::reset_live_view() {
 }
 
 void GlassView::add_spectrum_pixel(uint8_t power) {
-    if (pmem::ui_use_rgb_waterfall()){
-        spectrum_row[pixel_index] = spectrum_rgb3_lut[power];                                                                           // row of colors
-    }else{
-        spectrum_row[pixel_index] = spectrum_rgb3v_lut[power];                                                                           // row of colors
+    switch (pmem::spectrum_lut_id())
+    {
+    case 0:
+        spectrum_row[pixel_index] = spectrum_rgb3_lut[power];
+        break;
+    
+    case 1:
+        spectrum_row[pixel_index] = spectrum_magma_lut[power];// row of colors
+        break;
+    
+    default:
+        spectrum_row[pixel_index] = spectrum_turbo_lut[power];// row of colors
+        break;
     }
     
     spectrum_data[pixel_index] = (live_frequency_integrate * spectrum_data[pixel_index] + power) / (live_frequency_integrate + 1);  // smoothing
