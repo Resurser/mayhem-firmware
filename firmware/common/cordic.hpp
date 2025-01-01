@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "dsp_types.hpp"
-#include "cordic_18_tab.hpp"
+#include "cordic_16_tab.hpp"
 
 #ifndef M_PI
 #define M_PI (3.14159265358979323846264338327950288)

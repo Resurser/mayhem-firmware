@@ -281,6 +281,9 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // Add pixels to spectrum display and find max power for this slice
     // Center 12 bins are ignored (DC spike is blanked)
     // Leftmost and rightmost 2 bins are ignored
+    std::array<ui::Color, 256> spectrum_lut;
+    load_spectrum_lut(pmem::spectrum_lut_id(), spectrum_lut);
+   
     for (bin = 0; bin < 256; bin++) {
         if ((bin < 2) || (bin > 253) || ((bin >= 122) && (bin < 134))) {
             power = 0;
@@ -291,21 +294,7 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
                 power = spectrum.db[bin - 128];
         }
 
-        ui::Color pixel;
-        switch (pmem::spectrum_lut_id())
-        {
-        case 0:
-            pixel = spectrum_rgb3_lut[power];
-            break;
-        
-        case 1:
-            pixel = spectrum_magma_lut[power];// row of colors
-            break;
-        
-        default:
-            pixel = spectrum_turbo_lut[power];// row of colors
-            break;
-        }
+        ui::Color pixel = spectrum_lut[power];
         add_spectrum_pixel(pixel);
 
         mean_acc += power;

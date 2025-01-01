@@ -55,7 +55,7 @@ constexpr modem_def_t modem_defs[MODEM_DEF_COUNT] = {
     {"V23 M2", AFSK, 1300, 2100, 1200},
     {"RTTY US", AM, 2295, 2125, 45},
     {"RTTY EU", AM, 2125, 1955, 50},
-    {"RTTY 75", AM, 2125, 1955, 75}
+    {"RTTY 75", PSK, 2125, 1955, 75}
 };
 
 void generate_data(const std::string& in_message, uint16_t* out_data);

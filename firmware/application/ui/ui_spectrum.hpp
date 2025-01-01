@@ -112,6 +112,7 @@ class FrequencyScale : public Widget {
 
 class WaterfallWidget : public Widget {
    public:
+    
     void on_show() override;
     void on_hide() override;
     void paint(Painter&) override {}

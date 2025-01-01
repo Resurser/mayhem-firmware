@@ -253,7 +253,7 @@ class SetRadioView : public View {
     Checkbox check_ddc_enabled{
         {18, 14 * 16},
         5,
-        "Slide tune freq. (AM, NFM)"};
+        "Slide tune "};
 
     Button button_save{
         {2 * 8, 16 * 16, 12 * 8, 32},
@@ -374,14 +374,21 @@ class SetUIView : public View {
         {23 * 8, 14 * 16 + 2, 16, 16},
         &bitmap_sd_card_ok};
     
+    Labels labels2{
+        {{3 * 8, 15 * 16 + 4}, "Spectr color", Theme::getInstance()->fg_light->foreground},
+    };
     OptionsField options_spectrum_lut_id{
-        {3 * 8, 15 * 16 + 4},
+        {17 * 8, 15 * 16 + 4},
         18,
         {
-            {"RGB3 lut", 0},
-            {"Sunrise lut", 1},
-            {"Turbo lut", 2}
-        }};
+            {"RGB3", 0},
+            {"Inferno", 1},
+            {"Turbo", 2},
+            {"Classic", 3},
+            {"WebSDR", 4},
+            
+        }
+    };
 
     Button button_save{
         {2 * 8, 17 * 16, 12 * 8, 32},

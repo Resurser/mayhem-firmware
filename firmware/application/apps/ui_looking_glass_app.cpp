@@ -128,20 +128,9 @@ void GlassView::reset_live_view() {
 }
 
 void GlassView::add_spectrum_pixel(uint8_t power) {
-    switch (pmem::spectrum_lut_id())
-    {
-    case 0:
-        spectrum_row[pixel_index] = spectrum_rgb3_lut[power];
-        break;
-    
-    case 1:
-        spectrum_row[pixel_index] = spectrum_magma_lut[power];// row of colors
-        break;
-    
-    default:
-        spectrum_row[pixel_index] = spectrum_turbo_lut[power];// row of colors
-        break;
-    }
+    std::array<ui::Color, 256> spectrum_lut;
+    load_spectrum_lut(pmem::spectrum_lut_id(), spectrum_lut);
+    spectrum_row[pixel_index] = spectrum_lut[power];
     
     spectrum_data[pixel_index] = (live_frequency_integrate * spectrum_data[pixel_index] + power) / (live_frequency_integrate + 1);  // smoothing
     pixel_index++;

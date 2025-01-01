@@ -93,7 +93,6 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 
                         data_message.is_data = true;
                         data_message.value = word_bits & word_mask;
-                        data_message.value = word_bits ;
                         shared_memory.application_queue.push(data_message);
                     }
                 } else {

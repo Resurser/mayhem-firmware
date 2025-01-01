@@ -285,20 +285,8 @@ void WaterfallWidget::on_channel_spectrum(
     const ChannelSpectrum& spectrum) {
     /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
     std::array<ui::Color, 256> curr_spectrum_lut;
-    switch (pmem::spectrum_lut_id())
-    {
-    case 0:
-        curr_spectrum_lut = spectrum_rgb3_lut;
-        break;
+    load_spectrum_lut(pmem::spectrum_lut_id(), curr_spectrum_lut);
     
-    case 1:
-        curr_spectrum_lut = spectrum_magma_lut;
-        break;
-    
-    default:
-        curr_spectrum_lut = spectrum_turbo_lut;// row of colors
-        break;
-    }
     std::array<Color, 240> pixel_row;
 
     for (size_t i = 0; i < 120; i++) {
