@@ -30,12 +30,10 @@ extern const std::array<ui::Color, 256> spectrum_rgb2_lut;
 extern const std::array<ui::Color, 256> spectrum_origin_lut;
 extern const std::array<ui::Color, 256> spectrum_rgb4_lut;
 
-
 extern const std::array<ui::Color, 256> spectrum_rgb3_lut;
 extern const std::array<ui::Color, 256> spectrum_inferno_lut;
-extern const std::array<ui::Color, 256> spectrum_turbo_lut;
-extern const std::array<ui::Color, 256> spectrum_classic_lut;
 extern const std::array<ui::Color, 256> spectrum_websdr_lut;
+extern const std::array<ui::Color, 256> spectrum_electro_lut;
 
-void load_spectrum_lut(uint8_t spectrum_lut_id, std::array<ui::Color, 256>& result);
+void spectrum_color_lut(uint8_t spectrum_lut_id, std::array<ui::Color, 256> &result);
 #endif /*__SPECTRUM_COLOR_LUT_H__*/

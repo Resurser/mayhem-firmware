@@ -287,10 +287,10 @@ class SetUIView : public View {
         {3 * 8, 3 * 16},
         20,
         "Backlight off after:"};
-    OptionsField options_bloff{
-        {60, 4 * 16 + 8},
-        20,
-        {
+        OptionsField options_bloff{
+            {60, 4 * 16 + 8},
+            20,
+            {
             {"5 seconds", backlight_timeout_t::Timeout5Sec},
             {"15 seconds", backlight_timeout_t::Timeout15Sec},
             {"30 seconds", backlight_timeout_t::Timeout30Sec},
@@ -374,19 +374,17 @@ class SetUIView : public View {
         {23 * 8, 14 * 16 + 2, 16, 16},
         &bitmap_sd_card_ok};
     
-    Labels labels2{
-        {{3 * 8, 15 * 16 + 4}, "Spectr color", Theme::getInstance()->fg_light->foreground},
+    Labels label2{
+        {{3 * 8, 15 * 16 + 4}, "WF colors", Theme::getInstance()->fg_light->foreground},
     };
     OptionsField options_spectrum_lut_id{
         {17 * 8, 15 * 16 + 4},
         18,
         {
-            {"RGB3", 0},
+            {"RGB", 0},
             {"Inferno", 1},
-            {"Turbo", 2},
-            {"Classic", 3},
-            {"WebSDR", 4},
-            
+            {"WebSDR", 2},
+            {"Electro", 3}
         }
     };
 

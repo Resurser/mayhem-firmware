@@ -146,7 +146,7 @@ void TVView::on_channel_spectrum(
                         for (bmp_px = 0; bmp_px < 128; bmp_px++)
                         {
                                 //line_buffer[bmp_px] = video_buffer[bmp_px+line*128];
-                                line_buffer[bmp_px] = spectrum_rgb4_lut[video_buffer_int[bmp_px+line*128 + x_correction]];
+                                line_buffer[bmp_px] = lut::spectrum_rgb4_lut[video_buffer_int[bmp_px+line*128 + x_correction]];
                         }
 
                         display.render_line({ 0, line + 100 }, 128, line_buffer);

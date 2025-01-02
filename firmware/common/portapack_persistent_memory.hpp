@@ -338,7 +338,7 @@ bool ui_hide_fake_brightness();
 bool ui_hide_numeric_battery();
 bool ui_hide_battery_icon();
 bool ui_hide_sd_card();
-uint8_t spectrum_lut_id();
+uint8_t spectrum_color_id();
 bool ddc_enabled();
 uint8_t ui_theme_id();
 bool ui_override_batt_calc();
@@ -357,7 +357,7 @@ void set_ui_hide_battery_icon(bool v);
 void set_ui_hide_sd_card(bool v);
 void set_ui_theme_id(uint8_t v);
 void set_ui_override_batt_calc(bool v);
-void set_spectrum_lut_id(uint8_t v);
+void set_spectrum_color_id(uint8_t v);
 void set_ddc_enabled(bool v);
 
 

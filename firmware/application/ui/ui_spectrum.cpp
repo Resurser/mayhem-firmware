@@ -285,7 +285,7 @@ void WaterfallWidget::on_channel_spectrum(
     const ChannelSpectrum& spectrum) {
     /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
     std::array<ui::Color, 256> curr_spectrum_lut;
-    load_spectrum_lut(pmem::spectrum_lut_id(), curr_spectrum_lut);
+    spectrum_color_lut(pmem::spectrum_color_id(), curr_spectrum_lut);
     
     std::array<Color, 240> pixel_row;
 
