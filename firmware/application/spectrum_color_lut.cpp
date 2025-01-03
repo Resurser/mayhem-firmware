@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "spectrum_color_lut.hpp";
+#include "spectrum_color_lut.hpp"
 
 const std::array<ui::Color, 256> spectrum_rgb2_lut{{
     {0, 0, 128},
@@ -1835,19 +1835,21 @@ const std::array<ui::Color, 256> spectrum_electro_lut{{
     { 0xfe, 0xfe, 0xfe },
 }};
 
-void spectrum_color_lut(uint8_t spectrum_lut_id, std::array<ui::Color, 256> &result){
+std::array<ui::Color, 256> waterfall_spectrum_color;
+
+void select_waterfall_spectrum_color(uint8_t spectrum_lut_id){
     switch (spectrum_lut_id) {
     case 2:
-        result = spectrum_websdr_lut;
+        waterfall_spectrum_color = spectrum_websdr_lut;
         break;    
     case 3:
-        result = spectrum_electro_lut;
+        waterfall_spectrum_color = spectrum_electro_lut;
         break;           
     case 1:
-        result = spectrum_inferno_lut;
+        waterfall_spectrum_color = spectrum_inferno_lut;
         break;       
     default:
-        result = spectrum_rgb3_lut;// row of colors
+        waterfall_spectrum_color = spectrum_rgb3_lut;// row of colors
         break;
     }
 };

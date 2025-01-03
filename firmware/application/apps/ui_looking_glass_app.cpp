@@ -128,10 +128,7 @@ void GlassView::reset_live_view() {
 }
 
 void GlassView::add_spectrum_pixel(uint8_t power) {
-    std::array<ui::Color, 256> spectrum_color;
-    spectrum_color_lut(pmem::spectrum_color_id(), spectrum_color);
-    
-    spectrum_row[pixel_index] = spectrum_color[power];
+    spectrum_row[pixel_index] = waterfall_spectrum_color[power];
     
     spectrum_data[pixel_index] = (live_frequency_integrate * spectrum_data[pixel_index] + power) / (live_frequency_integrate + 1);  // smoothing
     pixel_index++;

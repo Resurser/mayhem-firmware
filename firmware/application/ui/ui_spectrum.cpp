@@ -284,14 +284,14 @@ void WaterfallWidget::on_hide() {
 void WaterfallWidget::on_channel_spectrum(
     const ChannelSpectrum& spectrum) {
     /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
-    std::array<ui::Color, 256> curr_spectrum_lut;
-    spectrum_color_lut(pmem::spectrum_color_id(), curr_spectrum_lut);
+    // std::array<ui::Color, 256> curr_spectrum_lut;
+    // spectrum_color_lut(pmem::spectrum_color_id(), curr_spectrum_lut);
     
     std::array<Color, 240> pixel_row;
 
     for (size_t i = 0; i < 120; i++) {
-        pixel_row[i]       = curr_spectrum_lut[spectrum.db[256 - 120 + i]];
-        pixel_row[120 + i] = curr_spectrum_lut[spectrum.db[i]];
+        pixel_row[i]       = waterfall_spectrum_color[spectrum.db[256 - 120 + i]];
+        pixel_row[120 + i] = waterfall_spectrum_color[spectrum.db[i]];
     }
 
     const auto draw_y = display.scroll(1);
@@ -314,7 +314,8 @@ WaterfallView::WaterfallView(const bool cursor) {
                   &frequency_scale});
 
     frequency_scale.set_focusable(cursor);
-
+    select_waterfall_spectrum_color(pmem::spectrum_color_id());
+    
     // Making the event climb up all the way up to here kinda sucks
     frequency_scale.on_select = [this](int32_t offset) {
         if (on_select) on_select(offset);

@@ -56,7 +56,7 @@ SearchView::SearchView(
     NavigationView& nav)
     : nav_(nav) {
     baseband::run_image(portapack::spi_flash::image_tag_wideband_spectrum);
-
+    select_waterfall_spectrum_color(pmem::spectrum_color_id());
     add_children({&labels,
                   &field_frequency_min,
                   &field_frequency_max,
@@ -281,8 +281,8 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // Add pixels to spectrum display and find max power for this slice
     // Center 12 bins are ignored (DC spike is blanked)
     // Leftmost and rightmost 2 bins are ignored
-    std::array<ui::Color, 256> spectrum_color;
-    spectrum_color_lut(pmem::spectrum_color_id(), spectrum_color);
+    // std::array<ui::Color, 256> spectrum_color;
+    // spectrum_color_lut(pmem::spectrum_color_id(), spectrum_color);
     
     for (bin = 0; bin < 256; bin++) {
         if ((bin < 2) || (bin > 253) || ((bin >= 122) && (bin < 134))) {
@@ -294,7 +294,7 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
                 power = spectrum.db[bin - 128];
         }
 
-        ui::Color pixel = spectrum_color[power];
+        ui::Color pixel = waterfall_spectrum_color[power];
         add_spectrum_pixel(pixel);
 
         mean_acc += power;
