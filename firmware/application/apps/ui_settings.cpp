@@ -394,7 +394,7 @@ SetUIView::SetUIView(NavigationView& nav) {
         pmem::set_clock_hidden(!checkbox_showclock.value());
         pmem::set_gui_return_icon(checkbox_guireturnflag.value());
         pmem::set_disable_touchscreen(checkbox_disable_touchscreen.value());
-        pmem::set_spectrum_color_id(options_spectrum_lut_id.selected_index_value());
+        pmem::set_spectrum_color_id(options_spectrum_lut_id.selected_index());
 
         pmem::set_ui_hide_camera(!toggle_camera.value());
         pmem::set_ui_hide_sleep(!toggle_sleep.value());

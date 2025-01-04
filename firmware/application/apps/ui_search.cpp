@@ -56,7 +56,7 @@ SearchView::SearchView(
     NavigationView& nav)
     : nav_(nav) {
     baseband::run_image(portapack::spi_flash::image_tag_wideband_spectrum);
-    select_waterfall_spectrum_color(pmem::spectrum_color_id());
+    // init_waterfall_spectrum_color(pmem::spectrum_color_id());
     add_children({&labels,
                   &field_frequency_min,
                   &field_frequency_max,

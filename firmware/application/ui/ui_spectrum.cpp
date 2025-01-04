@@ -312,10 +312,8 @@ void WaterfallWidget::clear() {
 WaterfallView::WaterfallView(const bool cursor) {
     add_children({&waterfall_widget,
                   &frequency_scale});
-
-    frequency_scale.set_focusable(cursor);
-    select_waterfall_spectrum_color(pmem::spectrum_color_id());
     
+    frequency_scale.set_focusable(cursor);
     // Making the event climb up all the way up to here kinda sucks
     frequency_scale.on_select = [this](int32_t offset) {
         if (on_select) on_select(offset);

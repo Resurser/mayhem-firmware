@@ -948,6 +948,7 @@ class SetThemeView : public View {
             {"Aqua", 2},
             {"Green", 3},
             {"Red", 4},
+            {"Cyan (Dark)", 5},
         },
         true};
 

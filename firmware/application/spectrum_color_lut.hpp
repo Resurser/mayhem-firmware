@@ -24,19 +24,12 @@
 
 #include "ui.hpp"
 #include <array>
-#include <map>
 
 extern const std::array<ui::Color, 256> spectrum_rgb2_lut;
 extern const std::array<ui::Color, 256> spectrum_rgb4_lut;
 extern const std::array<ui::Color, 256> spectrum_origin_lut;
 
-
 extern std::array<ui::Color, 256> waterfall_spectrum_color;
 
-extern const std::array<ui::Color, 256> spectrum_rgb3_lut;
-extern const std::array<ui::Color, 256> spectrum_inferno_lut;
-extern const std::array<ui::Color, 256> spectrum_websdr_lut;
-extern const std::array<ui::Color, 256> spectrum_electro_lut;
-
-void select_waterfall_spectrum_color(uint8_t spectrum_lut_id);
+void init_waterfall_spectrum_color(int spectrum_lut_id);
 #endif /*__SPECTRUM_COLOR_LUT_H__*/
