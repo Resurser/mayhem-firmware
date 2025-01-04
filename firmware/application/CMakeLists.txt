@@ -376,7 +376,7 @@ set(INCDIR ${CMAKE_CURRENT_BINARY_DIR} ${COMMON} ${PORTINC} ${KERNINC} ${TESTINC
 	hw
 	apps
 	protocols
-	bitmaps
+	bmps
 )
 
 #
