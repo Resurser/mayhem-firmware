@@ -37,7 +37,6 @@
 #include "utility.hpp"
 #include "rtc_time.hpp"
 #include "file_path.hpp"
-#include "spectrum_color_lut.hpp"
 
 #include <algorithm>
 #include <string>
@@ -471,8 +470,6 @@ void init() {
     // Firmware upgrade handling - adjust newly defined fields where 0 is an invalid default
     if (fake_brightness_level() == 0) set_fake_brightness_level(BRIGHTNESS_50);
     if (menu_color().v == 0) set_menu_color(Color::grey());
-
-    init_waterfall_spectrum_color(spectrum_color_id());
 }
 
 void persist() {

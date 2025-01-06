@@ -381,10 +381,8 @@ class SetUIView : public View {
         {17 * 8, 15 * 16 + 4},
         18,
         {
-            {"RGB", 0},
-            {"Inferno", 1},
-            {"WebSDR", 2},
-            {"Electro", 3}
+            {"RGB",     0},
+            {"Inferno", 1}
         }
     };
 

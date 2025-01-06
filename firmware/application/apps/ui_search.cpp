@@ -56,7 +56,6 @@ SearchView::SearchView(
     NavigationView& nav)
     : nav_(nav) {
     baseband::run_image(portapack::spi_flash::image_tag_wideband_spectrum);
-    // init_waterfall_spectrum_color(pmem::spectrum_color_id());
     add_children({&labels,
                   &field_frequency_min,
                   &field_frequency_max,
@@ -294,7 +293,7 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
                 power = spectrum.db[bin - 128];
         }
 
-        ui::Color pixel = waterfall_spectrum_color[power];
+        ui::Color pixel = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut)[power];
         add_spectrum_pixel(pixel);
 
         mean_acc += power;

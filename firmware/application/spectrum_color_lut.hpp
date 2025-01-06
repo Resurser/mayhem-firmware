@@ -27,9 +27,7 @@
 
 extern const std::array<ui::Color, 256> spectrum_rgb2_lut;
 extern const std::array<ui::Color, 256> spectrum_rgb4_lut;
-extern const std::array<ui::Color, 256> spectrum_origin_lut;
+extern const std::array<ui::Color, 256> spectrum_rgb3_lut;
+extern const std::array<ui::Color, 256> spectrum_inferno_lut;
 
-extern std::array<ui::Color, 256> waterfall_spectrum_color;
-
-void init_waterfall_spectrum_color(int spectrum_lut_id);
 #endif /*__SPECTRUM_COLOR_LUT_H__*/

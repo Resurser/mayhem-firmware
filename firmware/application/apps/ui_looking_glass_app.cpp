@@ -128,13 +128,12 @@ void GlassView::reset_live_view() {
 }
 
 void GlassView::add_spectrum_pixel(uint8_t power) {
-    spectrum_row[pixel_index] = waterfall_spectrum_color[power];
+    spectrum_row[pixel_index] = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut)[power];
     
     spectrum_data[pixel_index] = (live_frequency_integrate * spectrum_data[pixel_index] + power) / (live_frequency_integrate + 1);  // smoothing
     pixel_index++;
 
-    if (pixel_index == SCREEN_W)  // got an entire waterfall line
-    {
+    if (pixel_index == SCREEN_W) { // got an entire waterfall line
         if (live_frequency_view > 0) {
             constexpr int rssi_sample_range = SPEC_NB_BINS;
             constexpr float rssi_voltage_min = 0.4;
