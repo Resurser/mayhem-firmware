@@ -36,13 +36,12 @@
 
 using namespace ui;
 
-namespace ui::external_app::rtty_rx {
-// static char letters [32] = {
-// 	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
-// 	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
-// 	'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
-// 	'O',	'B',	'G',	'·',	'M',	'X',	'V',	'·'
-// };
+static char letters [32] = {
+	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
+	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
+	'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
+	'O',	'B',	'G',	'.',	'M',	'X',	'V',    '.',
+};
 
 // ///*
 // // * ITA-2 version of the figures case.
@@ -65,12 +64,15 @@ namespace ui::external_app::rtty_rx {
 // /*
 //  * A mix of the two. This is what seems to be what people actually use.
 //  */
-// static char figures [32] = {
-// 	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
-// 	'\r',	'$',	'4',	'\a',	',',	'!',	':',	'(',
-// 	'5',	'+',	')',	'2',	'H',	'6',	'0',	'1',
-// 	'9',	'?',	'&',	'·',	'.',	'/',	'=',	'·'
-// };
+static unsigned char figures [32] = {
+	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
+	'\r',	'$',	'4',	'\a',	',',	'!',	':',	'(',
+	'5',	'+',	')',	'2',	'H',	'6',	'0',	'1',
+	'9',	'?',	'&',	' ',	'.',	'/',	'=',	'.'
+};
+
+namespace ui::external_app::rtty_rx {
+
 class RTTYLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {

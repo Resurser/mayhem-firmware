@@ -25,8 +25,31 @@
 #include "audio_dma.hpp"
 #include "event_m4.hpp"
 #include "utility.hpp"
+const double MARK_FREQ = 2125.0; 
+const double SPACE_FREQ = 2295.0; 
+const double SAMPLE_RATE = 48000.0; 
+const double BAUD_RATE = 45.45; 
+const double PI = 3.14159265358979323846;
 
-
+std::unordered_map<int, char> baudotToAsciiMap = { {0b00000, ' '}, {0b00001, 'E'}, {0b00010, '\n'}, {0b00011, 'A'}, {0b00100, 'S'}, {0b00101, 'I'}, {0b00110, 'U'}, {0b00111, 'D'}, {0b01000, 'R'}, {0b01001, 'J'}, {0b01010, 'N'}, {0b01011, 'F'}, {0b01100, 'C'}, {0b01101, 'K'}, {0b01110, 'T'}, {0b01111, 'Z'}, {0b10000, 'L'}, {0b10001, 'W'}, {0b10010, 'H'}, {0b10011, 'Y'}, {0b10100, 'P'}, {0b10101, 'Q'}, {0b10110, 'O'}, {0b10111, 'B'}, {0b11000, 'G'}, {0b11001, 'M'}, {0b11010, 'X'}, {0b11011, 'V'}, {0b11100, 'K'}, {0b11101, ' '}, {0b11110, '\r'}, {0b11111, 'Q'} };
+std::string decodeRTTY(const std::vector<int>& fskTones) { 
+    std::string decodedText; 
+    size_t bitsPerChar = 5; 
+    size_t toneIndex = 0; 
+    while (toneIndex + bitsPerChar <= fskTones.size()) { 
+        int character = 0; 
+        for (size_t bit = 0; bit < bitsPerChar; ++bit) { 
+            character |= (fskTones[toneIndex + bit] << (bitsPerChar - 1 - bit)); 
+        } 
+        if (baudotToAsciiMap.find(character) != baudotToAsciiMap.end()) { 
+            decodedText += baudotToAsciiMap[character]; 
+        } else { 
+            decodedText += '?'; // Unknown character 
+        } 
+        toneIndex += bitsPerChar; 
+    } 
+    return decodedText; 
+}
 RTTYRxProcessor::RTTYRxProcessor() {
     // decim_0.configure(taps_6k0_decim_0.taps);
     // decim_1.configure(taps_6k0_decim_1.taps);
@@ -66,7 +89,6 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     const auto channel_out = channel_filter.execute(decim_1_out, dst_buffer);  // 32 / 2 = 16 (32 I/Q samples)
 
     feed_channel_stats(channel_out);
-
     auto audio = demod.execute(channel_out, audio_buffer);
 
     audio_output.write(audio);
@@ -169,30 +191,42 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     }
 }
 
+std::vector<int> demodulateFSK(const std::vector<uint8_t>& buffer) {
+    std::vector<int> fskTones;
+    size_t samplesPerBit = static_cast<size_t>(SAMPLE_RATE / BAUD_RATE);
+    
+    for (size_t i = 0; i + samplesPerBit <= buffer.size(); i += samplesPerBit) {
+        double markPower = 0.0;
+        double spacePower = 0.0;
+        
+        for (size_t j = 0; j < samplesPerBit; ++j) {
+            double sample = static_cast<double>(buffer[i + j]);
+            markPower += std::cos(2.0 * PI * MARK_FREQ * j / SAMPLE_RATE) * sample;
+            spacePower += std::cos(2.0 * PI * SPACE_FREQ * j / SAMPLE_RATE) * sample;
+        }
+        
+        if (markPower > spacePower) {
+            fskTones.push_back(1);
+        } else {
+            fskTones.push_back(0);
+        }
+    }
+    
+    return fskTones;
+}
+
 void RTTYRxProcessor::on_message(const Message* const message) {
     if (message->id == Message::ID::RTTYRxConfigure)
         configure(*reinterpret_cast<const RTTYRxConfigureMessage*>(message));
 }
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
-    /*constexpr size_t decim_0_input_fs = baseband_fs;
-        constexpr size_t decim_0_output_fs = decim_0_input_fs / decim_0.decimation_factor;
-
-        constexpr size_t decim_1_input_fs = decim_0_output_fs;
-        constexpr size_t decim_1_output_fs = decim_1_input_fs / decim_1.decimation_factor;
-
-        constexpr size_t channel_filter_input_fs = decim_1_output_fs;
-        const size_t channel_filter_output_fs = channel_filter_input_fs / 2;
-
-        const size_t demod_input_fs = channel_filter_output_fs;*/
     decim_0.configure(taps_6k0_decim_0.taps);
     decim_1.configure(taps_6k0_decim_1.taps);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 2);
     
-    // demod.configure(audio_fs, 5000);
-
-    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
-
+    // audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
+    audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
     samples_per_bit = audio_fs / message.baudrate;
 
     phase_inc = (0x10000 * message.baudrate) / audio_fs;

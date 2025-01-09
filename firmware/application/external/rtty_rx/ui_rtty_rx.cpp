@@ -72,7 +72,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = EVEN;
     // serial_format.stop_bits = 2;
     // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 4;
+    serial_format.data_bits = 7;
     serial_format.parity = NONE;
     serial_format.stop_bits = 1;
     serial_format.bit_order = MSB_FIRST;
@@ -95,9 +95,9 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(persistent_memory::modem_baudrate(), 4, 0, false);
+    baseband::set_rtty(persistent_memory::modem_baudrate(), 8, 0, false);
 
-    audio::set_rate(audio::Rate::Hz_24000);
+    audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
 
     receiver_model.enable();

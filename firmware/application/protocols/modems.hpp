@@ -29,7 +29,7 @@
 
 namespace modems {
 
-#define MODEM_DEF_COUNT 8
+#define MODEM_DEF_COUNT 9
 #define AFSK_TX_SAMPLERATE 1536000U
 
 enum ModemModulation {
@@ -53,9 +53,10 @@ constexpr modem_def_t modem_defs[MODEM_DEF_COUNT] = {
     {"V21", AFSK, 980, 1180, 300},
     {"V23 M1", AFSK, 1300, 1700, 600},
     {"V23 M2", AFSK, 1300, 2100, 1200},
-    {"RTTY US", AM, 2295, 2125, 45},
-    {"RTTY EU", AM, 2125, 1955, 50},
-    {"RTTY 75", PSK, 2125, 1955, 75}
+    {"RTTY 45 U", AM, 2295, 2125, 45},
+    {"RTTY 45 L", AM, 2125, 1955, 45},
+    {"RTTY 75 U", AM, 1445, 1275, 75},
+    {"RTTY 75 L", AM, 1275, 1445, 75}
 };
 
 void generate_data(const std::string& in_message, uint16_t* out_data);

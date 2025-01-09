@@ -44,7 +44,7 @@ class NarrowbandAMAudio : public BasebandProcessor {
 	void set_spectrum_zoom(const float x);
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr auto spectrum_rate_hz = 50.0f;
+    static constexpr auto   spectrum_rate_hz = 60.0f;
 	static constexpr size_t decim_2_decimation_factor = 8;
     static constexpr size_t channel_filter_decimation_factor = 1;
 

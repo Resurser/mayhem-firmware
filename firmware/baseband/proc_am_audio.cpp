@@ -101,10 +101,12 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     decim_0.configure(message.decim_0_filter.taps);
     decim_1.configure(message.decim_1_filter.taps);
     decim_2.configure(message.decim_2_filter.taps, decim_2_decimation_factor);
+
     channel_filter.configure(message.channel_filter.taps, channel_filter_decimation_factor);
     channel_filter_low_f = message.channel_filter.low_frequency_normalized * channel_filter_input_fs;
     channel_filter_high_f = message.channel_filter.high_frequency_normalized * channel_filter_input_fs;
     channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
+    
     //channel_spectrum.set_decimation_factor(1.0f);
     modulation_ssb = (message.modulation == AMConfigureMessage::Modulation::SSB);
     audio_output.configure(message.audio_hpf_config);
@@ -112,7 +114,8 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
         spectrum_zoom = message.spectrum_zoom;
     }
     channel_spectrum.set_decimation_factor(spectrum_zoom);
-	spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
+	
+    spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
 
 	ddc.set_sample_rate(decim_1_output_fs);
 
