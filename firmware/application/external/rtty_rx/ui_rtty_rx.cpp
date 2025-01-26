@@ -22,6 +22,7 @@
 
 #include "ui_rtty_rx.hpp"
 #include "ui_modemsetup.hpp"
+#include <unordered_map>
 
 #include "modems.hpp"
 #include "audio.hpp"
@@ -34,6 +35,15 @@
 using namespace portapack;
 using namespace modems;
 using namespace ui;
+
+std::unordered_map<int, char> baudotToAsciiMap = { 
+    {0b00000, ' '}, {0b00001, 'E'}, {0b00010, '\n'}, {0b00011, 'A'}, {0b00100, 'S'}, {0b00101, 'I'}, 
+    {0b00110, 'U'}, {0b00111, 'D'}, {0b01000, 'R'}, {0b01001, 'J'}, {0b01010, 'N'}, {0b01011, 'F'},
+    {0b01100, 'C'}, {0b01101, 'K'}, {0b01110, 'T'}, {0b01111, 'Z'}, {0b10000, 'L'}, {0b10001, 'W'}, 
+    {0b10010, 'H'}, {0b10011, 'Y'}, {0b10100, 'P'}, {0b10101, 'Q'}, {0b10110, 'O'}, {0b10111, 'B'}, 
+    {0b11000, 'G'}, {0b11001, 'M'}, {0b11010, 'X'}, {0b11011, 'V'}, {0b11100, 'K'}, {0b11101, ' '}, 
+    {0b11110, '\r'}, {0b11111, 'Q'} 
+};
 
 namespace ui::external_app::rtty_rx {
 
@@ -72,7 +82,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = EVEN;
     // serial_format.stop_bits = 2;
     // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 7;
+    serial_format.data_bits = 5;
     serial_format.parity = NONE;
     serial_format.stop_bits = 1;
     serial_format.bit_order = MSB_FIRST;
@@ -95,7 +105,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(persistent_memory::modem_baudrate(), 8, 0, false);
+    baseband::set_rtty(persistent_memory::modem_baudrate(), 5, 0, false);
 
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
@@ -106,26 +116,24 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
-
+    
     if (is_data) {
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 9);
 
         // value = deframe_word(value);
-
-        value &= 0xFF;                                          // ABCDEFGH
-        value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
-        value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
-        value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
-        value &= 0x7F;                                          // Ignore parity, which is the MSB now
-
-        if ((value >= 32) && (value < 127)) {
-            str_console += (char)value;  // Printable
+        if (baudotToAsciiMap.find(value) != baudotToAsciiMap.end()) { 
+            str_console += (char)baudotToAsciiMap[value];  // Printable
             str_byte += (char)value;
-        } else {
+        } else { 
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
             str_byte += "[" + to_string_hex(value, 2) + "]";
-        }
+        } 
+        // value &= 0xFF;                                          // ABCDEFGH
+        // value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
+        // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
+        // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
+        // value &= 0x7F;                                          // Ignore parity, which is the MSB now
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
         // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable

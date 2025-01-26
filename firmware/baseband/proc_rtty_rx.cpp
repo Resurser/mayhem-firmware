@@ -24,6 +24,8 @@
 #include "portapack_shared_memory.hpp"
 #include "audio_dma.hpp"
 #include "event_m4.hpp"
+#include <vector>
+#include <cmath>
 #include "utility.hpp"
 const double MARK_FREQ = 2125.0; 
 const double SPACE_FREQ = 2295.0; 
@@ -31,7 +33,15 @@ const double SAMPLE_RATE = 48000.0;
 const double BAUD_RATE = 45.45; 
 const double PI = 3.14159265358979323846;
 
-std::unordered_map<int, char> baudotToAsciiMap = { {0b00000, ' '}, {0b00001, 'E'}, {0b00010, '\n'}, {0b00011, 'A'}, {0b00100, 'S'}, {0b00101, 'I'}, {0b00110, 'U'}, {0b00111, 'D'}, {0b01000, 'R'}, {0b01001, 'J'}, {0b01010, 'N'}, {0b01011, 'F'}, {0b01100, 'C'}, {0b01101, 'K'}, {0b01110, 'T'}, {0b01111, 'Z'}, {0b10000, 'L'}, {0b10001, 'W'}, {0b10010, 'H'}, {0b10011, 'Y'}, {0b10100, 'P'}, {0b10101, 'Q'}, {0b10110, 'O'}, {0b10111, 'B'}, {0b11000, 'G'}, {0b11001, 'M'}, {0b11010, 'X'}, {0b11011, 'V'}, {0b11100, 'K'}, {0b11101, ' '}, {0b11110, '\r'}, {0b11111, 'Q'} };
+std::vector<int> convertBufferToVector(const buffer_c8_t* buffer, size_t size) {
+    std::vector<int> intVector(size * 2); // Each complex 8-bit value becomes two 16-bit integers
+    for (size_t i = 0; i < size; ++i) {
+        intVector[i * 2] = (int)buffer[i].p->real();
+        intVector[i * 2 + 1] = (int)buffer[i].p->imag();
+    }
+    return intVector;
+}
+
 std::string decodeRTTY(const std::vector<int>& fskTones) { 
     std::string decodedText; 
     size_t bitsPerChar = 5; 
@@ -41,14 +51,38 @@ std::string decodeRTTY(const std::vector<int>& fskTones) {
         for (size_t bit = 0; bit < bitsPerChar; ++bit) { 
             character |= (fskTones[toneIndex + bit] << (bitsPerChar - 1 - bit)); 
         } 
-        if (baudotToAsciiMap.find(character) != baudotToAsciiMap.end()) { 
-            decodedText += baudotToAsciiMap[character]; 
-        } else { 
-            decodedText += '?'; // Unknown character 
-        } 
-        toneIndex += bitsPerChar; 
+        // if (baudotToAsciiMap.find(character) != baudotToAsciiMap.end()) { 
+        //     decodedText += baudotToAsciiMap[character]; 
+        // } else { 
+        //     decodedText += '?'; // Unknown character 
+        // } 
+        // toneIndex += bitsPerChar; 
     } 
     return decodedText; 
+}
+
+std::vector<int> demodulateFSK(const std::vector<uint8_t>& buffer) {
+    std::vector<int> fskTones;
+    size_t samplesPerBit = static_cast<size_t>(SAMPLE_RATE / BAUD_RATE);
+    
+    for (size_t i = 0; i + samplesPerBit <= buffer.size(); i += samplesPerBit) {
+        double markPower = 0.0;
+        double spacePower = 0.0;
+        
+        for (size_t j = 0; j < samplesPerBit; ++j) {
+            double sample = static_cast<double>(buffer[i + j]);
+            markPower += std::cos(2.0 * PI * MARK_FREQ * j / SAMPLE_RATE) * sample;
+            spacePower += std::cos(2.0 * PI * SPACE_FREQ * j / SAMPLE_RATE) * sample;
+        }
+        
+        if (markPower > spacePower) {
+            fskTones.push_back(1);
+        } else {
+            fskTones.push_back(0);
+        }
+    }
+    
+    return fskTones;
 }
 RTTYRxProcessor::RTTYRxProcessor() {
     // decim_0.configure(taps_6k0_decim_0.taps);
@@ -142,16 +176,15 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
                         bit_counter = 0;
 
                         data_message.is_data = true;
-                        // data_message.value = word_bits & word_mask;
-                        data_message.value = word_bits;
+                        data_message.value = word_bits & word_mask;
+                        // data_message.value = word_bits;
                         shared_memory.application_queue.push(data_message);
                     }
                 } else {
-                    // if ((word_bits & word_mask) == trigger_value) {
-                    if (word_bits == trigger_value) {
+                    if ((word_bits & word_mask) == trigger_value) {
+                    // if (word_bits == trigger_value) {
                         triggered = !triggered;
                         bit_counter = 0;
-
                         data_message.is_data = true;
                         data_message.value = trigger_value;
                         shared_memory.application_queue.push(data_message);
@@ -189,30 +222,6 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
             }
         }
     }
-}
-
-std::vector<int> demodulateFSK(const std::vector<uint8_t>& buffer) {
-    std::vector<int> fskTones;
-    size_t samplesPerBit = static_cast<size_t>(SAMPLE_RATE / BAUD_RATE);
-    
-    for (size_t i = 0; i + samplesPerBit <= buffer.size(); i += samplesPerBit) {
-        double markPower = 0.0;
-        double spacePower = 0.0;
-        
-        for (size_t j = 0; j < samplesPerBit; ++j) {
-            double sample = static_cast<double>(buffer[i + j]);
-            markPower += std::cos(2.0 * PI * MARK_FREQ * j / SAMPLE_RATE) * sample;
-            spacePower += std::cos(2.0 * PI * SPACE_FREQ * j / SAMPLE_RATE) * sample;
-        }
-        
-        if (markPower > spacePower) {
-            fskTones.push_back(1);
-        } else {
-            fskTones.push_back(0);
-        }
-    }
-    
-    return fskTones;
 }
 
 void RTTYRxProcessor::on_message(const Message* const message) {
@@ -254,3 +263,61 @@ int main() {
     event_dispatcher.run();
     return 0;
 }
+
+// 
+
+
+// Function to decode RTTY signal
+//int decode_rtty(int8_t* buffer, int length) {
+     //Implement RTTY decoding logic here
+     //This function should demodulate the signal, filter, and extract the bitstream
+
+     //Initialize variables for RTTY decoding
+//    int bitstream = 0;
+//    int bits = 0;
+//    int bit_count = 0;
+
+     //Loop through the samples and decode the bits
+//    for (int i = 0; i < length; i += samples_per_bit) {
+         //Apply Goertzel algorithm to detect mark and space frequencies
+//        float mark_power = goertzel(buffer + i, samples_per_bit, mark_frequency, SAMPLE_RATE);
+//        float space_power = goertzel(buffer + i, samples_per_bit, space_frequency, SAMPLE_RATE);
+
+         //Determine the current bit based on detected power
+//        int bit = (mark_power > space_power) ? 1 : 0;
+
+         //Accumulate the bits into a bitstream
+//        bitstream = (bitstream >> 1) | (bit << 7);
+//        bits++;
+//        bit_count++;
+
+         //If 8 bits are collected, decode the character
+//        if (bits == 8) {
+             //For now, just return the bitstream as the decoded data
+//            int decoded_char = bitstream;
+
+             //Reset the bitstream and bit count
+//            bitstream = 0;
+//            bits = 0;
+
+             //Return the decoded character
+//            return decoded_char;
+//        }
+//    }
+
+     //Return dummy data if no valid character is decoded
+//    return 0x00;
+//}
+//float goertzel(const int8_t* samples, int sample_count, int target_frequency, int sample_rate) {
+//    float s_prev = 0.0;
+//    float s_prev2 = 0.0;
+//    float coeff = 2.0 * cosf(2.0 * M_PI * target_frequency / sample_rate);
+
+//    for (int i = 0; i < sample_count; ++i) {
+//        float s = samples[i] + coeff * s_prev - s_prev2;
+//        s_prev2 = s_prev;
+//        s_prev = s;
+//    }
+
+//    return s_prev2 * s_prev2 + s_prev * s_prev - coeff * s_prev * s_prev2;
+//}

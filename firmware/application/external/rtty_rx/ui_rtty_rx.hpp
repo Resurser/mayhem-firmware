@@ -73,6 +73,7 @@ static unsigned char figures [32] = {
 
 namespace ui::external_app::rtty_rx {
 
+
 class RTTYLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {
