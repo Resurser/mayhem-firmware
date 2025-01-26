@@ -75,7 +75,7 @@ FmRadioView::FmRadioView(NavigationView& nav)
 
     receiver_model.set_modulation(ReceiverModel::Mode::WidebandFMAudio);
 
-    field_frequency.set_step(25000);
+    field_frequency.set_step(10000);
     receiver_model.enable();
     audio::output::start();
 
