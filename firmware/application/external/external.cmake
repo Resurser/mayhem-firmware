@@ -158,6 +158,18 @@ set(EXTCPPSRC
 	#test_rx
 	external/test_rx/main.cpp
 	external/test_rx/ui_test_rx.cpp
+
+    # whip calculator
+    external/antenna_length/main.cpp
+    external/antenna_length/ui_whipcalc.cpp
+
+    # wav viewer
+    external/wav_view/main.cpp
+    external/wav_view/ui_view_wav.cpp
+
+    # wipe sdcard
+    external/sd_wipe/main.cpp
+    external/sd_wipe/ui_sd_wipe.cpp
 )
 
 set(EXTAPPLIST
@@ -199,4 +211,7 @@ set(EXTAPPLIST
 	app_manager
 	rtty_rx
 	test_rx
+    antenna_length
+    view_wav
+    sd_wipe
 )

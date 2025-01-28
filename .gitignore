@@ -64,6 +64,7 @@ cmake-build-debug/
 *.sublime-workspace
 .vscode
 .idea
+*.swp
 
 # VSCodium extensions
 .history
