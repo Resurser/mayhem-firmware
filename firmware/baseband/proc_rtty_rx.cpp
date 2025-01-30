@@ -33,6 +33,7 @@ const double SAMPLE_RATE = 48000.0;
 const double BAUD_RATE = 45.45; 
 const double PI = 3.14159265358979323846;
 
+
 std::vector<int> convertBufferToVector(const buffer_c8_t* buffer, size_t size) {
     std::vector<int> intVector(size * 2); // Each complex 8-bit value becomes two 16-bit integers
     for (size_t i = 0; i < size; ++i) {
@@ -111,8 +112,42 @@ RTTYRxProcessor::RTTYRxProcessor() {
 
     // configured = true;
 }
+// Constants for the RTTY demodulation
+// const double MARK_FREQ = 2125.0; // Frequency for the mark signal
+// const double SPACE_FREQ = 2295.0; // Frequency for the space signal
+// const double SAMPLE_RATE = 48000.0; // Sample rate of the input signal
+// const double BAUD_RATE = 45.45; // Baud rate for RTTY (standard is 45.45)
+
+// std::vector<int> demodulateFSK(const std::vector<uint8_t>& buffer) {
+//     std::vector<int> fskTones;
+//     size_t samplesPerBit = static_cast<size_t>(SAMPLE_RATE / BAUD_RATE);
+    
+//     for (size_t i = 0; i < buffer.size(); i += samplesPerBit) {
+//         // Perform a simple tone detection for mark and space frequencies
+//         double markPower = 0.0;
+//         double spacePower = 0.0;
+        
+//         for (size_t j = 0; j < samplesPerBit; ++j) {
+//             double sample = buffer[i + j];
+//             markPower += std::cos(2.0 * PI * MARK_FREQ * j / SAMPLE_RATE) * sample;
+//             spacePower += std::cos(2.0 * PI * SPACE_FREQ * j / SAMPLE_RATE) * sample;
+//         }
+        
+//         // Compare the power levels to determine if it's a mark or space
+//         if (markPower > spacePower) {
+//             fskTones.push_back(1); // Mark
+//         } else {
+//             fskTones.push_back(0); // Space
+//         }
+//     }
+    
+//     return fskTones;
+// }
+
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
+    
+    
     // This is called at 3072000 / 2048 = 1500Hz
 
     if (!configured) return;
@@ -234,8 +269,8 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     decim_1.configure(taps_6k0_decim_1.taps);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 2);
     
-    // audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
-    audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
+    // audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
     samples_per_bit = audio_fs / message.baudrate;
 
     phase_inc = (0x10000 * message.baudrate) / audio_fs;
