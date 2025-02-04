@@ -82,14 +82,14 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = EVEN;
     // serial_format.stop_bits = 2;
     // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 5;
-    serial_format.parity = NONE;
-    serial_format.stop_bits = 1;
-    serial_format.bit_order = MSB_FIRST;
+    // serial_format.data_bits = 5;
+    // serial_format.parity = NONE;
+    // serial_format.stop_bits = 1;
+    // serial_format.bit_order = MSB_FIRST;
     
-    persistent_memory::set_serial_format(serial_format);
+    // persistent_memory::set_serial_format(serial_format);
 
-    field_frequency.set_step(settings_.raw().step);
+    field_frequency.set_step(10000);
 
     check_log.set_value(logging);
     check_log.on_select = [this](Checkbox&, bool v) {
@@ -109,6 +109,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
+    receiver_model.set_sampling_rate(3072000);
 
     receiver_model.enable();
 }

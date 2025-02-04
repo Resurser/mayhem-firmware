@@ -44,9 +44,7 @@ class RTTYRxProcessor : public BasebandProcessor {
    private:
    
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr size_t decim_2_decimation_factor = 4;
-    static constexpr size_t channel_filter_decimation_factor = 1;
-    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
+    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
 
     size_t samples_per_bit{};
 
@@ -67,9 +65,6 @@ class RTTYRxProcessor : public BasebandProcessor {
         audio.size()
     };
     
-    // Array size ok down to 375 bauds (24000 / 375)
-    std::array<int32_t, 64> delay_line{0};
-
     dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
@@ -79,21 +74,11 @@ class RTTYRxProcessor : public BasebandProcessor {
     AudioOutput audio_output{};
 
     State state{};
-    size_t delay_line_index{};
-    uint32_t bit_counter{0};
-    uint32_t word_bits{0};
-    uint32_t sample_bits{0};
-    uint32_t phase{}, phase_inc{};
-    int32_t sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
+
+    uint32_t baud_rate{50};
     uint32_t word_length{};
-    uint32_t word_mask{};
-    uint32_t trigger_value{};
 
     bool configured{false};
-    bool wait_start{};
-    bool bit_value{};
-    bool trigger_word{};
-    bool triggered{};
 
     RTTYDataMessage data_message{false, 0};
     RSSIThread rssi_thread{};

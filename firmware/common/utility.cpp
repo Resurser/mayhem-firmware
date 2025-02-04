@@ -22,6 +22,10 @@
 #include "utility.hpp"
 
 #include <cstdint>
+#define M_PI		3.14159265358979323846
+#ifndef I
+    #define I _Complex_I
+#endif
 
 #if 0
 uint32_t gcd(const uint32_t u, const uint32_t v) {
@@ -58,6 +62,24 @@ uint32_t gcd(const uint32_t u, const uint32_t v) {
 	return gcd((v - u) >> 1, u);
 }
 #endif
+
+// Ініціалізація Goertzel алгоритму
+void init_goertzel(int sample_rate, int target_freq, float* coeff, float* q0, float* q1, float* q2) {
+    *q0 = 0.0;
+    *q1 = 0.0;
+    *q2 = 0.0;
+    float k = (0.5 + ((float)target_freq * sample_rate)) / sample_rate;
+    *coeff = 2.0 * cos(2.0 * M_PI * k);
+}
+
+// Виконання Goertzel алгоритму
+float run_goertzel(float coeff, float* q0, float* q1, float* q2, float sample) {
+    *q2 = *q1;
+    *q1 = *q0;
+    *q0 = coeff * *q1 - *q2 + sample;
+
+    return (*q1 * *q1 + *q2 * *q2 - coeff * *q1 * *q2);
+}
 
 float fast_log2(const float val) {
     // Thank you Stack Overflow!
