@@ -144,12 +144,10 @@ void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_
     send_message(&message);
 }
 
-void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t trigger_value, const bool trigger_word) {
+void set_rtty(const uint32_t baudrate, const uint32_t word_length) {
     const RTTYRxConfigureMessage message{
         baudrate,
-        word_length,
-        trigger_value,
-        trigger_word};
+        word_length};
     send_message(&message);
 }
 

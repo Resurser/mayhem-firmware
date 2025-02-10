@@ -44,6 +44,11 @@ std::unordered_map<int, char> baudotToAsciiMap = {
     {0b11000, 'G'}, {0b11001, 'M'}, {0b11010, 'X'}, {0b11011, 'V'}, {0b11100, 'K'}, {0b11101, ' '}, 
     {0b11110, '\r'}, {0b11111, 'Q'} 
 };
+// Таблиця перетворення Baudot коду в ASCII
+const char baudot_table[32] = {
+    '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', 'X', 'M', 'V', '\0', '\0'
+};
 
 namespace ui::external_app::rtty_rx {
 
@@ -74,8 +79,8 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
    
-    auto def_bell202 = &modem_defs[7];
-    persistent_memory::set_modem_baudrate(def_bell202->baudrate);
+    auto receiver_modem = &modem_defs[7];
+    persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
     serial_format_t serial_format;
 
     // serial_format.data_bits = 7;
@@ -105,11 +110,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(persistent_memory::modem_baudrate(), 5, 0, false);
-
+    baseband::set_rtty(persistent_memory::modem_baudrate(), 5);
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
-    receiver_model.set_sampling_rate(3072000);
+    
 
     receiver_model.enable();
 }
@@ -119,17 +123,25 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_byte = "";
     
     if (is_data) {
+        char c = baudot_table[value & 0x1F]; // Перетворення в ASCII
+
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 9);
 
-        // value = deframe_word(value);
-        if (baudotToAsciiMap.find(value) != baudotToAsciiMap.end()) { 
-            str_console += (char)baudotToAsciiMap[value];  // Printable
-            str_byte += (char)value;
-        } else { 
+        if (c) {
+            str_console += c;
+        } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
             str_byte += "[" + to_string_hex(value, 2) + "]";
-        } 
+        }
+            
+        // value = deframe_word(value);
+        // if (baudotToAsciiMap.find(value) != baudotToAsciiMap.end()) { 
+            
+        // } else { 
+        //     str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+        //     str_byte += "[" + to_string_hex(value, 2) + "]";
+        // } 
         // value &= 0xFF;                                          // ABCDEFGH
         // value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
         // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB

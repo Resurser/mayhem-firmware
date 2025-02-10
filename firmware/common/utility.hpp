@@ -86,9 +86,10 @@ constexpr size_t log_2(const size_t n, const size_t p = 0) {
     return (n <= 1) ? p : log_2(n / 2, p + 1);
 }
 
+std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length = 5) ;
 void  init_goertzel(int sample_rate, int target_freq, float* coeff, float* q0, float* q1, float* q2);
 float run_goertzel(float coeff, float* q0, float* q1, float* q2, float sample);
-
+float goertzel(const int8_t* samples, int sample_count, int target_frequency, int sample_rate);
 float fast_log2(const float val);
 float fast_pow2(const float val);
 

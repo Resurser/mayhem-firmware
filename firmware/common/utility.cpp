@@ -81,6 +81,37 @@ float run_goertzel(float coeff, float* q0, float* q1, float* q2, float sample) {
     return (*q1 * *q1 + *q2 * *q2 - coeff * *q1 * *q2);
 }
 
+float goertzel(const int8_t* samples, int sample_count, int target_frequency, int sample_rate) {
+   float s_prev = 0.0;
+   float s_prev2 = 0.0;
+   float coeff = 2.0 * cosf(2.0 * M_PI * target_frequency / sample_rate);
+
+   for (int i = 0; i < sample_count; ++i) {
+       float s = samples[i] + coeff * s_prev - s_prev2;
+       s_prev2 = s_prev;
+       s_prev = s;
+   }
+
+   return s_prev2 * s_prev2 + s_prev * s_prev - coeff * s_prev * s_prev2;
+}
+
+std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length) {
+    std::string text;
+    for (size_t i = 0; i < bits.size(); i += word_length) {
+        int value = 0;
+        for (int j = 0; j < word_length; ++j) {
+            value |= (bits[i + j] << ((word_length - 1) - j));
+        }
+
+        auto corrector = 0;
+        if (word_length < 7) {
+            corrector = 0x20;
+        }
+        text.push_back(static_cast<char>(value + corrector)); // Додаємо 0x20 для перетворення в читабельний текст
+    }
+    return text;
+}
+
 float fast_log2(const float val) {
     // Thank you Stack Overflow!
     // http://stackoverflow.com/questions/9411823/fast-log2float-x-implementation-c

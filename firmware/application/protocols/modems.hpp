@@ -36,7 +36,7 @@ enum ModemModulation {
     AFSK = 0,
     FSK,
     PSK,
-    AM  // SSB
+    AM
 };
 
 struct modem_def_t {
@@ -53,10 +53,10 @@ constexpr modem_def_t modem_defs[MODEM_DEF_COUNT] = {
     {"V21", AFSK, 980, 1180, 300},
     {"V23 M1", AFSK, 1300, 1700, 600},
     {"V23 M2", AFSK, 1300, 2100, 1200},
-    {"RTTY 45 U", AM, 2295, 2125, 45},
-    {"RTTY 45 L", AM, 2125, 1955, 45},
-    {"RTTY 75 U", AM, 1445, 1275, 75},
-    {"RTTY 75 L", AM, 1275, 1445, 75}
+    {"RTTY 50U", AM, 2295, 2125, 50},
+    {"RTTY 50L", AM, 2125, 2295, 50},
+    {"RTTY 75U", AM, 1445, 1275, 75},
+    {"RTTY 75L", AM, 1275, 1445, 75},
 };
 
 void generate_data(const std::string& in_message, uint16_t* out_data);

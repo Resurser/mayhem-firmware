@@ -1460,20 +1460,14 @@ class RTTYRxConfigureMessage : public Message {
    public:
     constexpr RTTYRxConfigureMessage (
         const uint32_t baudrate,
-        const uint32_t word_length,
-        const uint32_t trigger_value,
-        const bool trigger_word)
+        const uint32_t word_length)
         : Message{ID::RTTYRxConfigure},
           baudrate(baudrate),
-          word_length(word_length),
-          trigger_value(trigger_value),
-          trigger_word(trigger_word) {
+          word_length(word_length) {
     }
 
     const uint32_t baudrate;
     const uint32_t word_length;
-    const uint32_t trigger_value;
-    const bool trigger_word;
 };
 
 class RTTYDataMessage : public Message {
