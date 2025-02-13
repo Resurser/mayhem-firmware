@@ -34,7 +34,10 @@
 using namespace portapack;
 using namespace modems;
 using namespace ui;
-
+const char baudot_table[32] = {
+    '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', 'X', 'M', 'V', '\0', '\0'
+};
 namespace ui::external_app::afsk_rx {
 
 void AFSKLogger::log_raw_data(const std::string& data) {
@@ -64,18 +67,18 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
    
-    auto def_bell202 = &modem_defs[0];
+    auto def_bell202 = &modem_defs[5];
     persistent_memory::set_modem_baudrate(def_bell202->baudrate);
     serial_format_t serial_format;
 
-serial_format.data_bits = 7;
-    serial_format.parity = EVEN;
-    serial_format.stop_bits = 2;
-    serial_format.bit_order = LSB_FIRST;
     // serial_format.data_bits = 5;
-    // serial_format.parity = NONE;
-    // serial_format.stop_bits = 1;
+    // serial_format.parity = EVEN;
+    // serial_format.stop_bits = 0;
     // serial_format.bit_order = LSB_FIRST;
+    serial_format.data_bits = 5;
+    serial_format.parity = NONE;
+    serial_format.stop_bits = 1;
+    serial_format.bit_order = MSB_FIRST;
     
     persistent_memory::set_serial_format(serial_format);
 
@@ -95,7 +98,7 @@ serial_format.data_bits = 7;
         logger->append(logs_dir / u"AFSK.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_afsk(persistent_memory::modem_baudrate(), 7, 0, false);
+    baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
 
     audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();
@@ -112,19 +115,33 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         str_console += (char)((console_color & 3) + 9);
 
         // value = deframe_word(value);
-
+        uint32_t alt_val = value & 0x1F;
         value &= 0xFF;                                          // ABCDEFGH
         value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
         value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
         value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
         value &= 0x7F;                                          // Ignore parity, which is the MSB now
+        if (logging){
+            value = alt_val;
+        } else { 
 
+        }
+        
+        
         if ((value >= 32) && (value < 127)) {
             str_console += (char)value;  // Printable
             str_byte += (char)value;
-        } else if (logger && logging) {
+        } else if (value < 32) {
+            str_console += (char)baudot_table[value];  // Printable
+            str_byte += (char)baudot_table[value];
+        }else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
             str_byte += "[" + to_string_hex(value, 2) + "]";
+        }
+    
+        if (logger && logging) {
+
+           
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
@@ -138,10 +155,10 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
             console.writeln("");
             console_color++;
 
-            if (logger && logging) {
-                logger->log_raw_data(str_log);
-                str_log = "";
-            }
+            // if (logger && logging) {
+            //     logger->log_raw_data(str_log);
+            //     str_log = "";
+            // }
         }
         prev_value = value;
     } else {

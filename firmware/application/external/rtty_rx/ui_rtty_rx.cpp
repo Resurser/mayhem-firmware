@@ -87,10 +87,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = EVEN;
     // serial_format.stop_bits = 2;
     // serial_format.bit_order = LSB_FIRST;
-    // serial_format.data_bits = 5;
-    // serial_format.parity = NONE;
-    // serial_format.stop_bits = 1;
-    // serial_format.bit_order = MSB_FIRST;
+    serial_format.data_bits = 5;
+    serial_format.parity = NONE;
+    serial_format.stop_bits = 1;
+    serial_format.bit_order = MSB_FIRST;
     
     // persistent_memory::set_serial_format(serial_format);
 

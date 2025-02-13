@@ -68,7 +68,7 @@ class AFSKRxProcessor : public BasebandProcessor {
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
 
-    dsp::demodulate::FM demod{};
+    dsp::demodulate::SSB demod{};
 
     AudioOutput audio_output{};
 
