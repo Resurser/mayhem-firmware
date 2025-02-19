@@ -77,8 +77,8 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // serial_format.bit_order = LSB_FIRST;
     serial_format.data_bits = 5;
     serial_format.parity = NONE;
-    serial_format.stop_bits = 1;
-    serial_format.bit_order = MSB_FIRST;
+    serial_format.stop_bits = 0;
+    serial_format.bit_order = LSB_FIRST;
     
     persistent_memory::set_serial_format(serial_format);
 
@@ -116,11 +116,17 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
 
         // value = deframe_word(value);
         uint32_t alt_val = value & 0x1F;
+        // text_debug.set("~" + to_string_dec_uint(value));
+        
         value &= 0xFF;                                          // ABCDEFGH
+        // text_debug.set("<<" + to_string_dec_uint(value));
+
         value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
         value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
         value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
         value &= 0x7F;                                          // Ignore parity, which is the MSB now
+        
+        // text_debug.set(">>" + to_string_dec_uint(value));
         if (logging){
             value = alt_val;
         } else { 
@@ -147,7 +153,6 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
 
         console.write(str_console);
-
         if (logger && logging) str_log += str_byte;
 
         if ((value != 0x7F) && (prev_value == 0x7F)) {

@@ -42,7 +42,7 @@ class AFSKRxProcessor : public BasebandProcessor {
 
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
+    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
 
     size_t samples_per_bit{};
 
@@ -59,8 +59,8 @@ class AFSKRxProcessor : public BasebandProcessor {
     std::array<float, 32> audio{};
     const buffer_f32_t audio_buffer{
         audio.data(),
-        audio.size()};
-
+        audio.size()
+    };
     // Array size ok down to 375 bauds (24000 / 375)
     std::array<int32_t, 64> delay_line{0};
 
