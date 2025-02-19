@@ -174,6 +174,10 @@ set(EXTCPPSRC
 	# wipe sdcard
 	external/sd_wipe/main.cpp
 	external/sd_wipe/ui_sd_wipe.cpp
+
+	# playlist editor
+	external/playlist_editor/main.cpp
+	external/playlist_editor/ui_playlist_editor.cpp
 )
 
 set(EXTAPPLIST
@@ -219,4 +223,5 @@ set(EXTAPPLIST
 	antenna_length
 	view_wav
 	sd_wipe
+	playlist_editor
 )
