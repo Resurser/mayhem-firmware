@@ -165,7 +165,7 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
     // channel_filter.configure(taps_11k0_channel.taps, 2);
 
     audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
-
+    
     samples_per_bit = audio_fs / message.baudrate;
 
     phase_inc = (0x10000 * message.baudrate) / audio_fs;

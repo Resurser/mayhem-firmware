@@ -37,22 +37,12 @@
 using namespace ui;
 
 namespace ui::external_app::afsk_rx {
-// static char letters [32] = {
-// 	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
-// 	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
-// 	'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
-// 	'O',	'B',	'G',	'·',	'M',	'X',	'V',	'·'
-// };
+
 
 // ///*
 // // * ITA-2 version of the figures case.
 // // */
-// //static unsigned char figures[32] = {
-// //	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
-// //	'\r',	'·',	'4',	'\a',	',',	'·',	':',	'(',
-// //	'5',	'+',	')',	'2',	'·',	'6',	'0',	'1',
-// //	'9',	'?',	'·',	'·',	'.',	'/',	'=',	'·'
-// //};
+
 // ///*
 // // * U.S. version of the figures case.
 // // */

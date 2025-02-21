@@ -94,7 +94,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     
     // persistent_memory::set_serial_format(serial_format);
 
-    field_frequency.set_step(10000);
+    field_frequency.set_step(1000);
 
     check_log.set_value(logging);
     check_log.on_select = [this](Checkbox&, bool v) {
@@ -111,7 +111,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_rtty(persistent_memory::modem_baudrate(), 5);
-    audio::set_rate(audio::Rate::Hz_12000);
+    audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();
     
 
@@ -121,38 +121,48 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
-    
-    if (is_data) {
-        char c = baudot_table[value & 0x1F]; // Перетворення в ASCII
 
+    if (is_data) {
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 9);
 
-        if (c) {
-            str_console += c;
+        // value = deframe_word(value);
+        uint32_t alt_val2 = value;
+        uint32_t alt_val = value & 0x1F;
+        // text_debug.set("~" + to_string_dec_uint(value));
+        
+        value &= 0xFF;                                          // ABCDEFGH
+        // text_debug.set("<<" + to_string_dec_uint(value));
+
+        value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
+        value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
+        value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
+        value &= 0x7F;                                          // Ignore parity, which is the MSB now
+        
+        text_debug.set(">> " + to_string_dec_uint(value)+" :: "+to_string_dec_uint(alt_val)+" :: "+to_string_dec_uint(alt_val2));
+        
+        if (logging){
+            value = alt_val;
+        } else { 
+
+        }
+        
+        text_debug.set(">>" + to_string_dec_uint(value));
+        if ((value >= 32) && (value < 127)) {
+            str_console += (char)value;  // Printable
+            str_byte    += (char)value;
+        } else if (value < 32) {
+            str_console += (char)baudot_table[value];  // Printable
+            str_byte    += (char)baudot_table[value];
         } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            str_byte += "[" + to_string_hex(value, 2) + "]";
+            str_byte    += "[" + to_string_hex(value, 2) + "]";
         }
-            
-        // value = deframe_word(value);
-        // if (baudotToAsciiMap.find(value) != baudotToAsciiMap.end()) { 
-            
-        // } else { 
-        //     str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-        //     str_byte += "[" + to_string_hex(value, 2) + "]";
-        // } 
-        // value &= 0xFF;                                          // ABCDEFGH
-        // value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
-        // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
-        // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
-        // value &= 0x7F;                                          // Ignore parity, which is the MSB now
-
+    
+        
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
-        // str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-        // str_byte += "[" + to_string_hex(value, 2) + "]";
-        console.write(str_console);
 
+        console.write(str_console);
         if (logger && logging) str_log += str_byte;
 
         if ((value != 0x7F) && (prev_value == 0x7F)) {
