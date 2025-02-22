@@ -113,10 +113,13 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
 
-    audio::set_rate(audio::Rate::Hz_24000);
-    audio::output::start();
-
+    receiver_model.set_sampling_rate(3072000);
+    receiver_model.set_baseband_bandwidth(1750000);
+    receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
     receiver_model.enable();
+
+    audio::set_rate(audio::Rate::Hz_12000);
+    audio::output::start();
 }
 
 void AFSKRxView::on_data(uint32_t value, bool is_data) {

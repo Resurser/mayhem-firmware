@@ -35,7 +35,8 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
     // FM demodulation
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);              // 2048 / 8 = 256 (512 I/Q samples)
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
-    const auto channel_out = channel_filter.execute(decim_1_out, dst_buffer);  // 32 / 2 = 16 (32 I/Q samples)
+    const auto decim_2_out = decim_2.execute(decim_1_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
+    const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);  // 32 / 2 = 16 (32 I/Q samples)
 
     feed_channel_stats(channel_out);
 
@@ -156,15 +157,16 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
         const size_t channel_filter_output_fs = channel_filter_input_fs / 2;
 
         const size_t demod_input_fs = channel_filter_output_fs;*/
-
-    decim_0.configure(taps_11k0_decim_0.taps);
-	decim_1.configure(taps_11k0_decim_1.taps);
-	channel_filter.configure(taps_11k0_channel.taps, 2);
+    
+    decim_0.configure(taps_6k0_decim_0.taps);
+	decim_1.configure(taps_6k0_decim_1.taps);
+	decim_2.configure(taps_6k0_decim_2.taps, 8);
+	channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    audio_output.configure(audio_12k_hpf_300hz_config);
     // decim_0.configure(taps_11k0_decim_0.taps);
     // decim_1.configure(taps_11k0_decim_1.taps);
     // channel_filter.configure(taps_11k0_channel.taps, 2);
 
-    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
     
     samples_per_bit = audio_fs / message.baudrate;
 

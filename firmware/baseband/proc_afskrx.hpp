@@ -61,11 +61,11 @@ class AFSKRxProcessor : public BasebandProcessor {
         audio.data(),
         audio.size()
     };
-    // Array size ok down to 375 bauds (24000 / 375)
     std::array<int32_t, 64> delay_line{0};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
+    dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
 
     dsp::demodulate::SSB demod{};

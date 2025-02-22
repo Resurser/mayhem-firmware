@@ -111,10 +111,8 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_rtty(persistent_memory::modem_baudrate(), 5);
-    audio::set_rate(audio::Rate::Hz_24000);
+    audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
-    
-
     receiver_model.enable();
 }
 
