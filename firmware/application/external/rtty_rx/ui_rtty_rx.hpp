@@ -36,42 +36,15 @@
 
 using namespace ui;
 
-static char letters [32] = {
-	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
-	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
-	'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
-	'O',	'B',	'G',	'.',	'M',	'X',	'V',    '.',
-};
-
-// ///*
-// // * ITA-2 version of the figures case.
-// // */
-// //static unsigned char figures[32] = {
-// //	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
-// //	'\r',	'·',	'4',	'\a',	',',	'·',	':',	'(',
-// //	'5',	'+',	')',	'2',	'·',	'6',	'0',	'1',
-// //	'9',	'?',	'·',	'·',	'.',	'/',	'=',	'·'
-// //};
-// ///*
-// // * U.S. version of the figures case.
-// // */
-// //static unsigned char figures[32] = {
-// //	'\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
-// //	'\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
-// //	'5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
-// //	'9',	'?',	'&',	'·',	'.',	'/',	';',	'·'
-// //};
-// /*
-//  * A mix of the two. This is what seems to be what people actually use.
-//  */
-static unsigned char figures [32] = {
-	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
-	'\r',	'$',	'4',	'\a',	',',	'!',	':',	'(',
-	'5',	'+',	')',	'2',	'H',	'6',	'0',	'1',
-	'9',	'?',	'&',	' ',	'.',	'/',	'=',	'.'
-};
-
 namespace ui::external_app::rtty_rx {
+
+class Baudot {
+   public:
+    unsigned char pickup_char (uint32_t rttyRxdata);
+   private:
+    unsigned char toChar (uint32_t data);
+    rttyParity
+};
 
 
 class RTTYLogger {

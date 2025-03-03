@@ -36,21 +36,69 @@ using namespace portapack;
 using namespace modems;
 using namespace ui;
 
-std::unordered_map<int, char> baudotToAsciiMap = { 
-    {0b00000, ' '}, {0b00001, 'E'}, {0b00010, '\n'}, {0b00011, 'A'}, {0b00100, 'S'}, {0b00101, 'I'}, 
-    {0b00110, 'U'}, {0b00111, 'D'}, {0b01000, 'R'}, {0b01001, 'J'}, {0b01010, 'N'}, {0b01011, 'F'},
-    {0b01100, 'C'}, {0b01101, 'K'}, {0b01110, 'T'}, {0b01111, 'Z'}, {0b10000, 'L'}, {0b10001, 'W'}, 
-    {0b10010, 'H'}, {0b10011, 'Y'}, {0b10100, 'P'}, {0b10101, 'Q'}, {0b10110, 'O'}, {0b10111, 'B'}, 
-    {0b11000, 'G'}, {0b11001, 'M'}, {0b11010, 'X'}, {0b11011, 'V'}, {0b11100, 'K'}, {0b11101, ' '}, 
-    {0b11110, '\r'}, {0b11111, 'Q'} 
-};
-// Таблиця перетворення Baudot коду в ASCII
-const char baudot_table[32] = {
-    '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
-    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', 'X', 'M', 'V', '\0', '\0'
-};
-
 namespace ui::external_app::rtty_rx {
+
+
+unsigned char Baudot::pickup_char (uint32_t rttyRxdata) {
+    uint8_t	data_mask	= (1 << rttyNbits) - 1;
+    uint8_t	parbit 		= (rttyRxdata >> rttyNbits) & 1;
+    uint8_t	data;
+
+	if (rttyParity != RTTY_PARITY_NONE) {
+	   if (parbit != check_parity (rttyRxdata, rttyNbits, rttyParity)) {
+//	      fprintf (stderr, "Parity error");
+	      return 0;
+	   }
+	}
+
+	data	= (int)(rttyRxdata & data_mask);
+	if (rttyMsb)
+	   data = reverseBits (data, rttyNbits);
+
+	if (rttyNbits == 5)
+	   return BaudottoASCII (data);
+
+	return data;
+}
+
+unsigned char Baudot::toChar(const uint32_t data) {
+    int out = 0;
+    const char letters[32] = {
+        '\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
+        '\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
+        'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
+        'O',	'B',	'G',	' ',	'M',	'X',	'V',	' '
+    };
+    const char figures[32] = {
+        '\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
+        '\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
+        '5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
+        '9',	'?',	'&',	' ',	'.',	'/',	';',	' '
+    };
+
+    switch (data) {
+    case 0x1F:		/* letters */
+        rxmode = LETTERS;
+        break;
+    case 0x1B:		/* figures */
+        rxmode = FIGURES;
+        break;
+    case 0x04:		/* unshift-on-space */
+//        if (progdefaults.UOSrx)
+//            rxmode = LETTERS;
+        return ' ';
+        break;
+    default:
+        if (rxmode == LETTERS)
+            out = letters[data];
+        else
+            out = figures[data];
+        break;
+    }
+
+    return out;
+}
+
 
 void RTTYLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
@@ -110,8 +158,8 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         logger->append(logs_dir / u"RTTY.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(persistent_memory::modem_baudrate(), 5);
-    audio::set_rate(audio::Rate::Hz_12000);
+    baseband::set_rtty(50, 5);
+    audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();
     receiver_model.enable();
 }

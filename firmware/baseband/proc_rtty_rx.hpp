@@ -35,6 +35,19 @@
 #include "fifo.hpp"
 #include "message.hpp"
 
+#define SAMPLE_RATE 3072000 // 3.072 МГц
+#define DECIMATION_FACTOR 128
+#define AUDIO_SAMPLE_RATE (SAMPLE_RATE / DECIMATION_FACTOR)
+#define BAUD_RATE 50
+#define MARK_FREQ 2125
+#define SPACE_FREQ 2295
+#define SAMPLES_PER_BIT (AUDIO_SAMPLE_RATE / BAUD_RATE)
+#define STOP_BITS 1.5
+#define BUFFER_SIZE 8192
+#define PI 3.14159265358979323846
+#define VGA_GAIN 20
+#define AFC_BANDWIDTH 50 // Ширина смуги автопідстроювання частоти
+
 class RTTYRxProcessor : public BasebandProcessor {
    public:
     RTTYRxProcessor ();
@@ -75,6 +88,9 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     std::array<int32_t, 64> delay_line{0};
     uint32_t word_length{5};
+    uint16_t freq_mark{2125};
+    uint16_t freq_space{2295};
+
     State state{};
     
     size_t delay_line_index{};

@@ -21,7 +21,9 @@
  */
 
 #include "proc_rtty_rx.hpp"
-#include "portapack_shared_memory.hpp"
+
+#include "portapack_persistent_memory.hpp"
+
 #include "audio_dma.hpp"
 #include "event_m4.hpp"
 #include "math.h"
@@ -31,16 +33,14 @@
 #include <vector>
 #include <cmath>
 
-#include "dsp_goertzel.hpp"
 #include "utility.hpp"
 
-#define SAMPLE_RATE 24000 // 24 кГц
-#define BAUD_RATE 45.45
-#define MARK_FREQ 2125
-#define SPACE_FREQ 2295
-#define SAMPLES_PER_BIT (SAMPLE_RATE / BAUD_RATE)
-#define BUFFER_SIZE 8192
+#ifndef M_PI
+#define M_PI (3.14159265358979323846264338327950288)
+#endif
 
+using namespace portapack;
+using namespace modems;
 
 RTTYRxProcessor::RTTYRxProcessor() {
     // decim_0.configure(taps_6k0_decim_0.taps);
@@ -85,101 +85,39 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     auto audio = demod.execute(channel_out, audio_buffer);
 
     audio_output.write(audio);
+    
+    std::vector<int> demodulated;
+    int baud_samples = samples_per_bit; // 
 
     // Audio signal processing
-    for (size_t c = 0; c < audio.count; c++) {
-        const int32_t sample_int = audio.p[c] * 32768.0f;
-        int32_t current_sample = __SSAT(sample_int, 16);
+    for (size_t c = 0; c < audio.count; c += baud_samples) {
+        float mark_energy = 0;
+        float space_energy = 0;
 
-        current_sample /= 128;
-
-        // Delay line put
-        delay_line[delay_line_index & 0x3F] = current_sample;
-
-        // Delay line get, and LPF
-        sample_mixed = (delay_line[(delay_line_index - (samples_per_bit / 2)) & 0x3F] * current_sample) / 4;
-        sample_filtered = prev_mixed + sample_mixed + (prev_filtered / 2);
-
-        delay_line_index++;
-
-        prev_filtered = sample_filtered;
-        prev_mixed = sample_mixed;
-
-        // Slice
-        sample_bits <<= 1;
-        sample_bits |= (sample_filtered < -20) ? 1 : 0;
-
-        // Check for "clean" transition: either 0011 or 1100
-        if ((((sample_bits >> 2) ^ sample_bits) & 3) == 3) {
-            // Adjust phase
-            if (phase < 0x8000)
-                phase += 0x800;  // Is this a proper value ?
-            else
-                phase -= 0x800;
-        }
-
-        phase += phase_inc;
-
-        if (phase >= 0x10000) {
-            phase &= 0xFFFF;
-
-            if (trigger_word) {
-                // Continuous-stream value-triggered mode (AX.25) - UNTESTED
-                word_bits <<= 1;
-                word_bits |= (sample_bits & 1);
-
-                bit_counter++;
-
-                if (triggered) {
-                    if (bit_counter == word_length) {
-                        bit_counter = 0;
-
-                        data_message.is_data = true;
-                        data_message.value = word_bits & word_mask;
-                        shared_memory.application_queue.push(data_message);
-                    }
-                } else {
-                    if ((word_bits & word_mask) == trigger_value) {
-                    // if (word_bits == trigger_value) {
-                        triggered = !triggered;
-                        bit_counter = 0;
-
-                        data_message.is_data = true;
-                        data_message.value = trigger_value;
-                        shared_memory.application_queue.push(data_message);
-                    }
-                }
-
-            } else {
-                // RS232-like modem mode
-                if (state == WAIT_START) {
-                    if (!(sample_bits & 1)) {
-                        // Got start bit
-                        state = RECEIVE;
-                        bit_counter = 0;
-                    }
-                } else if (state == WAIT_STOP) {
-                    if (sample_bits & 1) {
-                        // Got stop bit
-                        state = WAIT_START;
-                    }
-                } else {
-                    word_bits <<= 1;
-                    word_bits |= (sample_bits & 1);
-
-                    bit_counter++;
-                }
-
-                if (bit_counter == word_length) {
-                    bit_counter = 0;
-                    state = WAIT_STOP;
-
-                    data_message.is_data = true;
-                    data_message.value = word_bits;
-                    shared_memory.application_queue.push(data_message);
-                }
+        for (int j = 0; j < baud_samples; ++j) {
+            if (c + j < audio.count) {
+                mark_energy += audio.p[c + j] * cos(2 * M_PI * freq_mark * j / audio_fs); // Mark frequency 2125 Hz
+                space_energy += audio.p[c + j] * cos(2 * M_PI * freq_space * j / audio_fs); // Space frequency 2295 Hz
             }
         }
+
+        if (mark_energy > space_energy) {
+            demodulated.push_back(1);
+        } else {
+            demodulated.push_back(0);
+        }
+    }
+    for (size_t i = 0; i < demodulated.size(); i += 5) {
+        uint32_t code = 0;
+        for (int j = 0; j < 5; ++j) {
+            if (i + j < demodulated.size()) {
+                code = (code << 1) | demodulated[i + j];
+            }
+        }
+
+        data_message.is_data = true;
+        data_message.value = code;
+        shared_memory.application_queue.push(data_message);
     }
 }
 
@@ -189,12 +127,13 @@ void RTTYRxProcessor::on_message(const Message* const message) {
 }
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
+    configured = false;
     decim_0.configure(taps_11k0_decim_0.taps);
-	decim_1.configure(taps_11k0_decim_1.taps);
-	channel_filter.configure(taps_11k0_channel.taps, 4);
-    
-    audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
-    // audio_output.configure(audio_12k_hpf_300hz_config);
+    decim_1.configure(taps_11k0_decim_1.taps);
+    channel_filter.configure(taps_11k0_channel.taps, 2);
+    // demod.configure(audio_fs, 5000);
+
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
 
     samples_per_bit = audio_fs / message.baudrate;
 
@@ -203,6 +142,8 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
 
     trigger_word = 0;
     word_length = message.word_length;
+    freq_mark = message.mark_freq;
+    freq_space = message.space_freq;
     trigger_value = 0;
     word_mask = (1 << word_length) - 1;
 
@@ -211,8 +152,8 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
 
     triggered = false;
     state = WAIT_START;
-
     configured = true;
+    
 }
 
 int main() {

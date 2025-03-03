@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
  * Copyright (C) 2017 Furrtek
@@ -38,29 +39,6 @@ using namespace ui;
 
 namespace ui::external_app::afsk_rx {
 
-
-// ///*
-// // * ITA-2 version of the figures case.
-// // */
-
-// ///*
-// // * U.S. version of the figures case.
-// // */
-// //static unsigned char figures[32] = {
-// //	'\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
-// //	'\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
-// //	'5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
-// //	'9',	'?',	'&',	'·',	'.',	'/',	';',	'·'
-// //};
-// /*
-//  * A mix of the two. This is what seems to be what people actually use.
-//  */
-// static char figures [32] = {
-// 	'\0',	'3',	'\n',	'-',	' ',	'\'',	'8',	'7',
-// 	'\r',	'$',	'4',	'\a',	',',	'!',	':',	'(',
-// 	'5',	'+',	')',	'2',	'H',	'6',	'0',	'1',
-// 	'9',	'?',	'&',	'·',	'.',	'/',	'=',	'·'
-// };
 class AFSKLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {
