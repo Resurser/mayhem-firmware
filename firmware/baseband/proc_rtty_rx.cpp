@@ -43,31 +43,29 @@ using namespace portapack;
 using namespace modems;
 
 RTTYRxProcessor::RTTYRxProcessor() {
-    // decim_0.configure(taps_6k0_decim_0.taps);
-    // decim_1.configure(taps_6k0_decim_1.taps);
-    // channel_filter.configure(taps_2k8_lsb_channel.taps, 2);
-    
-    // // demod.configure(audio_fs, 5000);
+    decim_0.configure(taps_200k_decim_0.taps);
+    decim_1.configure(taps_16k0_decim_1.taps);
+    channel_filter.configure(taps_11k0_channel.taps, 2);
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 50);
 
-    // audio_output.configure(audio_12k_hpf_300hz_config, audio_12k_deemph_300_6_config, 0);
+    samples_per_bit = audio_fs / BAUD_RATE;
 
-    // samples_per_bit = audio_fs / message.baudrate;
+    phase_inc = (0x10000 * BAUD_RATE) / audio_fs;
+    phase = 0;
+    freq_mark = MARK_FREQ;
+    freq_space = SPACE_FREQ;
 
-    // phase_inc = (0x10000 * message.baudrate) / audio_fs;
-    // phase = 0;
+    trigger_word = 0;
+    word_length = 5;
+    trigger_value = 0;
+    word_mask = (1 << word_length) - 1;
 
-    // trigger_word = message.trigger_word;
-    // word_length = message.word_length;
-    // trigger_value = message.trigger_value;
-    // word_mask = (1 << word_length) - 1;
+    // Delay line
+    delay_line_index = 0;
+    triggered = false;
+    state = WAIT_START;
 
-    // // Delay line
-    // delay_line_index = 0;
-
-    // triggered = false;
-    // state = WAIT_START;
-
-    // configured = true;
+    configured = true;
 }
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
@@ -85,9 +83,9 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     auto audio = demod.execute(channel_out, audio_buffer);
 
     audio_output.write(audio);
-    
+
     std::vector<int> demodulated;
-    int baud_samples = samples_per_bit; // 
+    int baud_samples = samples_per_bit;  //
 
     // Audio signal processing
     for (size_t c = 0; c < audio.count; c += baud_samples) {
@@ -96,8 +94,8 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
 
         for (int j = 0; j < baud_samples; ++j) {
             if (c + j < audio.count) {
-                mark_energy += audio.p[c + j] * cos(2 * M_PI * freq_mark * j / audio_fs); // Mark frequency 2125 Hz
-                space_energy += audio.p[c + j] * cos(2 * M_PI * freq_space * j / audio_fs); // Space frequency 2295 Hz
+                mark_energy += audio.p[c + j] * cos(2 * M_PI * freq_mark * j / audio_fs);    // Mark frequency 2125 Hz
+                space_energy += audio.p[c + j] * cos(2 * M_PI * freq_space * j / audio_fs);  // Space frequency 2295 Hz
             }
         }
 
@@ -128,13 +126,10 @@ void RTTYRxProcessor::on_message(const Message* const message) {
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     configured = false;
-    decim_0.configure(taps_11k0_decim_0.taps);
-    decim_1.configure(taps_11k0_decim_1.taps);
+    decim_0.configure(taps_200k_decim_0.taps);
+    decim_1.configure(taps_16k0_decim_1.taps);
     channel_filter.configure(taps_11k0_channel.taps, 2);
-    // demod.configure(audio_fs, 5000);
-
-    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
-
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 50);
     samples_per_bit = audio_fs / message.baudrate;
 
     phase_inc = (0x10000 * message.baudrate) / audio_fs;
@@ -153,7 +148,6 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     triggered = false;
     state = WAIT_START;
     configured = true;
-    
 }
 
 int main() {

@@ -63,12 +63,12 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(467225500);
-    auto def_bell202 = &modem_defs[0];
+    auto def_bell202 = &modem_defs[5];
     persistent_memory::set_modem_baudrate(def_bell202->baudrate);
     serial_format_t serial_format;
-    serial_format.data_bits = 7;
-    serial_format.parity = EVEN;
-    serial_format.stop_bits = 1;
+    serial_format.data_bits = 5;
+    serial_format.parity = NONE;
+    serial_format.stop_bits = 2;
     serial_format.bit_order = LSB_FIRST;
     persistent_memory::set_serial_format(serial_format);
 
@@ -88,7 +88,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
         logger->append(logs_dir / u"AFSK.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_afsk(persistent_memory::modem_baudrate(), 8, 0, false);
+    baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
 
     audio::set_rate(audio::Rate::Hz_24000);
     audio::output::start();

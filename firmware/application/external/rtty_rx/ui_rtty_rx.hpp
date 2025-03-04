@@ -38,15 +38,6 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-class Baudot {
-   public:
-    unsigned char pickup_char (uint32_t rttyRxdata);
-   private:
-    unsigned char toChar (uint32_t data);
-    rttyParity
-};
-
-
 class RTTYLogger {
    public:
     Optional<File::Error> append(const std::filesystem::path& filename) {
@@ -79,6 +70,7 @@ class RTTYRxView : public View {
     uint8_t console_color{0};
     uint32_t prev_value{0};
     std::string str_log{""};
+    uint16_t rxmode{1}; //LETTERS
     bool logging{false};
 
     RFAmpField field_rf_amp{

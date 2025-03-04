@@ -54,9 +54,9 @@ constexpr modem_def_t modem_defs[MODEM_DEF_COUNT] = {
     {"V23 M1", AFSK, 1300, 1700, 600},
     {"V23 M2", AFSK, 1300, 2100, 1200},
     
-    {"RTTY50", AM, 2125, 2295, 50},
+    {"FSK50", FSK, 2125, 2295, 50},
     {"LRTTY50", AM, 1275, 1445, 50},
-    {"RTTY45", AM, 2125, 2295, 45},
+    {"RTTY45", PSK, 2125, 2295, 45},
     {"LRTTY45", AM, 1275, 1445, 45},
 };
 

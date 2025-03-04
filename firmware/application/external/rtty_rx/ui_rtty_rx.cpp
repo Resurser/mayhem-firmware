@@ -38,30 +38,7 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-
-unsigned char Baudot::pickup_char (uint32_t rttyRxdata) {
-    uint8_t	data_mask	= (1 << rttyNbits) - 1;
-    uint8_t	parbit 		= (rttyRxdata >> rttyNbits) & 1;
-    uint8_t	data;
-
-	if (rttyParity != RTTY_PARITY_NONE) {
-	   if (parbit != check_parity (rttyRxdata, rttyNbits, rttyParity)) {
-//	      fprintf (stderr, "Parity error");
-	      return 0;
-	   }
-	}
-
-	data	= (int)(rttyRxdata & data_mask);
-	if (rttyMsb)
-	   data = reverseBits (data, rttyNbits);
-
-	if (rttyNbits == 5)
-	   return BaudottoASCII (data);
-
-	return data;
-}
-
-unsigned char Baudot::toChar(const uint32_t data) {
+unsigned char RTTYRxView::BaudottoChar(const uint32_t data) {
     int out = 0;
     const char letters[32] = {
         '\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
@@ -78,10 +55,10 @@ unsigned char Baudot::toChar(const uint32_t data) {
 
     switch (data) {
     case 0x1F:		/* letters */
-        rxmode = LETTERS;
+        rxmode = 1;
         break;
     case 0x1B:		/* figures */
-        rxmode = FIGURES;
+        rxmode = 2;
         break;
     case 0x04:		/* unshift-on-space */
 //        if (progdefaults.UOSrx)
@@ -89,10 +66,10 @@ unsigned char Baudot::toChar(const uint32_t data) {
         return ' ';
         break;
     default:
-        if (rxmode == LETTERS)
-            out = letters[data];
-        else
+        if (rxmode == 2)
             out = figures[data];
+        else
+            out = letters[data];
         break;
     }
 
@@ -140,7 +117,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     serial_format.stop_bits = 1;
     serial_format.bit_order = MSB_FIRST;
     
-    // persistent_memory::set_serial_format(serial_format);
+    persistent_memory::set_serial_format(serial_format);
 
     field_frequency.set_step(1000);
 
@@ -175,30 +152,40 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         // value = deframe_word(value);
         uint32_t alt_val2 = value;
         uint32_t alt_val = value & 0x1F;
-        // text_debug.set("~" + to_string_dec_uint(value));
+        text_debug.set(">> " + to_string_dec_uint(value)+" :: "+to_string_dec_uint(alt_val)+" :: "+to_string_dec_uint(alt_val2));
+        
+        text_debug.set("~" + to_string_dec_uint(value));
         
         value &= 0xFF;                                          // ABCDEFGH
         // text_debug.set("<<" + to_string_dec_uint(value));
 
         value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
+        uint32_t alt_val3 = value;
         value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
+        uint32_t alt_val4 = value;
         value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
+        uint32_t alt_val5 = value;
         value &= 0x7F;                                          // Ignore parity, which is the MSB now
         
-        text_debug.set(">> " + to_string_dec_uint(value)+" :: "+to_string_dec_uint(alt_val)+" :: "+to_string_dec_uint(alt_val2));
+        text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
+            " :: "+to_string_dec_uint(alt_val, 2)+
+            " > "+to_string_hex(alt_val2, 2)+
+            " >> "+to_string_hex(alt_val3, 2)+
+            " >>> "+to_string_hex(alt_val4, 2)+
+            " >>>> "+to_string_hex(alt_val5, 2));
         
+
         if (logging){
             value = alt_val;
         } else { 
 
         }
         
-        text_debug.set(">>" + to_string_dec_uint(value));
         if ((value >= 32) && (value < 127)) {
             str_console += (char)value;  // Printable
             str_byte    += (char)value;
         } else if (value < 32) {
-            str_console += (char)baudot_table[value];  // Printable
+            str_console += (char)BaudottoChar(value);  // Printable
             str_byte    += (char)baudot_table[value];
         } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable

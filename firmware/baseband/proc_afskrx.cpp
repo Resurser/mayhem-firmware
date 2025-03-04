@@ -156,12 +156,12 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
 
         const size_t demod_input_fs = channel_filter_output_fs;*/
 
-    decim_0.configure(taps_11k0_decim_0.taps);
-    decim_1.configure(taps_11k0_decim_1.taps);
+    decim_0.configure(taps_200k_decim_0.taps);
+    decim_1.configure(taps_16k0_decim_1.taps);
     channel_filter.configure(taps_11k0_channel.taps, 2);
     // demod.configure(audio_fs, 5000);
 
-    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 0);
+    audio_output.configure(audio_24k_hpf_300hz_config, audio_24k_deemph_300_6_config, 50);
 
     samples_per_bit = audio_fs / message.baudrate;
 

@@ -52,6 +52,7 @@
 *.map
 *.lst
 .dep/
+.github/
 /build*
 CMakeFiles/
 cmake-build-debug/

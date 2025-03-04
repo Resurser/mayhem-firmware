@@ -55,7 +55,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
    private:
-   
+    unsigned char RTTYRxView::BaudottoChar(const uint32_t data);
     static constexpr size_t baseband_fs = 3072000;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
 

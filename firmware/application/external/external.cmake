@@ -218,7 +218,7 @@ set(EXTAPPLIST
 	metronome
 	app_manager
 	hopper
-	rtty_rx
+	# rtty_rx
 	test_rx
 	antenna_length
 	view_wav
