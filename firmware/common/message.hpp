@@ -588,6 +588,7 @@ class AMConfigureMessage : public Message {
     enum class Modulation : int32_t {
         DSB = 0,
         SSB = 1,
+        SSB_FM = 2,  // Added new for RX Wefax mode,  to demodulate APT signal ,FM modulated inside audio subcarrier tones, and then up broadcasted in SSB USB .
     };
 
     constexpr AMConfigureMessage(
@@ -596,7 +597,7 @@ class AMConfigureMessage : public Message {
         const fir_taps_real<32> decim_2_filter,
         const fir_taps_complex<64> channel_filter,
         const Modulation modulation,
-        const iir_biquad_config_t audio_hpf_config,
+        const iir_biquad_config_t audio_hpf_lpf_config,
         float spectrum_zoom)
         : Message{ID::AMConfigure},
           decim_0_filter(decim_0_filter),
@@ -604,7 +605,7 @@ class AMConfigureMessage : public Message {
           decim_2_filter(decim_2_filter),
           channel_filter(channel_filter),
           modulation{modulation},
-          audio_hpf_config(audio_hpf_config),
+          audio_hpf_lpf_config(audio_hpf_lpf_config),
           spectrum_zoom(spectrum_zoom) {
     }
 
@@ -613,7 +614,7 @@ class AMConfigureMessage : public Message {
     const fir_taps_real<32> decim_2_filter;
     const fir_taps_complex<64> channel_filter;
     const Modulation modulation;
-    const iir_biquad_config_t audio_hpf_config;
+    const iir_biquad_config_t audio_hpf_lpf_config;
     const float spectrum_zoom;
 };
 

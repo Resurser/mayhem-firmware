@@ -68,9 +68,11 @@ class NarrowbandAMAudio : public BasebandProcessor {
 
     dsp::DDC ddc { };
     
-    bool modulation_ssb = false;
+    // bool modulation_ssb = false;  // Origianlly we only had 2 AM demod types {DSB = 0, SSB = 1} , and we could handle it with bool var , 1 bit.
+    int8_t modulation_ssb = 0;  // Now we have 3 AM demod types we will send now index integer  {DSB = 0, SSB = 1, SSB_FM = 2}
     dsp::demodulate::AM demod_am{};
     dsp::demodulate::SSB demod_ssb{};
+    dsp::demodulate::SSB_FM demod_ssb_fm{};  // added for Wfax mode.
     FeedForwardCompressor audio_compressor{};
     AudioOutput audio_output{};
 

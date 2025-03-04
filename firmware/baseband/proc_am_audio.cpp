@@ -27,6 +27,7 @@
 #include "event_m4.hpp"
 
 #include <array>
+#include "dsp_hilbert.hpp"
 
 void NarrowbandAMAudio::execute(const buffer_c8_t& buffer) {
     if (!configured) {
@@ -48,16 +49,28 @@ void NarrowbandAMAudio::execute(const buffer_c8_t& buffer) {
     // TODO: Feed channel_stats post-decimation data?
     feed_channel_stats(channel_out);
 
-    auto audio = demodulate(channel_out);
+    auto audio = demodulate(channel_out);  // now 3 AM demodulation types : demod_am, demod_ssb, demod_ssb_fm (for Wefax)
     audio_compressor.execute_in_place(audio);
     audio_output.write(audio);
 }
 
 buffer_f32_t NarrowbandAMAudio::demodulate(const buffer_c16_t& channel) {
-    if (modulation_ssb) {
-        return demod_ssb.execute(channel, audio_buffer);
-    } else {
-        return demod_am.execute(channel, audio_buffer);
+    switch (modulation_ssb) {  // enum class Modulation : int32_t {DSB = 0, SSB = 1, SSB_FM = 2}
+        case (int)(AMConfigureMessage::Modulation::DSB):
+            return demod_am.execute(channel, audio_buffer);
+            break;
+
+        case (int)(AMConfigureMessage::Modulation::SSB):
+            return demod_ssb.execute(channel, audio_buffer);
+            break;
+
+        case (int)(AMConfigureMessage::Modulation::SSB_FM):  // Added to handle Weather Fax mode.
+            // chDbgPanic("case SSB_FM demodulation");                   // Debug.
+            return demod_ssb_fm.execute(channel, audio_buffer);  // Calling a derivative of demod_ssb (USB) , but with different FIR taps + FM audio tones demod.
+            break;
+
+        default:
+            break;
     }
 }
 
