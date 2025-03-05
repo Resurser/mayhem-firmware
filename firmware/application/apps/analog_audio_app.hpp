@@ -83,6 +83,24 @@ class AMFMAptOptionsView : public View {
         }};
 };
 
+class AMFMAptOptionsView : public View {
+   public:
+    AMFMAptOptionsView(Rect parent_rect, const Style* style);
+
+   private:
+    Text label_config{
+        {0 * 8, 0 * 16, 2 * 8, 1 * 16},
+        "BW",
+    };
+
+    OptionsField options_config{
+        {3 * 8, 0 * 16},
+        6,  // Max option length
+        {
+            // Using common messages from freqman_ui.cpp In HF USB , Here  we only need USB Audio demod, + post-FM demod fsubcarrier FM tone to get APT signal.
+        }};
+};
+
 class NBFMOptionsView : public View {
    public:
     NBFMOptionsView(Rect parent_rect, const Style* style);

@@ -353,6 +353,10 @@ void ReceiverModel::update_amfm_configuration() {
     am_configs[amfm_configuration()].apply(spectrum_zoom());  // update with different index for Wefax.
 }
 
+void ReceiverModel::update_amfm_configuration() {
+    am_configs[amfm_configuration()].apply();  // update with different index for Wefax.
+}
+
 void ReceiverModel::update_nbfm_configuration() {
     nbfm_configs[nbfm_configuration()].apply(squelch_level());
 }
