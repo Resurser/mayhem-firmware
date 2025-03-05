@@ -64,7 +64,7 @@ MEMORY
     ram_external_app_antenna_length(rwx) : org = 0xADD70000, len = 32k 
     ram_external_app_view_wav(rwx) : org = 0xADD80000, len = 32k 
     ram_external_app_sd_wipe(rwx) : org = 0xADD90000, len = 32k 
-    ram_external_app_hopper(rwx) : org = 0xADDA0000, len = 32k 
+    ram_external_app_hopper(rwx) : org = 0xADDA0000, len = 32k
     ram_external_app_rtty_rx(rwx) : org = 0xADDB0000, len = 32k
 }
 
@@ -292,11 +292,12 @@ SECTIONS
         *(*ui*external_app*hopper*);
     } > ram_external_app_hopper
 
-    .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
+    
+    .external_app_playlist_editor : ALIGN(4) SUBALIGN(4)
     {
-        KEEP(*(.external_app.app_rtty_rx.application_information));
-        *(*ui*external_app*rtty_rx*);
-    } > ram_external_app_rtty_rx
+        KEEP(*(.external_app.app_playlist_editor.application_information));
+        *(*ui*external_app*playlist_editor*);
+    } > ram_external_app_playlist_editor
 
     .external_app_test_rx : ALIGN(4) SUBALIGN(4)
     {
@@ -323,9 +324,9 @@ SECTIONS
         *(*ui*external_app*sd_wipe*);
     } > ram_external_app_sd_wipe
 
-    .external_app_playlist_editor : ALIGN(4) SUBALIGN(4)
+    .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
     {
-        KEEP(*(.external_app.app_playlist_editor.application_information));
-        *(*ui*external_app*playlist_editor*);
-    } > ram_external_app_playlist_editor
+        KEEP(*(.external_app.app_rtty_rx.application_information));
+        *(*ui*external_app*rtty_rx*);
+    } > ram_external_app_rtty_rx
 }

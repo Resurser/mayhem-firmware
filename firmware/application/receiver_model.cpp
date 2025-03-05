@@ -350,7 +350,7 @@ void ReceiverModel::update_am_configuration() {
 }
 
 void ReceiverModel::update_amfm_configuration() {
-    am_configs[amfm_configuration()].apply();  // update with different index for Wefax.
+    am_configs[amfm_configuration()].apply(spectrum_zoom());  // update with different index for Wefax.
 }
 
 void ReceiverModel::update_nbfm_configuration() {

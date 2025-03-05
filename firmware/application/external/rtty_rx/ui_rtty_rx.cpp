@@ -38,43 +38,6 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-unsigned char RTTYRxView::BaudottoChar(const uint32_t data) {
-    int out = 0;
-    const char letters[32] = {
-        '\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
-        '\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
-        'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
-        'O',	'B',	'G',	' ',	'M',	'X',	'V',	' '
-    };
-    const char figures[32] = {
-        '\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
-        '\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
-        '5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
-        '9',	'?',	'&',	' ',	'.',	'/',	';',	' '
-    };
-
-    switch (data) {
-    case 0x1F:		/* letters */
-        rxmode = 1;
-        break;
-    case 0x1B:		/* figures */
-        rxmode = 2;
-        break;
-    case 0x04:		/* unshift-on-space */
-//        if (progdefaults.UOSrx)
-//            rxmode = LETTERS;
-        return ' ';
-        break;
-    default:
-        if (rxmode == 2)
-            out = figures[data];
-        else
-            out = letters[data];
-        break;
-    }
-
-    return out;
-}
 
 
 void RTTYLogger::log_raw_data(const std::string& data) {
@@ -141,6 +104,44 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     receiver_model.enable();
 }
 
+char RTTYRxView::BaudottoChar(const uint32_t data) {
+    int out = 0;
+    const char letters[32] = {
+        '\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
+        '\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
+        'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
+        'O',	'B',	'G',	' ',	'M',	'X',	'V',	' '
+    };
+    const char figures[32] = {
+        '\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
+        '\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
+        '5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
+        '9',	'?',	'&',	' ',	'.',	'/',	';',	' '
+    };
+
+    switch (data) {
+    case 0x1F:		/* letters */
+        rxmode = 1;
+        break;
+    case 0x1B:		/* figures */
+        rxmode = 2;
+        break;
+    case 0x04:		/* unshift-on-space */
+//        if (progdefaults.UOSrx)
+//            rxmode = LETTERS;
+        return ' ';
+        break;
+    default:
+        if (rxmode == 2)
+            out = figures[data];
+        else
+            out = letters[data];
+        break;
+    }
+
+    return out;
+}
+
 void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
@@ -151,11 +152,9 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
 
         // value = deframe_word(value);
         uint32_t alt_val2 = value;
-        uint32_t alt_val = value & 0x1F;
-        text_debug.set(">> " + to_string_dec_uint(value)+" :: "+to_string_dec_uint(alt_val)+" :: "+to_string_dec_uint(alt_val2));
+        str_console += (char)BaudottoChar(value);
         
-        text_debug.set("~" + to_string_dec_uint(value));
-        
+        uint32_t alt_val = value & 0x1F;   
         value &= 0xFF;                                          // ABCDEFGH
         // text_debug.set("<<" + to_string_dec_uint(value));
 
@@ -186,7 +185,7 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
             str_byte    += (char)value;
         } else if (value < 32) {
             str_console += (char)BaudottoChar(value);  // Printable
-            str_byte    += (char)baudot_table[value];
+            str_byte    += (char)BaudottoChar(value);
         } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
             str_byte    += "[" + to_string_hex(value, 2) + "]";

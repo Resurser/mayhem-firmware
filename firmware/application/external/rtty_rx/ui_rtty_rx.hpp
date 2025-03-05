@@ -125,7 +125,7 @@ class RTTYRxView : public View {
             const auto message = static_cast<const FreqChangeCommandMessage*>(p);
             this->on_freqchg(message->freq);
         }};
-
+    char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);
 };
 

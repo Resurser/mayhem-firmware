@@ -55,7 +55,6 @@ class RTTYRxProcessor : public BasebandProcessor {
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
    private:
-    unsigned char RTTYRxView::BaudottoChar(const uint32_t data);
     static constexpr size_t baseband_fs = 3072000;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
 
@@ -93,12 +92,12 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     State state{};
     
-    size_t delay_line_index{};
+    size_t   delay_line_index{};
     uint32_t bit_counter{0};
     uint32_t word_bits{0};
     uint32_t sample_bits{0};
     uint32_t phase{}, phase_inc{};
-    int32_t sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
+    int32_t  sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
     uint32_t word_mask{};
     uint32_t trigger_value{};
 

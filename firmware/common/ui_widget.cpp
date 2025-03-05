@@ -2808,7 +2808,7 @@ void Waveform::paint(Painter& painter) {
     if (clickable_ && has_focus()) {
         painter.draw_rectangle(
             screen_rect(),
-            Theme::getInstance()->fg_light->foreground);
+            Theme::getInstance()->fg_cyan->foreground);
     }
 }
 
