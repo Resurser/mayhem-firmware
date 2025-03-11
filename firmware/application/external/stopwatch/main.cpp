@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Mark Thompson
+ * Copyright (C) 2025 Mark Thompson
  *
  * This file is part of PortaPack.
  *
@@ -20,61 +20,61 @@
  */
 
 #include "ui.hpp"
-#include "ui_tetris.hpp"
+#include "ui_stopwatch.hpp"
 #include "ui_navigation.hpp"
 #include "external_app.hpp"
 
-namespace ui::external_app::tetris {
+namespace ui::external_app::stopwatch {
 void initialize_app(ui::NavigationView& nav) {
-    nav.push<TetrisView>();
+    nav.push<StopwatchView>();
 }
-}  // namespace ui::external_app::tetris
+}  // namespace ui::external_app::stopwatch
 
 extern "C" {
 
-__attribute__((section(".external_app.app_tetris.application_information"), used)) application_information_t _application_information_tetris = {
-    /*.memory_location = */ (uint8_t*)0x00000000,  // will be filled at compile time
-    /*.externalAppEntry = */ ui::external_app::tetris::initialize_app,
+__attribute__((section(".external_app.app_stopwatch.application_information"), used)) application_information_t _application_information_stopwatch = {
+    /*.memory_location = */ (uint8_t*)0x00000000,
+    /*.externalAppEntry = */ ui::external_app::stopwatch::initialize_app,
     /*.header_version = */ CURRENT_HEADER_VERSION,
     /*.app_version = */ VERSION_MD5,
 
-    /*.app_name = */ "Tetris",
+    /*.app_name = */ "Stopwatch",
     /*.bitmap_data = */ {
-        0xF8,
-        0xFF,
-        0x88,
-        0x88,
-        0x88,
-        0x88,
-        0x88,
-        0x88,
-        0xF8,
-        0xFF,
-        0x80,
-        0x08,
-        0x80,
-        0x08,
-        0x9F,
-        0x08,
-        0x91,
-        0x0F,
-        0x11,
         0x00,
-        0x11,
         0x00,
-        0xFF,
-        0xF1,
-        0x11,
-        0x91,
-        0x11,
-        0x91,
-        0x11,
-        0x91,
-        0xFF,
-        0xF1,
+        0xC0,
+        0x01,
+        0x80,
+        0x00,
+        0x80,
+        0x20,
+        0x60,
+        0x13,
+        0x10,
+        0x0C,
+        0x88,
+        0x08,
+        0x84,
+        0x10,
+        0x84,
+        0x10,
+        0xC2,
+        0x21,
+        0x84,
+        0x10,
+        0x04,
+        0x10,
+        0x08,
+        0x08,
+        0x10,
+        0x04,
+        0x60,
+        0x03,
+        0x80,
+        0x00,
     },
-    /*.icon_color = */ ui::Color::green().v,
-    /*.menu_location = */ app_location_t::GAMES,
+    /*.icon_color = */ ui::Color::cyan().v,
+    /*.menu_location = */ app_location_t::UTILITIES,
     /*.desired_menu_position = */ -1,
 
     /*.m4_app_tag = portapack::spi_flash::image_tag_none */ {0, 0, 0, 0},

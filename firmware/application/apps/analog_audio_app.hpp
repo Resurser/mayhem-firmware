@@ -245,7 +245,8 @@ class AnalogAudioView : public View {
             {"NFM ", toUType(ReceiverModel::Mode::NarrowbandFMAudio)},
             {"WFM ", toUType(ReceiverModel::Mode::WidebandFMAudio)},
             {"SPEC", toUType(ReceiverModel::Mode::SpectrumAnalysis)},
-            {"WFAX", toUType(ReceiverModel::Mode::AMAudioFMApt)}}};
+            {"AMFM", toUType(ReceiverModel::Mode::AMAudioFMApt)}  // Added to handle  HF  WeatherFax , SSB (USB demod) + Tone_Subcarrier FM demod
+        }};
 
     AudioVolumeField field_volume{
         {28 * 8, 0 * 16}};
