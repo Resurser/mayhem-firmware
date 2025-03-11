@@ -56,7 +56,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     void on_message(const Message* const message) override;
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 2;
+    static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
 
     size_t samples_per_bit{};
 
@@ -77,8 +77,9 @@ class RTTYRxProcessor : public BasebandProcessor {
         audio.size()
     };
     
-    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
+    dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
 
     dsp::demodulate::SSB demod{};
