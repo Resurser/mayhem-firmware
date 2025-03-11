@@ -63,38 +63,6 @@ uint32_t gcd(const uint32_t u, const uint32_t v) {
 }
 #endif
 
-// Ініціалізація Goertzel алгоритму
-void init_goertzel(int sample_rate, int target_freq, float* coeff, float* q0, float* q1, float* q2) {
-    *q0 = 0.0;
-    *q1 = 0.0;
-    *q2 = 0.0;
-    float k = (0.5 + ((float)target_freq * sample_rate)) / sample_rate;
-    *coeff = 2.0 * cos(2.0 * M_PI * k);
-}
-
-// Виконання Goertzel алгоритму
-float run_goertzel(float coeff, float* q0, float* q1, float* q2, float sample) {
-    *q2 = *q1;
-    *q1 = *q0;
-    *q0 = coeff * *q1 - *q2 + sample;
-
-    return (*q1 * *q1 + *q2 * *q2 - coeff * *q1 * *q2);
-}
-
-float goertzel(const int8_t* samples, int sample_count, int target_frequency, int sample_rate) {
-   float s_prev = 0.0;
-   float s_prev2 = 0.0;
-   float coeff = 2.0 * cosf(2.0 * M_PI * target_frequency / sample_rate);
-
-   for (int i = 0; i < sample_count; ++i) {
-       float s = samples[i] + coeff * s_prev - s_prev2;
-       s_prev2 = s_prev;
-       s_prev = s;
-   }
-
-   return s_prev2 * s_prev2 + s_prev * s_prev - coeff * s_prev * s_prev2;
-}
-
 std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length) {
     std::string text;
     for (size_t i = 0; i < bits.size(); i += word_length) {

@@ -72,7 +72,8 @@ void AMConfig::apply(float spectrum_zoom) const {
         channel,                       // var channel FIR taps filter , variable values, depending selected  AM mode, each one different  (DSB-9K, DSB-6K, USB-3K, LSB-3K,CW,WFAX)
         modulation,                    // var parameter . enum class Modulation : int32_t {DSB = 0, SSB = 1, SSB_FM = 2}
         audio_12k_iir_filter_config, 
-        spectrum_zoom};  // var parameter , 300 Hz hpf all except Wefax (1.500Hz lpf)
+        spectrum_zoom
+    };  // var parameter , 300 Hz hpf all except Wefax (1.500Hz lpf)
     send_message(&message);
     audio::set_rate(audio::Rate::Hz_12000);
 }

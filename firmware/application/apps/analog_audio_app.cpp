@@ -212,9 +212,10 @@ AnalogAudioView::AnalogAudioView(
 
     auto modulation = receiver_model.modulation();
     // This app doesn't handle "Capture" mode.
-    if (modulation > ReceiverModel::Mode::SpectrumAnalysis)  // This two should be together in the last index position : SpectrumAnalysis = 4, and  Capture = 5
-        modulation = ReceiverModel::Mode::SpectrumAnalysis;  // For sw simplicity , Wefax_mode,  should NOT be added between.
+    if (modulation == ReceiverModel::Mode::Capture)
+        modulation = ReceiverModel::Mode::SpectrumAnalysis;
 
+    previous_modulation = modulation;
     options_modulation.set_by_value(toUType(modulation));
     options_modulation.on_change = [this](size_t, OptionsField::value_t v) {
         this->on_modulation_changed(static_cast<ReceiverModel::Mode>(v));
@@ -307,9 +308,12 @@ void AnalogAudioView::on_baseband_bandwidth_changed(uint32_t bandwidth_hz) {
 
 void AnalogAudioView::on_modulation_changed(ReceiverModel::Mode modulation) {
     // This app doesn't know what to do with "Capture" mode.
-    if (modulation > ReceiverModel::Mode::SpectrumAnalysis)
-        modulation = ReceiverModel::Mode::SpectrumAnalysis;
-
+     if (modulation == ReceiverModel::Mode::Capture) {
+        if (modulation > previous_modulation)
+            modulation = ReceiverModel::Mode::SpectrumAnalysis;
+        else
+            modulation = ReceiverModel::Mode::AMAudioFMApt;
+    }
     baseband::spectrum_streaming_stop();
     update_modulation(modulation);
     on_show_options_modulation();
@@ -425,16 +429,11 @@ void AnalogAudioView::on_show_options_modulation() {
             ddc_enable = false;
             break;
 
-        case ReceiverModel::Mode::AMAudioFMApt:  // TODO
-            widget = std::make_unique<AMFMAptOptionsView>(options_view_rect, Theme::getInstance()->option_active);
-            waterfall.show_audio_spectrum_view(false);
-            text_ctcss.hidden(true);
-            break;
-
         case ReceiverModel::Mode::AMAudioFMApt:
             widget = std::make_unique<AMFMAptOptionsView>(options_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(true);
+            ddc_enable = false;
             break;
 
         case ReceiverModel::Mode::SpectrumAnalysis:
