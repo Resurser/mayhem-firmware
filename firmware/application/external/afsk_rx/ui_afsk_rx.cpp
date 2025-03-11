@@ -36,7 +36,23 @@ using namespace modems;
 using namespace ui;
 
 namespace ui::external_app::afsk_rx {
+const char letters_table[32] = {
+    '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '\a', 'M', 'X', 'V', '\b'
+};
 
+const char figures_table[32] = {
+    '\0', '3', '\n', '-', ' ', '|', '8', '7', '\r', '$', '4', '\'', ',', '!', ':', '(',
+    '5', '"', ')', '2', '#', '6', '0', '1', '9', '?', '&', '\a', '.', '/', ';', '\b'
+};
+
+char decode_baudot(uint8_t byte, ShiftState* shift_state) {
+    if (*shift_state == LETTERS) {
+        return letters_table[byte & 0x1F];
+    } else {
+        return figures_table[byte & 0x1F];
+    }
+}
 void AFSKLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
@@ -62,14 +78,14 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
                   &console});
 
     // Auto-configure modem for LCR RX (TODO remove)
-    field_frequency.set_value(467225500);
+    field_frequency.set_value(10100000);
     auto def_bell202 = &modem_defs[5];
     persistent_memory::set_modem_baudrate(def_bell202->baudrate);
     serial_format_t serial_format;
     serial_format.data_bits = 5;
     serial_format.parity = NONE;
     serial_format.stop_bits = 2;
-    serial_format.bit_order = LSB_FIRST;
+    serial_format.bit_order = MSB_FIRST;
     persistent_memory::set_serial_format(serial_format);
 
     field_frequency.set_step(100);
@@ -90,7 +106,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
 
-    audio::set_rate(audio::Rate::Hz_24000);
+    audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
 
     receiver_model.enable();
@@ -105,19 +121,26 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         str_console += (char)((console_color & 3) + 9);
 
         // value = deframe_word(value);
-
-        value &= 0xFF;                                          // ABCDEFGH
-        value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
-        value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
-        value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
-        value &= 0x7F;                                          // Ignore parity, which is the MSB now
-
-        if ((value >= 32) && (value < 127)) {
-            str_console += (char)value;  // Printable
-            str_byte += (char)value;
+        value &= 0x1F;                                          // ABCDEFGH
+        // value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
+        // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
+        // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
+        // value &= 0x7F;                                          // Ignore parity, which is the MSB now
+        
+        if ((value < 32)) {
+         // Повний цикл
+            char decoded_char = decode_baudot(value, &shift_state);
+            if (decoded_char == '\a') { // Перемикання режимів
+                shift_state = FIGURES;
+            } if (decoded_char == '\b') { // Перемикання режимів
+                shift_state = LETTERS;
+            } else {
+               str_console += (char)decoded_char;  // Printable
+              //str_byte   += (char)value;
+            }
         } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            str_byte += "[" + to_string_hex(value, 2) + "]";
+            str_byte    += "[" + to_string_hex(value, 2) + "]";
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
@@ -126,7 +149,7 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
 
         if (logger && logging) str_log += str_byte;
 
-        if ((value != 0x7F) && (prev_value == 0x7F)) {
+        if ((value != '\n') && (prev_value == '\n')) {
             // Message split
             console.writeln("");
             console_color++;
