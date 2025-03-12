@@ -84,7 +84,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     serial_format_t serial_format;
     serial_format.data_bits = 5;
     serial_format.parity = NONE;
-    serial_format.stop_bits = 2;
+    serial_format.stop_bits = 1;
     serial_format.bit_order = MSB_FIRST;
     persistent_memory::set_serial_format(serial_format);
 
@@ -127,7 +127,7 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
         // value &= 0x7F;                                          // Ignore parity, which is the MSB now
         
-        if ((value < 32)) {
+        if (value < 32) {
          // Повний цикл
             char decoded_char = decode_baudot(value, &shift_state);
             if (decoded_char == '\a') { // Перемикання режимів

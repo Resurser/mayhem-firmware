@@ -32,15 +32,15 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 
     if (!configured) return;
 
-    // FM demodulation
+    // SSB demodulation
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);              // 2048 / 8 = 256 (512 I/Q samples)
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
-    const auto channel_out = channel_filter.execute(decim_1_out, dst_buffer);  // 32 / 2 = 16 (32 I/Q samples)
+    const auto decim_2_out = decim_2.execute(decim_1_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
+    const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);  // 32 / 2 = 16 (32 I/Q samples)
 
     feed_channel_stats(channel_out);
 
     auto audio = demod.execute(channel_out, audio_buffer);
-
     audio_output.write(audio);
 
     // Audio signal processing

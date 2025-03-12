@@ -67,7 +67,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
    
-    auto receiver_modem = &modem_defs[7];
+    auto receiver_modem = &modem_defs[5];
     persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
     serial_format_t serial_format;
 
@@ -102,11 +102,6 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
-    receiver_model.enable();
-    
-    audio::set_rate(audio::Rate::Hz_24000);
-    audio::output::start();
-
     receiver_model.enable();
 }
 
@@ -157,34 +152,15 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         str_console += (char)((console_color & 3) + 9);
 
         // value = deframe_word(value);
-        uint32_t alt_val2 = value;
-        str_console += (char)BaudottoChar(value);
         
-        uint32_t alt_val = value & 0x1F;   
-        value &= 0xFF;                                          // ABCDEFGH
+        
+        value &= 0x1F;     
+        uint32_t alt_val = deframe_word(value);                                  // ABCDEFGH
         // text_debug.set("<<" + to_string_dec_uint(value));
 
-        value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
-        uint32_t alt_val3 = value;
-        value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
-        uint32_t alt_val4 = value;
-        value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
-        uint32_t alt_val5 = value;
-        value &= 0x7F;                                          // Ignore parity, which is the MSB now
-        
         text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
-            " :: "+to_string_dec_uint(alt_val, 2)+
-            " > "+to_string_hex(alt_val2, 2)+
-            " >> "+to_string_hex(alt_val3, 2)+
-            " >>> "+to_string_hex(alt_val4, 2)+
-            " >>>> "+to_string_hex(alt_val5, 2));
+            " > "+to_string_hex(alt_val, 2));
         
-
-        if (logging){
-            value = alt_val;
-        } else { 
-
-        }
         
         if ((value >= 32) && (value < 127)) {
             str_console += (char)value;  // Printable

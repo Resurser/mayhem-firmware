@@ -76,7 +76,7 @@ class AFSKRxProcessor : public BasebandProcessor {
     State state{};
     size_t delay_line_index{};
     uint32_t bit_counter{0};
-    uint32_t word_bits{0};
+    uint32_t word_bits{5};
     uint32_t sample_bits{0};
     uint32_t phase{}, phase_inc{};
     int32_t sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};

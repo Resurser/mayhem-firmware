@@ -125,7 +125,7 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     configured = false;
     decim_0.configure(taps_6k0_decim_0.taps);
     decim_1.configure(taps_6k0_decim_1.taps);
-    decim_2.configure(taps_6k0_decim_2.taps, 4);
+    decim_2.configure(taps_6k0_decim_2.taps,4);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
     audio_output.configure(audio_12k_hpf_300hz_config);
     samples_per_bit = audio_fs / message.baudrate;
