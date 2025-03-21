@@ -37,9 +37,14 @@
 using namespace portapack;
 using namespace modems;
 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846264338327950288)
+#endif
+
 void BLECommLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
+
 
 namespace ui {
 static std::uint64_t get_freq_by_channel_number(uint8_t channel_number) {

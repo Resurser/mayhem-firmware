@@ -70,10 +70,12 @@ void set_fifo_data(const int8_t* data);
 void set_pitch_rssi(int32_t avg, bool enabled);
 void set_afsk_data(const uint32_t afsk_samples_per_bit, const uint32_t afsk_phase_inc_mark, const uint32_t afsk_phase_inc_space, const uint8_t afsk_repeat, const uint32_t afsk_bw, const uint8_t symbol_count);
 void kill_afsk();
-void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t trigger_value, const bool trigger_word);
 void set_fsk(const size_t deviation);
 void set_aprs(const uint32_t baudrate);
-void set_rtty(const uint32_t baudrate, const uint32_t word_length);
+
+void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space );
+// todo: add set_rtty with parity and stop bits
+void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space);
 
 void set_btlerx(uint8_t channel_number);
 void set_btletx(uint8_t channel_number, char* macAddress, char* advertisementData, uint8_t pduType);

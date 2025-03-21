@@ -754,26 +754,25 @@ class TXProgressMessage : public Message {
     uint32_t progress = 0;
     bool done = false;
 };
-
 class AFSKRxConfigureMessage : public Message {
-   public:
-    constexpr AFSKRxConfigureMessage(
-        const uint32_t baudrate,
-        const uint32_t word_length,
-        const uint32_t trigger_value,
-        const bool trigger_word)
-        : Message{ID::AFSKRxConfigure},
-          baudrate(baudrate),
-          word_length(word_length),
-          trigger_value(trigger_value),
-          trigger_word(trigger_word) {
-    }
-
-    const uint32_t baudrate;
-    const uint32_t word_length;
-    const uint32_t trigger_value;
-    const bool trigger_word;
-};
+    public:
+     constexpr AFSKRxConfigureMessage (
+         const uint32_t baudrate,
+         const uint32_t word_length,
+         const uint32_t freq_mark,
+         const uint32_t freq_space)
+         : Message{ID::RTTYRxConfigure},
+           baudrate(baudrate),
+           word_length(word_length),
+           freq_mark(freq_mark),
+           freq_space(freq_space) {
+     }
+ 
+     const uint32_t baudrate;
+     const uint32_t word_length;
+     const uint32_t freq_mark;
+     const uint32_t freq_space;
+ };
 
 class APRSRxConfigureMessage : public Message {
    public:
@@ -1461,14 +1460,20 @@ class RTTYRxConfigureMessage : public Message {
    public:
     constexpr RTTYRxConfigureMessage (
         const uint32_t baudrate,
-        const uint32_t word_length)
+        const uint32_t word_length,
+        const uint32_t freq_mark,
+        const uint32_t freq_space)
         : Message{ID::RTTYRxConfigure},
           baudrate(baudrate),
-          word_length(word_length) {
+          word_length(word_length),
+          freq_mark(freq_mark),
+          freq_space(freq_space) {
     }
 
     const uint32_t baudrate;
     const uint32_t word_length;
+    const uint32_t freq_mark;
+    const uint32_t freq_space;
 };
 
 class RTTYDataMessage : public Message {

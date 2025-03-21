@@ -53,6 +53,7 @@ char decode_baudot(uint8_t byte, ShiftState* shift_state) {
         return figures_table[byte & 0x1F];
     }
 }
+
 void AFSKLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
@@ -79,8 +80,8 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(10100000);
-    auto def_bell202 = &modem_defs[5];
-    persistent_memory::set_modem_baudrate(def_bell202->baudrate);
+    auto receiver_modem = &modem_defs[5];
+    persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
     serial_format_t serial_format;
     serial_format.data_bits = 5;
     serial_format.parity = NONE;
@@ -104,7 +105,8 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
         logger->append(logs_dir / u"AFSK.TXT");
 
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
+    baseband::set_afsk(persistent_memory::modem_baudrate(), 5, receiver_modem->mark_freq, receiver_modem->space_freq);
+    
 
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();

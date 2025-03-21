@@ -38,6 +38,9 @@
 using namespace ui;
 
 namespace ui::external_app::afsk_rx {
+
+// const char BAUDOT_LETTERS[32] = "E\nA SIU\rDRJNFCKTZLWHYPQOBG";
+// const char BAUDOT_FIGURES[32] = "3\n- '87\r$4,!(5\")2#6019?&";
 typedef enum {
     LETTERS,
     FIGURES
@@ -111,8 +114,6 @@ class AFSKRxView : public View {
 
     Console console{
         {0, 4 * 16, 240, screen_width}};
-
-    void on_data_afsk(const AFSKDataMessage& message);
 
     std::unique_ptr<AFSKLogger> logger{};
 

@@ -595,7 +595,6 @@ ThemeGreen::ThemeGreen() {
     bg_table_header = new Color{0, 205, 30};
 }
 
-
 ThemeRed::ThemeRed() {
     bg_lightest = new Style{
         .font = font::fixed_8x16,

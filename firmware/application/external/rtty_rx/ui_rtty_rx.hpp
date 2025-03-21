@@ -108,8 +108,6 @@ class RTTYRxView : public View {
     Console console{
         {0, 4 * 16, 240, screen_width}};
 
-    void on_data_rtty(const RTTYDataMessage& message);
-
     std::unique_ptr<RTTYLogger> logger{};
 
     MessageHandlerRegistration message_handler_packet{
