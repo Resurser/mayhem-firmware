@@ -36,24 +36,22 @@ using namespace modems;
 using namespace ui;
 
 namespace ui::external_app::afsk_rx {
+    
 const char letters_table[32] = {
     '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
-    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '\a', 'M', 'X', 'V', '\b'
-};
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '\a', 'M', 'X', 'V', '\b'};
 
 const char figures_table[32] = {
     '\0', '3', '\n', '-', ' ', '|', '8', '7', '\r', '$', '4', '\'', ',', '!', ':', '(',
-    '5', '"', ')', '2', '#', '6', '0', '1', '9', '?', '&', '\a', '.', '/', ';', '\b'
-};
+    '5', '"', ')', '2', '#', '6', '0', '1', '9', '?', '&', '\a', '.', '/', ';', '\b'};
 
-char decode_baudot(uint8_t byte, ShiftState* shift_state) {
+char AFSKRxView::decode_baudot(uint8_t byte, ShiftState* shift_state) {
     if (*shift_state == LETTERS) {
         return letters_table[byte & 0x1F];
     } else {
         return figures_table[byte & 0x1F];
     }
 }
-
 void AFSKLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
@@ -106,8 +104,6 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (will be removed later)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 5, receiver_modem->mark_freq, receiver_modem->space_freq);
-    
-
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
 
@@ -128,21 +124,21 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
         // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
         // value &= 0x7F;                                          // Ignore parity, which is the MSB now
-        
+
         if (value < 32) {
-         // Повний цикл
+            // Повний цикл
             char decoded_char = decode_baudot(value, &shift_state);
-            if (decoded_char == '\a') { // Перемикання режимів
+            if (decoded_char == '\a') {  // Перемикання режимів
                 shift_state = FIGURES;
-            } if (decoded_char == '\b') { // Перемикання режимів
+            } else if (decoded_char == '\b') {  // Перемикання режимів
                 shift_state = LETTERS;
             } else {
-               str_console += (char)decoded_char;  // Printable
-              //str_byte   += (char)value;
+                str_console += (char)decoded_char;  // Printable                                   
+                // str_byte   += (char)value;
             }
         } else {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            str_byte    += "[" + to_string_hex(value, 2) + "]";
+            str_byte += "[" + to_string_hex(value, 2) + "]";
         }
 
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";

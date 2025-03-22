@@ -123,11 +123,13 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
     
     //channel_spectrum.set_decimation_factor(1.0f);
-    modulation_ssb = (message.modulation == AMConfigureMessage::Modulation::SSB);
     audio_output.configure(message.audio_hpf_lpf_config);
     if (message.spectrum_zoom){
         spectrum_zoom = message.spectrum_zoom;
+    } else if (message.modulation == AMConfigureMessage::Modulation::SSB_FM) {
+        spectrum_zoom = 6.0f;  // zooming for better tuning {SSB_FM = 2}
     }
+    
     channel_spectrum.set_decimation_factor(spectrum_zoom);
 	
     spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);

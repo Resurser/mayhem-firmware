@@ -32,7 +32,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 
     if (!configured) return;
 
-    // SSB demodulation
+    // FM demodulation
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);              // 2048 / 8 = 256 (512 I/Q samples)
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
     const auto decim_2_out = decim_2.execute(decim_1_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
@@ -41,6 +41,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
     feed_channel_stats(channel_out);
 
     auto audio = demod.execute(channel_out, audio_buffer);
+
     audio_output.write(audio);
 
     // Audio signal processing
@@ -97,6 +98,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
                     }
                 } else {
                     if ((word_bits & word_mask) == trigger_value) {
+                        // if (word_bits == trigger_value) {
                         triggered = !triggered;
                         bit_counter = 0;
 
@@ -161,15 +163,18 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
     decim_2.configure(taps_6k0_decim_2.taps, 4);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
     audio_output.configure(audio_12k_hpf_300hz_config);
+    // decim_0.configure(taps_11k0_decim_0.taps);
+    // decim_1.configure(taps_11k0_decim_1.taps);
+    // channel_filter.configure(taps_11k0_channel.taps, 2);
 
     samples_per_bit = audio_fs / message.baudrate;
 
     phase_inc = (0x10000 * message.baudrate) / audio_fs;
     phase = 0;
 
-    trigger_word = message.trigger_word;
+    trigger_word = 0;  // message.trigger_word;
     word_length = message.word_length;
-    trigger_value = message.trigger_value;
+    trigger_value = 0;  // message.trigger_value;
     word_mask = (1 << word_length) - 1;
 
     // Delay line

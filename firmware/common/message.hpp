@@ -130,6 +130,10 @@ class Message {
         DDCConfig = 73,
         RTTYRxConfigure = 74,
         RTTYData = 75,
+        WeFaxRxConfigure = 76,
+        WeFaxRxStatusData = 77,
+        WeFaxRxImageData = 78,
+
         MAX
     };
 
@@ -754,6 +758,7 @@ class TXProgressMessage : public Message {
     uint32_t progress = 0;
     bool done = false;
 };
+
 class AFSKRxConfigureMessage : public Message {
     public:
      constexpr AFSKRxConfigureMessage (
@@ -761,7 +766,7 @@ class AFSKRxConfigureMessage : public Message {
          const uint32_t word_length,
          const uint32_t freq_mark,
          const uint32_t freq_space)
-         : Message{ID::RTTYRxConfigure},
+         : Message{ID::AFSKRxConfigure},
            baudrate(baudrate),
            word_length(word_length),
            freq_mark(freq_mark),
@@ -1490,5 +1495,33 @@ class RTTYDataMessage : public Message {
     uint32_t value;
 };
 
+
+class WeFaxRxConfigureMessage : public Message {
+   public:
+    constexpr WeFaxRxConfigureMessage(uint8_t lpm, uint8_t ioc)
+        : Message{ID::WeFaxRxConfigure},
+          lpm{lpm},
+          ioc{ioc} {
+    }
+    uint8_t lpm = 120;
+    uint8_t ioc = 0;
+};
+
+class WeFaxRxStatusDataMessage : public Message {
+   public:
+    constexpr WeFaxRxStatusDataMessage(uint8_t state)
+        : Message{ID::WeFaxRxStatusData},
+          state{state} {
+    }
+    uint8_t state = 0;
+};
+
+class WeFaxRxImageDataMessage : public Message {
+   public:
+    constexpr WeFaxRxImageDataMessage()
+        : Message{ID::WeFaxRxImageData} {}
+    uint8_t image[400]{0};
+    uint32_t cnt = 0;
+};
 
 #endif /*__MESSAGE_H__*/

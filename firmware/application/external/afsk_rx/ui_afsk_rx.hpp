@@ -69,7 +69,7 @@ class AFSKRxView : public View {
 
    private:
     void on_data(uint32_t value, bool is_data);
-
+    char decode_baudot(uint8_t byte, ShiftState* shift_state);
     NavigationView& nav_;
     RxRadioState radio_state_{};
     app_settings::SettingsManager settings_{
@@ -114,6 +114,8 @@ class AFSKRxView : public View {
 
     Console console{
         {0, 4 * 16, 240, screen_width}};
+
+    void on_data_afsk(const AFSKDataMessage& message);
 
     std::unique_ptr<AFSKLogger> logger{};
 
