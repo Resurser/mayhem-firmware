@@ -19,12 +19,9 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
-
 #include "proc_afskrx.hpp"
 #include "portapack_shared_memory.hpp"
-
 #include "audio_dma.hpp"
-
 #include "event_m4.hpp"
 
 void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {

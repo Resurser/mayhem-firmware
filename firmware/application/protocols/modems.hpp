@@ -53,11 +53,11 @@ constexpr modem_def_t modem_defs[MODEM_DEF_COUNT] = {
     {"V21", AFSK, 980, 1180, 300},
     {"V23 M1", AFSK, 1300, 1700, 600},
     {"V23 M2", AFSK, 1300, 2100, 1200},
-    
-    {"FSK50", FSK, 2125, 2295, 50},
+
+    {"URTTY50", AM, 2125, 2295, 50},
     {"LRTTY50", AM, 1275, 1445, 50},
-    {"RTTY45", PSK, 2125, 2295, 45},
-    {"LRTTY45", AM, 1275, 1445, 45},
+    {"URTTY45", AM, 2295, 2125, 45},
+    {"LRTTY45", AM, 1445, 1275, 45},
 };
 
 void generate_data(const std::string& in_message, uint16_t* out_data);
