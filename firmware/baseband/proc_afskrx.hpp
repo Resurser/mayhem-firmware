@@ -80,7 +80,7 @@ class AFSKRxProcessor : public BasebandProcessor {
     uint32_t sample_bits{0};
     uint32_t phase{}, phase_inc{};
     int32_t sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
-    uint32_t word_length{};
+    uint32_t word_length{5};
     uint32_t word_mask{};
     uint32_t trigger_value{};
 

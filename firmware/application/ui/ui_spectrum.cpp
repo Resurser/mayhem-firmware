@@ -288,11 +288,22 @@ void WaterfallWidget::on_channel_spectrum(
     // spectrum_color_lut(pmem::spectrum_color_id(), curr_spectrum_lut);
     
     std::array<Color, 240> pixel_rows;
-    const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
+    // std::array<Color, 240> powers;
     
+    const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
+    uint8_t min = 255;
     for (size_t i = 0; i < 120; i++) {
-        pixel_rows[i]       = spectrum_color[spectrum.db[256 - 120 + i]];
-        pixel_rows[120 + i] = spectrum_color[spectrum.db[i]];
+        if (min > spectrum.db[i]){
+            min = spectrum.db[i];
+        }
+        if (min > spectrum.db[256 - 120 + i]){
+            min = spectrum.db[256 - 120 + i];
+        }
+    }
+    const uint8_t delta = min > 127 ? 63 : 0;
+    for (size_t i = 0; i < 120; i++) {
+        pixel_rows[i]       = spectrum_color[spectrum.db[256 - 120 + i] - delta];
+        pixel_rows[120 + i] = spectrum_color[spectrum.db[i]  - delta];
     }
 
     const auto draw_y = display.scroll(1);
