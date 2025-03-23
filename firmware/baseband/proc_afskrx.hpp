@@ -49,7 +49,8 @@ class AFSKRxProcessor : public BasebandProcessor {
     enum State {
         WAIT_START = 0,
         WAIT_STOP,
-        RECEIVE
+        RECEIVE,
+        WAIT_HALF_STOP
     };
 
     std::array<complex16_t, 512> dst{};
@@ -61,8 +62,8 @@ class AFSKRxProcessor : public BasebandProcessor {
         audio.data(),
         audio.size()};
 
-    // Array size ok down to 375 bauds (24000 / 375)
-    std::array<int32_t, 64> delay_line{0};
+    // Array size ok down to 45 bauds (12000 / 45)
+    std::array<int32_t, 266> delay_line{0};
 
     dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
@@ -75,6 +76,7 @@ class AFSKRxProcessor : public BasebandProcessor {
 
     State state{};
     size_t delay_line_index{};
+    uint32_t half_stop_counter{0};
     uint32_t bit_counter{0};
     uint32_t word_bits{0};
     uint32_t sample_bits{0};

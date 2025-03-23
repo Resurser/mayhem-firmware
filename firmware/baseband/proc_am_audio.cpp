@@ -124,18 +124,16 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     
     //channel_spectrum.set_decimation_factor(1.0f);
     audio_output.configure(message.audio_hpf_lpf_config);
-    if (message.spectrum_zoom){
-        spectrum_zoom = message.spectrum_zoom;
-    } else if (message.modulation == AMConfigureMessage::Modulation::SSB_FM) {
-        spectrum_zoom = 6.0f;  // zooming for better tuning {SSB_FM = 2}
-    }
-    
-    channel_spectrum.set_decimation_factor(spectrum_zoom);
-	
+
+    spectrum_zoom = message.channel_spectrum_decimation_factor;
     spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
 
-	ddc.set_sample_rate(decim_1_output_fs);
-
+	
+    
+    modulation_ssb = (int)message.modulation;  // now sending by message , 3 types of AM demod :   enum class Modulation : int32_t {DSB = 0, SSB = 1, SSB_FM = 2}
+    channel_spectrum.set_decimation_factor(spectrum_zoom);
+    audio_output.configure(message.audio_hpf_lpf_config);  // hpf in all AM demod modes (AM-6K/9K, USB/LSB,DSB), except Wefax (lpf there).
+    ddc.set_sample_rate(decim_1_output_fs);
     configured = true;
 }
 

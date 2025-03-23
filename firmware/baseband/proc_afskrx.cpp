@@ -42,6 +42,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
     audio_output.write(audio);
 
     // Audio signal processing
+    const uint32_t half_samples_per_bit = samples_per_bit / 2;
     for (size_t c = 0; c < audio.count; c++) {
         const int32_t sample_int = audio.p[c] * 32768.0f;
         int32_t current_sample = __SSAT(sample_int, 16);
@@ -52,7 +53,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         delay_line[delay_line_index & 0x3F] = current_sample;
 
         // Delay line get, and LPF
-        sample_mixed = (delay_line[(delay_line_index - (samples_per_bit / 2)) & 0x3F] * current_sample) / 4;
+        sample_mixed = (delay_line[(delay_line_index - half_samples_per_bit) & 0x3F] * current_sample) / 4;
         sample_filtered = prev_mixed + sample_mixed + (prev_filtered / 2);
 
         delay_line_index++;
@@ -78,60 +79,38 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         if (phase >= 0x10000) {
             phase &= 0xFFFF;
 
-            if (trigger_word) {
-                // Continuous-stream value-triggered mode (AX.25) - UNTESTED
-                word_bits <<= 1;
-                word_bits |= (sample_bits & 1);
+            // RTTY decoding
+            if (state == WAIT_START) {
+                if (!(sample_bits & 1)) {
+                    // Got start bit
+                    state = RECEIVE;
+                    bit_counter = 0;
+                    word_bits = 0;  // Reset word bits for new character
+                }
+            } else if (state == WAIT_STOP) {
+                if (sample_bits & 1) {
+                    // Got stop bit
+                    state = WAIT_HALF_STOP;
+                    half_stop_counter = 0;
+                }
+            } else if (state == WAIT_HALF_STOP) {
+                half_stop_counter++;
+                if (half_stop_counter >= half_samples_per_bit) {
+                    state = WAIT_START;
+
+                    // Process the received character (5-bit Baudot code)
+                    data_message.is_data = true;
+                    data_message.value = word_bits & 0x1F;  // Mask to 5 bits
+                    shared_memory.application_queue.push(data_message);
+                }
+            } else {
+                word_bits >>= 1;  // Shift right to receive LSB first
+                word_bits |= ((sample_bits & 1) << 4);  // Add the new bit to the 5-bit word
 
                 bit_counter++;
 
-                if (triggered) {
-                    if (bit_counter == word_length) {
-                        bit_counter = 0;
-
-                        data_message.is_data = true;
-                        data_message.value = word_bits & word_mask;
-                        shared_memory.application_queue.push(data_message);
-                    }
-                } else {
-                    if ((word_bits & word_mask) == trigger_value) {
-                        // if (word_bits == trigger_value) {
-                        triggered = !triggered;
-                        bit_counter = 0;
-
-                        data_message.is_data = true;
-                        data_message.value = trigger_value;
-                        shared_memory.application_queue.push(data_message);
-                    }
-                }
-
-            } else {
-                // RS232-like modem mode
-                if (state == WAIT_START) {
-                    if (!(sample_bits & 1)) {
-                        // Got start bit
-                        state = RECEIVE;
-                        bit_counter = 0;
-                    }
-                } else if (state == WAIT_STOP) {
-                    if (sample_bits & 1) {
-                        // Got stop bit
-                        state = WAIT_START;
-                    }
-                } else {
-                    word_bits <<= 1;
-                    word_bits |= (sample_bits & 1);
-
-                    bit_counter++;
-                }
-
-                if (bit_counter == word_length) {
-                    bit_counter = 0;
+                if (bit_counter == 5) {
                     state = WAIT_STOP;
-
-                    data_message.is_data = true;
-                    data_message.value = word_bits;
-                    shared_memory.application_queue.push(data_message);
                 }
             }
         }
