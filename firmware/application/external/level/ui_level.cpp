@@ -33,7 +33,7 @@ using namespace portapack;
 using namespace tonekey;
 using portapack::memory::map::backup_ram;
 
-namespace ui {
+namespace ui::external_app::level {
 
 // Function to map the value from one range to another
 int32_t LevelView::map(int32_t value, int32_t fromLow, int32_t fromHigh, int32_t toLow, int32_t toHigh) {
@@ -130,9 +130,16 @@ LevelView::LevelView(NavigationView& nav)
 
     freqman_set_modulation_option(field_mode);
     field_mode.on_change = [this](size_t, OptionsField::value_t v) {
-        if (v != -1) {
-            change_mode(v);
+        static freqman_index_t last_mode = WFM_MODULATION;
+        if (v > SPEC_MODULATION) {
+            if (last_mode == SPEC_MODULATION)
+                v = AM_MODULATION;
+            else
+                v = SPEC_MODULATION;
+            field_mode.set_selected_index(v);
         }
+        last_mode = v;
+        change_mode(v);
     };
     field_mode.set_by_value(radio_mode);  // Reflect the mode into the manual selector
     field_bw.set_selected_index(radio_bw);
@@ -277,15 +284,6 @@ size_t LevelView::change_mode(freqman_index_t new_mod) {
             field_bw.set_by_value(0);
             field_bw.on_change = [this](size_t index, OptionsField::value_t n) { radio_bw = index ; receiver_model.set_wfm_configuration(n); };
             break;
-        case AMFM_MODULATION:
-            audio_sampling_rate = audio::Rate::Hz_12000;
-            freqman_set_bandwidth_option(new_mod, field_bw);
-            baseband::run_image(portapack::spi_flash::image_tag_am_audio);
-            receiver_model.set_modulation(ReceiverModel::Mode::AMAudioFMApt);
-            receiver_model.set_amfm_configuration(5);  // Fix index 5 manually, not from freqman: set to  RX AM (USB+FM) mode to demod audio tone, and get Wefax_APT signal.
-            field_bw.set_by_value(0);
-            field_bw.on_change = [this](size_t, OptionsField::value_t n) { (void)n; };
-            break;
         case SPEC_MODULATION:
             audio_sampling_rate = audio::Rate::Hz_24000;
             freqman_set_bandwidth_option(new_mod, field_bw);
@@ -338,4 +336,4 @@ void LevelView::on_freqchg(int64_t freq) {
     button_frequency.set_text("<" + to_string_short_freq(freq) + " MHz>");
 }
 
-} /* namespace ui */
+}  // namespace ui::external_app::level
