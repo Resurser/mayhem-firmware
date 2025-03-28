@@ -187,11 +187,11 @@ void ReceiverModel::set_wfm_configuration(uint8_t n) {
     }
 }
 
-float ReceiverModel::spectrum_zoom() const {
+size_t ReceiverModel::spectrum_zoom() const {
     return settings_.spectrum_zoom;
 }
 
-void ReceiverModel::set_spectrum_zoom(float v) {
+void ReceiverModel::set_spectrum_zoom(size_t v) {
     settings_.spectrum_zoom = v;
     update_modulation();
 }
@@ -268,7 +268,7 @@ void ReceiverModel::set_configuration_without_update(
     size_t new_nbfm_config_index,
     size_t new_wfm_config_index,
     uint8_t new_squelch_level,
-    const float new_spectrum_zoom) {
+    const size_t new_spectrum_zoom) {
     settings_.mode = new_mode;
     settings_.frequency_step = new_frequency_step;
     settings_.am_config_index = new_am_config_index;
@@ -363,7 +363,7 @@ void ReceiverModel::update_am_configuration() {
 }
 
 void ReceiverModel::update_amfm_configuration() {
-    am_configs[amfm_configuration()].apply(2.0);  // update with different index for Wefax.
+    am_configs[amfm_configuration()].apply(spectrum_zoom());  // update with different index for Wefax.
 }
 
 void ReceiverModel::update_nbfm_configuration() {

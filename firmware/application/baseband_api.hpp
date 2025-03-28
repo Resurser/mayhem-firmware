@@ -44,7 +44,7 @@ struct AMConfig {
     const iir_biquad_config_t audio_12k_iir_filter_config;  // added to handle two var IIR filter types : 300 hpf(as before) , 1500Hz lpf for Wefax.
     const size_t spectrum_decimation_factor;                // used to handle LCD AM waterfall zoom x1 / zoom x2.
 
-    void apply(const float spectrum_zoom) const;
+    void apply(const size_t spectrum_decimation_factor) const;
 };
 
 struct NBFMConfig {
@@ -75,7 +75,7 @@ void kill_afsk();
 void set_fsk(const size_t deviation);
 void set_aprs(const uint32_t baudrate);
 
-void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space );
+void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space);
 // todo: add set_rtty with parity and stop bits
 void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space);
 

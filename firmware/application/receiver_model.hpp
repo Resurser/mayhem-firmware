@@ -59,7 +59,7 @@ class ReceiverModel {
         uint8_t nbfm_config_index = 0;
         uint8_t wfm_config_index = 0;
         uint8_t squelch_level = 80;
-        float spectrum_zoom = 4.0f;
+        size_t spectrum_zoom = 4.0;
     };
 
     /* The frequency to receive (no offset). */
@@ -102,8 +102,8 @@ class ReceiverModel {
     uint8_t squelch_level() const;
     void set_squelch_level(uint8_t v);
 
-    float spectrum_zoom() const;
-    void set_spectrum_zoom(float v);
+    size_t spectrum_zoom() const;
+    void set_spectrum_zoom(size_t v);
     
     void set_antenna_bias();
 
@@ -129,7 +129,7 @@ class ReceiverModel {
         size_t new_nbfm_config_index,
         size_t new_wfm_config_index,
         uint8_t new_squelch_level,
-        float new_spectrum_zoom
+        const size_t new_spectrum_zoom
     );
 
     void configure_from_app_settings(const app_settings::AppSettings& settings);

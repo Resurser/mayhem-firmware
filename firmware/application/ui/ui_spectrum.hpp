@@ -98,7 +98,7 @@ class FrequencyScale : public Widget {
     int channel_filter_low_frequency{0};
     int channel_filter_high_frequency{0};
     int channel_filter_transition{0};
-    int ddc_freq { 0 };
+    int ddc_freq{0};
 
     void clear();
     void clear_background(Painter& painter, const Rect r);
@@ -113,14 +113,34 @@ class FrequencyScale : public Widget {
 
 class WaterfallWidget : public Widget {
    public:
-    
+    uint8_t delta{0};
+   
+    uint8_t lines_count {0};
     void on_show() override;
     void on_hide() override;
     void paint(Painter&) override {}
+    // Function to apply contrast adjustment with dynamic gamma
+    uint8_t adjustContrast(uint8_t intensity, float gamma);
+
+    uint8_t linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor);
+    // Function to update the dynamic range (min and max values) based on a histogram and percentile
+    void updateDynamicRangeWithHistogram(const std::array<uint8_t, 256>& inputBuffer, uint8_t& min, uint8_t& max, const float percentile);
+    // Function for noise floor compensation and linear normalization
+    void processSignal(const std::array<uint8_t, 256>& inputSignal,  std::array<uint8_t, 256>& outputSignal, uint8_t& minValue, uint8_t& maxValue, uint8_t noiseFloor, float alpha, float percentile);
+    // Function to apply temporal smoothing to the output signal
+    void smoothSignal(const std::array<uint8_t, 256>& inputBuffer,  std::array<uint8_t, 256>& smoothedBuffer, float smoothFactor);
 
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
 
    private:
+    // uint8_t minValue{0};    // Estimated initial noise floor
+    // uint8_t maxValue{255};  // Estimated initial peak signal strength
+
+    // // Parameters
+    uint8_t noiseFloor{1};   // Noise floor compensation
+    // float alpha{0.1f};        // Smoothing factor for dynamic range updates
+    float percentile{0.06f};  // Histogram percentile for min/max range adjustment
+
     void clear();
 };
 
@@ -173,6 +193,7 @@ class WaterfallView : public View {
             const auto message = *reinterpret_cast<const ChannelSpectrumConfigMessage*>(p);
             this->channel_fifo = message.fifo;
         }};
+
     MessageHandlerRegistration message_handler_audio_spectrum{
         Message::ID::AudioSpectrum,
         [this](const Message* const p) {
@@ -180,14 +201,14 @@ class WaterfallView : public View {
             this->audio_spectrum_data = message.data;
             this->audio_spectrum_update = true;
         }};
-    
-    MessageHandlerRegistration message_handler_ddc_config {
-		Message::ID::DDCConfig,
-		[this](const Message* const p) {
-			const auto message = *reinterpret_cast<const DDCConfigMessage*>(p);
-			this->frequency_scale.set_ddc_freq(message.freq);
-		}
-	};
+
+    MessageHandlerRegistration message_handler_ddc_config{
+        Message::ID::DDCConfig,
+        [this](const Message* const p) {
+            const auto message = *reinterpret_cast<const DDCConfigMessage*>(p);
+            this->frequency_scale.set_ddc_freq(message.freq);
+        }};
+
     MessageHandlerRegistration message_handler_frame_sync{
         Message::ID::DisplayFrameSync,
         [this](const Message* const) {

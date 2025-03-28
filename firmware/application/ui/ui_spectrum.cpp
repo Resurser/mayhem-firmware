@@ -27,8 +27,8 @@
 using namespace portapack;
 
 #include "baseband_api.hpp"
-
 #include "string_format.hpp"
+#include "utility.hpp"
 
 #include <cmath>
 #include <array>
@@ -281,31 +281,125 @@ void WaterfallWidget::on_hide() {
     display.scroll_disable();
 }
 
-void WaterfallWidget::on_channel_spectrum(
-    const ChannelSpectrum& spectrum) {
-    /* TODO: static_assert that message.spectrum.db.size() >= pixel_row.size() */
-    // std::array<ui::Color, 256> curr_spectrum_lut;
-    // spectrum_color_lut(pmem::spectrum_color_id(), curr_spectrum_lut);
-    
-    std::array<Color, 240> pixel_rows;
-    // std::array<Color, 240> powers;
-    
-    const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
-    uint8_t min = 255;
-    for (size_t i = 0; i < 120; i++) {
-        if (min > spectrum.db[i]){
-            min = spectrum.db[i];
-        }
-        if (min > spectrum.db[256 - 120 + i]){
-            min = spectrum.db[256 - 120 + i];
-        }
-    }
-    const uint8_t delta = min > 127 ? 63 : 0;
-    for (size_t i = 0; i < 120; i++) {
-        pixel_rows[i]       = spectrum_color[spectrum.db[256 - 120 + i] - delta];
-        pixel_rows[120 + i] = spectrum_color[spectrum.db[i]  - delta];
+
+// Function to apply contrast adjustment with dynamic gamma
+uint8_t WaterfallWidget::adjustContrast(uint8_t intensity, float gamma) {
+    // Normalize intensity to range [0, 1]
+    float normalized = intensity / 255.0f;
+
+    // Apply gamma correction
+    normalized = std::pow(normalized, gamma);
+
+    // Scale back to [0, 255]
+    return static_cast<uint8_t>(normalized * 255);
+}
+
+// Function to update the dynamic range (min and max values) based on a histogram and percentile
+void WaterfallWidget::updateDynamicRangeWithHistogram(const std::array<uint8_t, 256>& inputBuffer, uint8_t& min, uint8_t& max, const float percentile) {
+    // Create a histogram for the input signal
+    std::array<uint8_t, 256> histogram{0};
+    for (uint8_t value : inputBuffer) {
+        histogram[value]++;
     }
 
+    // Calculate cumulative sums
+    std::array<uint8_t, 256> cumulativeSum{0};
+    cumulativeSum[0] = histogram[0];
+    for (size_t i = 1; i < 255; ++i) {
+        cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
+    }
+
+    // Determine min and max based on the desired percentile
+    int totalCount = inputBuffer.size();
+    int minCount = static_cast<int>(totalCount * percentile);
+    int maxCount = static_cast<int>(totalCount * (1.0f - percentile));
+
+    for (size_t i = 0; i < 256; ++i) {
+        if (cumulativeSum[i] > minCount) {
+            min = static_cast<uint8_t>(i);
+            break;
+        }
+    }
+
+    for (size_t i = 255; i > 0; --i) {
+        if (cumulativeSum[i] < maxCount) {
+            max = static_cast<uint8_t>(i);
+            break;
+        }
+    }
+}
+
+// Function for noise floor compensation and linear normalization
+uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor) {
+    // Adjust the signal by subtracting the noise floor
+    signal = std::max(signal, noiseFloor);
+    min =std::min(min, noiseFloor);
+    if (signal > (min + (max - min) / 2)){
+        
+    }
+    // Normalize the adjusted signal
+    return static_cast<uint8_t>((signal - min) * ((signal > (min + (max - min) / 2)) ? 245 : 220) / (max - min));
+}
+
+// Function to apply temporal smoothing to the output signal
+void WaterfallWidget::smoothSignal(const  std::array<uint8_t, 256>& inputBuffer, std::array<uint8_t, 256>& smoothedBuffer, float smoothFactor) {
+    smoothedBuffer[0] = inputBuffer[0]; // Initialize with the first value
+
+    for (size_t i = 1; i < inputBuffer.size(); ++i) {
+        smoothedBuffer[i] = static_cast<uint8_t>((1.0f - smoothFactor) * smoothedBuffer[i - 1] + smoothFactor * inputBuffer[i]);
+    }
+}
+
+// Main function to process the signal with dynamic range adjustment and smoothing
+void WaterfallWidget::processSignal(const std::array<uint8_t, 256>& inputSignal, std::array<uint8_t, 256>& outputSignal, uint8_t& minValue, uint8_t& maxValue, uint8_t noiseFloor, float alpha, float percentile) {
+    // Dynamic range update with histogram
+    updateDynamicRangeWithHistogram(inputSignal, minValue, maxValue, percentile);
+
+    // Normalize signal with noise floor compensation
+    std::array<uint8_t, 256> normalizedSignal{0};
+    for (size_t i = 0; i < inputSignal.size(); ++i) {
+        normalizedSignal[i] = linearNormalizeWithNoiseFloor(inputSignal[i], minValue, maxValue, noiseFloor);
+    }
+
+    // Apply smoothing for stability
+    smoothSignal(normalizedSignal, outputSignal, alpha);
+}
+
+void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
+    std::array<Color, 240> pixel_rows;    
+    // std::array<uint8_t, 240> adjustedSpectrum {};
+    const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
+    uint8_t min = 255;
+    uint8_t max = 0;
+    updateDynamicRangeWithHistogram(spectrum.db, min, max, percentile);
+    // for (size_t i = 0; i < 240; i++) {
+    //     if (max < spectrum.db[i]){
+    //         max = spectrum.db[i];
+    //     }    
+    //     if (min > spectrum.db[i]){
+    //         min = spectrum.db[i];
+    //     }
+    // }
+    
+    // for (size_t i = 0; i < 120; i++) {
+    //     adjustedSpectrum[i] = (uint8_t)(fast_pow2((float)(spectrum.db[256 - 120 + i]/255.f))*255);
+    //     adjustedSpectrum[120 + i] = (uint8_t)(fast_pow2((float)(spectrum.db[i]/255.f))*255);
+    // }
+    // delta = (min < delta) ? min / 2 : delta;
+    
+    // const uint8_t dynamic_range = max - min;
+    for (size_t i = 0; i < 120; i++) {
+        pixel_rows[i]       = spectrum_color[
+            linearNormalizeWithNoiseFloor(spectrum.db[256 - 120 + i], min, max, noiseFloor)
+        ];
+        pixel_rows[120 + i] = spectrum_color[            
+            linearNormalizeWithNoiseFloor(spectrum.db[i+15], min, max, noiseFloor)
+        ];
+        
+        // pixel_rows[i]       = spectrum_color[adjustedSpectrum[i]];
+        // pixel_rows[120 + i] = spectrum_color[adjustedSpectrum[120 + i]];
+    }
+    
     const auto draw_y = display.scroll(1);
 
     display.draw_pixels(

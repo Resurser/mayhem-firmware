@@ -40,7 +40,6 @@ class AnalogAudioView;
 class AMOptionsView : public View {
    public:
     AMOptionsView(AnalogAudioView* view, Rect parent_rect, const Style* style);
-    int16_t previous_filter_array_index = 0;
 
    private:
     Text label_config{
@@ -56,10 +55,13 @@ class AMOptionsView : public View {
         }};
 
     OptionsField zoom_config{
-        {23 * 8, 0 * 16},
-        7,
-        {{"ZOOM x1", 4},
-         {"ZOOM x2", 6}}  // offset index array filters.
+        {21 * 8, 0 * 16},
+        9,
+        {
+            {"ZOOM x1  ", 4},
+            {"ZOOM x1.5", 6},
+            {"ZOOM x2  ", 8},
+        }  // offset index array filters.
     };
 };
 
@@ -81,10 +83,13 @@ class AMFMAptOptionsView : public View {
         }};
 
     OptionsField zoom_config{
-        {23 * 8, 0 * 16},
-        7,
-        {{"ZOOM x1", 0},
-         {"ZOOM x2", 6}}  // offset index array filters.
+        {21 * 8, 0 * 16},
+        9,
+        {
+            {"ZOOM x1  ", 4},
+            {"ZOOM x1.5", 6},
+            {"ZOOM x2  ", 8},
+        }  // offset index array filters.
     };
 };
 
@@ -206,8 +211,8 @@ class AnalogAudioView : public View {
     NavigationView& nav_;
     RxRadioState radio_state_{};
     uint8_t iq_phase_calibration_value{15};  // initial default RX IQ phase calibration value , used for both max2837 & max2839
-    uint8_t zoom_factor_am{4};               // initial zoom factor in AM mode
-    uint8_t zoom_factor_amfm{6};             // initial zoom factor in AMFM mode
+    uint8_t zoom_factor_am{0};               // initial zoom factor in AM mode
+    uint8_t zoom_factor_amfm{0};             // initial zoom factor in AMFM mode
     app_settings::SettingsManager settings_{
         "rx_audio",
         app_settings::Mode::RX,

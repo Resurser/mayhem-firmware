@@ -64,7 +64,7 @@ static void send_message(const Message* const message) {
     }
 }
 
-void AMConfig::apply(float spectrum_zoom) const {
+void AMConfig::apply(const size_t spectrum_decimation_factor) const {
     const AMConfigureMessage message{
         taps_6k0_decim_0,             // common FIR filter taps pre-decim_0 to all 6 x AM mod types.(AM-9K, AM-6K, USB, LSB, CW, AMFM-WFAX)
         decim_1,                      // var decim_1 FIR taps filter , variable values , to handle two spectrum decim factor 1 and 2 (zoom) and more APT LPF filtered .

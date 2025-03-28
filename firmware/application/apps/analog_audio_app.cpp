@@ -52,20 +52,19 @@ AMOptionsView::AMOptionsView(
         &zoom_config,
     });
 
-    zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
-        receiver_model.set_am_configuration(previous_filter_array_index + n);
-        view->set_zoom_factor(AM_MODULATION, n);
-    };
-
     // restore zoom selection
-    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));
-
     freqman_set_bandwidth_option(AM_MODULATION, options_config);  // adding the common message from freqman.cpp to the options_config
     options_config.set_by_value(receiver_model.am_configuration());
+    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));
+    receiver_model.set_spectrum_zoom(view->get_zoom_factor(AM_MODULATION));
+    
+    zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
+        receiver_model.set_spectrum_zoom(n);
+        view->set_zoom_factor(AM_MODULATION, n);
+    };
+    
     options_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_am_configuration(n);
-        previous_filter_array_index = n;
-        zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));
     };
 }
 
@@ -134,12 +133,13 @@ AMFMAptOptionsView::AMFMAptOptionsView(
     options_config.set_by_value(receiver_model.amfm_configuration());
 
     zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
-        receiver_model.set_amfm_configuration(5 + n);
+        receiver_model.set_spectrum_zoom(n);
         view->set_zoom_factor(AMFM_MODULATION, n);
     };
 
     // restore zoom selection
     zoom_config.set_by_value(view->get_zoom_factor(AMFM_MODULATION));
+    receiver_model.set_spectrum_zoom(view->get_zoom_factor(AMFM_MODULATION));
 }
 
 /* SPECOptionsView *******************************************************/
@@ -496,7 +496,6 @@ void AnalogAudioView::on_reference_ppm_correction_changed(int32_t v) {
 void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
     audio::output::mute();
     record_view.stop();
-
     baseband::shutdown();
 
     portapack::spi_flash::image_tag_t image_tag;

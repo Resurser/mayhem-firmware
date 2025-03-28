@@ -595,8 +595,8 @@ class AMConfigureMessage : public Message {
         SSB_FM = 2,  // Added new for RX Wefax mode,  to demodulate APT signal ,FM modulated inside audio subcarrier tones, and then up broadcasted in SSB USB .
     };
     enum class Zoom_waterfall : size_t {
-        ZOOM_x_1 = 1,
-        ZOOM_x_2 = 2,
+        ZOOM_x_1 = 4,
+        ZOOM_x_2 = 8,
     };
 
     constexpr AMConfigureMessage(
@@ -607,7 +607,6 @@ class AMConfigureMessage : public Message {
         const Modulation modulation,
         const iir_biquad_config_t audio_hpf_lpf_config,
         const size_t channel_spectrum_decimation_factor)
-
         : Message{ID::AMConfigure},
           decim_0_filter(decim_0_filter),
           decim_1_filter(decim_1_filter),
