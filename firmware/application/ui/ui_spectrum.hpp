@@ -113,34 +113,22 @@ class FrequencyScale : public Widget {
 
 class WaterfallWidget : public Widget {
    public:
-    uint8_t delta{0};
-   
-    uint8_t lines_count {0};
     void on_show() override;
     void on_hide() override;
     void paint(Painter&) override {}
-    // Function to apply contrast adjustment with dynamic gamma
-    uint8_t adjustContrast(uint8_t intensity, float gamma);
-
-    uint8_t linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor);
-    // Function to update the dynamic range (min and max values) based on a histogram and percentile
-    void updateDynamicRangeWithHistogram(const std::array<uint8_t, 256>& inputBuffer, uint8_t& min, uint8_t& max, const float percentile);
-    // Function for noise floor compensation and linear normalization
-    void processSignal(const std::array<uint8_t, 256>& inputSignal,  std::array<uint8_t, 256>& outputSignal, uint8_t& minValue, uint8_t& maxValue, uint8_t noiseFloor, float alpha, float percentile);
-    // Function to apply temporal smoothing to the output signal
-    void smoothSignal(const std::array<uint8_t, 256>& inputBuffer,  std::array<uint8_t, 256>& smoothedBuffer, float smoothFactor);
 
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
-
    private:
-    // uint8_t minValue{0};    // Estimated initial noise floor
-    // uint8_t maxValue{255};  // Estimated initial peak signal strength
-
-    // // Parameters
-    uint8_t noiseFloor{1};   // Noise floor compensation
     // float alpha{0.1f};        // Smoothing factor for dynamic range updates
-    float percentile{0.06f};  // Histogram percentile for min/max range adjustment
-
+    float percentile{0.1f};  // Histogram percentile for min/max range adjustment
+    // Function to apply linear normalization with noise floor compensation
+    uint8_t normalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max);
+    // Function to update the dynamic range (min and max values) based on a histogram and percentile
+    void updateDynamicRangeWithHistogram(const std::array<uint8_t, 256>& inputBuffer, uint8_t& min, uint8_t& max, const float percentile);
+    // Function to apply temporal smoothing to the output signal
+    uint8_t estimateNoiseFloor(const std::array<uint8_t, 256> inputBuffer);
+    void applySpatialSmoothing(const std::array<uint8_t, 256>& inputBuffer, std::array<uint8_t, 256>& smoothedBuffer, int filterRadius);
+        
     void clear();
 };
 

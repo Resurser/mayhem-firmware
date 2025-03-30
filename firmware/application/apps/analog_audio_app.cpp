@@ -55,8 +55,6 @@ AMOptionsView::AMOptionsView(
     // restore zoom selection
     freqman_set_bandwidth_option(AM_MODULATION, options_config);  // adding the common message from freqman.cpp to the options_config
     options_config.set_by_value(receiver_model.am_configuration());
-    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));
-    receiver_model.set_spectrum_zoom(view->get_zoom_factor(AM_MODULATION));
     
     zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_spectrum_zoom(n);
@@ -66,6 +64,9 @@ AMOptionsView::AMOptionsView(
     options_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_am_configuration(n);
     };
+    
+    receiver_model.set_spectrum_zoom(view->get_zoom_factor(AM_MODULATION));
+    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));    
 }
 
 /* NBFMOptionsView *******************************************************/

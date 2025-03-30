@@ -281,47 +281,36 @@ void WaterfallWidget::on_hide() {
     display.scroll_disable();
 }
 
-
-// Function to apply contrast adjustment with dynamic gamma
-uint8_t WaterfallWidget::adjustContrast(uint8_t intensity, float gamma) {
-    // Normalize intensity to range [0, 1]
-    float normalized = intensity / 255.0f;
-
-    // Apply gamma correction
-    normalized = std::pow(normalized, gamma);
-
-    // Scale back to [0, 255]
-    return static_cast<uint8_t>(normalized * 255);
-}
-
 // Function to update the dynamic range (min and max values) based on a histogram and percentile
 void WaterfallWidget::updateDynamicRangeWithHistogram(const std::array<uint8_t, 256>& inputBuffer, uint8_t& min, uint8_t& max, const float percentile) {
     // Create a histogram for the input signal
-    std::array<uint8_t, 256> histogram{0};
+    const uint16_t _buffer_size = 256;
+    std::array<uint8_t, _buffer_size> histogram{};
+    std::array<uint8_t, _buffer_size> cumulativeSum{};
+
     for (uint8_t value : inputBuffer) {
         histogram[value]++;
     }
 
     // Calculate cumulative sums
-    std::array<uint8_t, 256> cumulativeSum{0};
     cumulativeSum[0] = histogram[0];
-    for (size_t i = 1; i < 255; ++i) {
+    for (size_t i = 1; i < _buffer_size; ++i) {
         cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
     }
 
     // Determine min and max based on the desired percentile
-    int totalCount = inputBuffer.size();
+    int totalCount = _buffer_size;
     int minCount = static_cast<int>(totalCount * percentile);
     int maxCount = static_cast<int>(totalCount * (1.0f - percentile));
 
-    for (size_t i = 0; i < 256; ++i) {
+    for (size_t i = 0; i < _buffer_size; ++i) {
         if (cumulativeSum[i] > minCount) {
             min = static_cast<uint8_t>(i);
             break;
         }
     }
 
-    for (size_t i = 255; i > 0; --i) {
+    for (size_t i = _buffer_size-1; i > 0; --i) {
         if (cumulativeSum[i] < maxCount) {
             max = static_cast<uint8_t>(i);
             break;
@@ -329,71 +318,78 @@ void WaterfallWidget::updateDynamicRangeWithHistogram(const std::array<uint8_t, 
     }
 }
 
+// Spatial smoothing using a lightweight box filter
+void WaterfallWidget::applySpatialSmoothing(const std::array<uint8_t, 256>& inputBuffer, std::array<uint8_t, 256>& smoothedBuffer, int filterRadius) {
+    std::array<uint8_t, 256> tempData = inputBuffer;
+    for (size_t i = 0; i < 256; ++i) {
+        int sum = 0, count = 0;
+        for (int j = -filterRadius; j <= filterRadius; ++j) {
+            size_t idx = std::min(std::max(static_cast<int>(i) + j, 0), static_cast<int>(256 - 1));
+            sum += tempData[idx];
+            count++;
+        }
+        smoothedBuffer[i] = sum / count;
+    }
+}
+
 // Function for noise floor compensation and linear normalization
-uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor) {
-    // Adjust the signal by subtracting the noise floor
-    signal = std::max(signal, noiseFloor);
-    min =std::min(min, noiseFloor);
-    if (signal > (min + (max - min) / 2)){
-        
-    }
-    // Normalize the adjusted signal
-    return static_cast<uint8_t>((signal - min) * ((signal > (min + (max - min) / 2)) ? 245 : 220) / (max - min));
+uint8_t WaterfallWidget::normalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max) {
+    // Clamp the intensity to the range [minDb, maxDb]
+    auto intensity = std::max(min, std::min(max, signal));
+    // Normalize intensity to the range [0, 1]
+    float normalized = (float)(intensity - min) / (float)(max - min);
+
+    // Scale to [0, 255] for LUT indexing
+    return static_cast<uint8_t>(std::log10(1.0f + 9.0f * (normalized / 255.0f)) * 250.0f);
 }
 
-// Function to apply temporal smoothing to the output signal
-void WaterfallWidget::smoothSignal(const  std::array<uint8_t, 256>& inputBuffer, std::array<uint8_t, 256>& smoothedBuffer, float smoothFactor) {
-    smoothedBuffer[0] = inputBuffer[0]; // Initialize with the first value
+//     return static_cast<uint8_t>(normalized * 255);
+// }
 
-    for (size_t i = 1; i < inputBuffer.size(); ++i) {
-        smoothedBuffer[i] = static_cast<uint8_t>((1.0f - smoothFactor) * smoothedBuffer[i - 1] + smoothFactor * inputBuffer[i]);
-    }
-}
-
-// Main function to process the signal with dynamic range adjustment and smoothing
-void WaterfallWidget::processSignal(const std::array<uint8_t, 256>& inputSignal, std::array<uint8_t, 256>& outputSignal, uint8_t& minValue, uint8_t& maxValue, uint8_t noiseFloor, float alpha, float percentile) {
-    // Dynamic range update with histogram
-    updateDynamicRangeWithHistogram(inputSignal, minValue, maxValue, percentile);
-
-    // Normalize signal with noise floor compensation
-    std::array<uint8_t, 256> normalizedSignal{0};
-    for (size_t i = 0; i < inputSignal.size(); ++i) {
-        normalizedSignal[i] = linearNormalizeWithNoiseFloor(inputSignal[i], minValue, maxValue, noiseFloor);
-    }
-
-    // Apply smoothing for stability
-    smoothSignal(normalizedSignal, outputSignal, alpha);
+uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> inputBuffer){
+    std::array<uint8_t, 256> sortedData = inputBuffer;
+    std::sort(sortedData.begin(), sortedData.end());
+    
+    return sortedData[sortedData.size() / 2];
 }
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_rows;    
-    // std::array<uint8_t, 240> adjustedSpectrum {};
+    
+    std::array<uint8_t, 256> adjustedSpectrum = spectrum.db;
     const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
     uint8_t min = 255;
     uint8_t max = 0;
-    updateDynamicRangeWithHistogram(spectrum.db, min, max, percentile);
-    // for (size_t i = 0; i < 240; i++) {
-    //     if (max < spectrum.db[i]){
-    //         max = spectrum.db[i];
-    //     }    
-    //     if (min > spectrum.db[i]){
-    //         min = spectrum.db[i];
-    //     }
-    // }
+    uint8_t delta = 0;
+    uint8_t noiseFloor = estimateNoiseFloor(spectrum.db);
+    // updateDynamicRangeWithHistogram(spectrum.db, min, max, percentile);
+    uint8_t maxSignal = *std::max_element(spectrum.db.begin(), spectrum.db.end());
     
-    // for (size_t i = 0; i < 120; i++) {
-    //     adjustedSpectrum[i] = (uint8_t)(fast_pow2((float)(spectrum.db[256 - 120 + i]/255.f))*255);
-    //     adjustedSpectrum[120 + i] = (uint8_t)(fast_pow2((float)(spectrum.db[i]/255.f))*255);
-    // }
-    // delta = (min < delta) ? min / 2 : delta;
+    // Adjust dynamic range
+    max = (maxSignal < 245) ? maxSignal + 5 : maxSignal;  // Add a small margin above the strongest signal
+    min = noiseFloor;  // Add a small margin below the noise floor
+    // Ensure a minimum range of 10 dB
+    if (min > 220) {
+        delta = 100;
+        for (size_t i = 0; i < 256; i++) {
+            adjustedSpectrum[i] = spectrum.db[i] - delta;
+        }
+        min -=delta;
+        max -=delta;
+    }
+    if (max - min < 10) {
+        max = min + 10;
+    }
     
-    // const uint8_t dynamic_range = max - min;
+    // applySpatialSmoothing(spectrum.db, adjustedSpectrum, 3);
     for (size_t i = 0; i < 120; i++) {
         pixel_rows[i]       = spectrum_color[
-            linearNormalizeWithNoiseFloor(spectrum.db[256 - 120 + i], min, max, noiseFloor)
+            // adjustedSpectrum[256 - 120 + i]
+            normalizeWithNoiseFloor(adjustedSpectrum[256 - 120 + i], min, max)
         ];
-        pixel_rows[120 + i] = spectrum_color[            
-            linearNormalizeWithNoiseFloor(spectrum.db[i+15], min, max, noiseFloor)
+        pixel_rows[120 + i] = spectrum_color[ 
+            // adjustedSpectrum[i]
+            normalizeWithNoiseFloor(adjustedSpectrum[i], min, max)
         ];
         
         // pixel_rows[i]       = spectrum_color[adjustedSpectrum[i]];

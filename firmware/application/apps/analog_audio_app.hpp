@@ -58,9 +58,9 @@ class AMOptionsView : public View {
         {21 * 8, 0 * 16},
         9,
         {
-            {"ZOOM x1  ", 4},
+            {"ZOOM   x1", 4},
             {"ZOOM x1.5", 6},
-            {"ZOOM x2  ", 8},
+            {"ZOOM   x2", 8},
         }  // offset index array filters.
     };
 };
@@ -86,9 +86,9 @@ class AMFMAptOptionsView : public View {
         {21 * 8, 0 * 16},
         9,
         {
-            {"ZOOM x1  ", 4},
+            {"ZOOM   x1", 4},
             {"ZOOM x1.5", 6},
-            {"ZOOM x2  ", 8},
+            {"ZOOM   x2", 8},
         }  // offset index array filters.
     };
 };

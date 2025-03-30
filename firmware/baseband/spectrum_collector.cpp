@@ -113,7 +113,9 @@ static typename T::value_type spectrum_window_hamming_3(const T& s, const size_t
     static_assert((length), "Array length must be power of 2");
     constexpr size_t mask = length - 1;
     // Three point Hamming window.
-    return s[i] * 0.54f + (s[(i - 1) & mask] + s[(i + 1) & mask]) * -0.23f;
+    const auto prev = s[(i - 1) & mask];
+    const auto next = s[(i + 1) & mask];
+    return s[i] * 0.54f + (prev + next) * -0.23f;
 };
 
 template <typename T>

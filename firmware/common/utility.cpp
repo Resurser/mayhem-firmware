@@ -27,6 +27,11 @@
     #define I _Complex_I
 #endif
 
+template <typename T>
+constexpr T clamp(const T& value, const T& min, const T& max) {
+    return (value < min) ? min : (value > max) ? max : value;
+}
+
 #if 0
 uint32_t gcd(const uint32_t u, const uint32_t v) {
 	/* From http://en.wikipedia.org/wiki/Binary_GCD_algorithm */
