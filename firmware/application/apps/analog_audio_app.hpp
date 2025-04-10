@@ -295,9 +295,7 @@ class AnalogAudioView : public View {
     void set_options_widget(std::unique_ptr<Widget> new_widget);
 
     void update_modulation(ReceiverModel::Mode modulation);
-
     void handle_coded_squelch(uint32_t value);
-
     void on_freqchg(int64_t freq);
 
     MessageHandlerRegistration message_handler_coded_squelch{

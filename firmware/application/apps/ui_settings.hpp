@@ -237,7 +237,7 @@ class SetRadioView : public View {
         {{26 * 8, 6 * 16}, "kHz", Theme::getInstance()->fg_light->foreground}};
 
     Labels labels_bias{
-        {{4 * 8 + 4, 8 * 16}, "CAUTION: device must", Theme::getInstance()->error_dark->foreground},
+        {{4 * 8 + 4, 8 * 16}, "CAUTION: check antenna connector", Theme::getInstance()->error_dark->foreground},
         {{6 * 8 + 4, 9 * 16}, "accept a DC voltage!", Theme::getInstance()->error_dark->foreground}};
 
     Checkbox check_bias{
@@ -254,7 +254,7 @@ class SetRadioView : public View {
         {18, 14 * 16},
         5,
         "Slide tune "};
-
+    
     Button button_save{
         {2 * 8, 16 * 16, 12 * 8, 32},
         "Save"};

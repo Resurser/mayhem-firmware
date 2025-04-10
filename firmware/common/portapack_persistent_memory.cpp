@@ -139,7 +139,7 @@ struct ui_config2_t {
     bool button_long_press_delay : 1;
     uint8_t spectrum_color_id: 1;
     bool ddc_enabled : 1;
-    uint8_t theme_id;;
+    uint8_t theme_id;
 };
 static_assert(sizeof(ui_config2_t) == sizeof(uint32_t));
 

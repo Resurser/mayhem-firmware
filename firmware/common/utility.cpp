@@ -108,6 +108,20 @@ float fast_pow2(const float val) {
     return u.f;
 }
 
+/**
+ * @brief Converts a squared magnitude value (mag²) to decibels relative to 1 Volt (dBV).
+ *
+ * This function computes the dBV value of a given squared magnitude (mag²) using
+ * a logarithmic transformation. It is optimized for performance by using a fast
+ * logarithm base-2 function.
+ *
+ * @param mag2 The squared magnitude value to be converted. It should be a positive
+ *             floating-point value.
+ * @return The corresponding value in decibels relative to 1 Volt (dBV).
+ *
+ * @note The function assumes that the input value is valid and greater than zero.
+ *       Undefined behavior may occur for non-positive inputs.
+ */
 float mag2_to_dbv_norm(const float mag2) {
     constexpr float mag2_log2_max = 0.0f;  // std::log2(1.0f);
     constexpr float log_mag2_mag_factor = 0.5f;
