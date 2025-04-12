@@ -357,11 +357,11 @@ uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> signa
 }
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
-    std::array<Color, 240> pixel_rows;    
+    std::array<Color, 240> pixel_row;    
     
     // std::array<uint8_t, 256> adjustedSpectrum = spectrum.db;
     // std::array<uint8_t, 256> adjustedSpectrum2{};
-    const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
+    // const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
     // uint8_t max = 0;
     // uint8_t min = 255;
     // uint8_t noise_floor = estimateNoiseFloor(spectrum.db, min, max);
@@ -401,8 +401,8 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     const auto draw_y = display.scroll(1);
 
     display.draw_pixels(
-        {{0, draw_y}, {pixel_rows.size(), 1}},
-        pixel_rows);
+        {{0, draw_y}, {pixel_row.size(), 1}},
+        pixel_row);
 }
 
 void WaterfallWidget::clear() {
