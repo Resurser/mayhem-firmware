@@ -21,8 +21,6 @@
 
 #include "ui_spectrum.hpp"
 
-#include "spectrum_color_lut.hpp"
-
 #include "portapack.hpp"
 using namespace portapack;
 
@@ -391,8 +389,13 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // applySpatialSmoothing(adjustedSpectrum, adjustedSpectrum2, 2);
     
     for (size_t i = 0; i < 120; i++) {
-        pixel_rows[i]       = spectrum_color[spectrum.db[256 - 120 + i]];
-        pixel_rows[120 + i] = spectrum_color[spectrum.db[i]];
+        const auto pixel_color = gradient.lut[spectrum.db[256 - 120 + i]];
+        pixel_row[i] = pixel_color;
+    }
+
+    for (size_t i = 120; i < 240; i++) {
+        const auto pixel_color = gradient.lut[spectrum.db[i - 120]];
+        pixel_row[i] = pixel_color;
     }
     
     const auto draw_y = display.scroll(1);
@@ -419,6 +422,10 @@ WaterfallView::WaterfallView(const bool cursor) {
     frequency_scale.on_select = [this](int32_t offset) {
         if (on_select) on_select(offset);
     };
+
+    if (!waterfall_widget.gradient.load_file(default_gradient_file)) {
+        waterfall_widget.gradient.set_default();
+    }
 }
 
 void WaterfallView::on_show() {
