@@ -353,6 +353,8 @@ bool ui_button_repeat_delay();
 bool ui_button_repeat_speed();
 bool ui_button_long_press_delay();
 
+bool ui_battery_charge_hint();
+
 void set_ui_hide_speaker(bool v);
 void set_ui_hide_mute(bool v);
 void set_ui_hide_converter(bool v);
@@ -373,6 +375,7 @@ void set_ui_button_long_press_delay(bool v);
 void set_spectrum_color_id(uint8_t v);
 void set_ddc_enabled(bool v);
 
+void set_ui_battery_charge_hint(bool v);
 
 // sd persisting settings
 bool should_use_sdcard_for_pmem();

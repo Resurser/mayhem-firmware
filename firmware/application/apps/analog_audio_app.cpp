@@ -59,6 +59,7 @@ AMOptionsView::AMOptionsView(
     zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_spectrum_zoom(n);
         view->set_zoom_factor(AM_MODULATION, n);
+        view->set_previous_zoom_option(n);
     };
     
     options_config.on_change = [this, view](size_t, OptionsField::value_t n) {
@@ -296,6 +297,22 @@ void AnalogAudioView::set_zoom_factor(uint8_t mode, uint8_t zoom) {  // define a
         zoom_factor_am = zoom;
     else if (mode == AMFM_MODULATION)
         zoom_factor_amfm = zoom;
+}
+
+uint8_t AnalogAudioView::get_previous_AM_mode_option() {
+    return previous_AM_mode_option;
+}
+
+void AnalogAudioView::set_previous_AM_mode_option(uint8_t mode) {
+    previous_AM_mode_option = mode;
+}
+
+uint8_t AnalogAudioView::get_previous_zoom_option() {
+    return previous_zoom;
+}
+
+void AnalogAudioView::set_previous_zoom_option(uint8_t zoom) {
+    previous_zoom = zoom;
 }
 
 uint8_t AnalogAudioView::get_spec_iq_phase_calibration_value() {  // define accessor functions inside AnalogAudioView to read iq_phase_calibration_value
