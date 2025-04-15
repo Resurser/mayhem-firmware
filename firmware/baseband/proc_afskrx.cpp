@@ -43,7 +43,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 
     // Audio signal processing
     const uint32_t half_samples_per_bit = samples_per_bit / 2;
-    const int32_t slice_threshold = -20;  // Threshold for slicing
+    const int32_t slice_threshold = -28;  // Threshold for slicing
     const uint32_t phase_wrap = 0x10000;
 
     for (size_t c = 0; c < audio.count; c++) {
@@ -60,6 +60,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         delay_line_index++;
         prev_filtered = sample_filtered;
         prev_mixed = sample_mixed;
+
 
         // Slice the sample
         sample_bits = (sample_bits << 1) | (sample_filtered < slice_threshold ? 1 : 0);

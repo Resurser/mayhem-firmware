@@ -316,86 +316,89 @@ void WaterfallWidget::updateDynamicRangeWithHistogram(const std::array<uint8_t, 
     }
 }
 
-// Spatial smoothing using a lightweight box filter
-void WaterfallWidget::applySpatialSmoothing(const std::array<uint8_t, 256> signalsIn, std::array<uint8_t, 256>& signalsOut) {
-    const int16_t SG_COEFFS[5] = { -3, 12, 17, 12, -3 };
-
-    size_t size = 256;
-    int halfWin = 2; // Window size = 5
-    for (uint16_t i = halfWin; i < size - halfWin; i++) {
-        int32_t sum = 0;
-
-        for (int j = -halfWin; j <= halfWin; j++) {
-            sum += (int32_t)SG_COEFFS[j + halfWin] * signalsIn[i + j];
-        }
-
-        signalsOut[i] = (int16_t)(sum / 32); // Normalize back
-    }
-}
 
 // Function for noise floor compensation and linear normalization
-uint8_t WaterfallWidget::normalizeWithNoiseFloor(const uint8_t signal, const uint8_t min, const uint8_t max) {
-    if (signal < (min + 20)){
+uint8_t WaterfallWidget::normalizeWithNoiseFloor(const float signal, const float min, const float max) {
+    if (signal < min){
         return 0;
     }
-    uint8_t intensity = std::max(min, std::min(max, signal));
+    //float intensity = std::max(min, std::min(max, signal));
 
    // Scale to [0, 255] for LUT indexing
-   return static_cast<uint8_t>(((intensity - min) / (max - min)) * 245);
+   return static_cast<uint8_t>(((signal - min) / (max - min)) * 250.0);
 
 }
 
-//     return static_cast<uint8_t>(normalized * 255);
-// }
+void WaterfallWidget::clearNoise(std::array<uint8_t, 256>& spectrumData, uint8_t noiseFloor, uint8_t margin) {
+    for (auto& bin : spectrumData) {
+        if (bin < noiseFloor + margin) {
+            bin = 0; // Suppress noise
+        }
+    }
+}
 
-uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max){
+void WaterfallWidget::applyTemporalSmoothing(const std::array<uint8_t, 256>& currentFrame, std::array<uint8_t, 256>& smoothedFrame, 
+        std::array<uint8_t, 256>&previousFrame, float smoothingFactor) {
+    
+    for (size_t i = 0; i < currentFrame.size(); ++i) {
+        smoothedFrame[i] = static_cast<uint8_t>((1.0f - smoothingFactor) * previousFrame[i] + 
+                                                smoothingFactor * currentFrame[i]);
+    }
+    previousFrame = smoothedFrame; // Update previous frame
+
+}
+
+void WaterfallWidget::applySpatialSmoothing(std::array<uint8_t, 256>& spectrumData, int filterRadius) {
+    std::array<uint8_t, 256> tempData = spectrumData;
+    for (size_t i = 0; i < spectrumData.size(); ++i) {
+        int sum = 0, count = 0;
+        for (int j = -filterRadius; j <= filterRadius; ++j) {
+            size_t idx = std::min(std::max(static_cast<int>(i) + j, 0), static_cast<int>(spectrumData.size() - 1));
+            sum += tempData[idx];
+            // std::array<uint8_t, 256> adjustedSpectrum = spectrum.db;
+            count++;
+        }
+        spectrumData[i] = sum / count;
+    }
+}
+
+
+uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn){
     std::array<uint8_t,256> sortedData = signalsIn;
     std::sort(sortedData.begin(), sortedData.end());
-    min = sortedData.at(0);
-    max = sortedData.at(sortedData.size() - 1);
     return sortedData[sortedData.size() / 2]; // Median value
 }
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;    
-    
-    // std::array<uint8_t, 256> adjustedSpectrum = spectrum.db;
+    std::array<uint8_t, 256> adjustedSpectrum = spectrum.db;
     // std::array<uint8_t, 256> adjustedSpectrum2{};
     // const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
     // uint8_t max = 0;
     // uint8_t min = 255;
     // uint8_t noise_floor = estimateNoiseFloor(spectrum.db, min, max);
     //*std::max_element(spectrum.db.begin(), spectrum.db.end());
-    // uint8_t delta = 0;
-    
-    // min = noise_floor;
-    
-    // Adjust dynamic range
-    // // Ensure a minimum range of 10 dB
-    // if (min > 60) {
-    //     delta = 40;
-    //     min -= delta;
-    //     max -= delta;
+    if (receiver_model.lna() > 24 && receiver_model.vga() > 32) {
+            // delta = 24;
         
-    // // if (max - min < 20) {
-    // //     max = min + 20;
-    // // }
-    // }
-    // updateDynamicRangeWithHistogram(spectrum.db, min, max, 0.2f);
-    // for (size_t i = 0; i < 256; i++) {
-    //     adjustedSpectrum[i] = normalizeWithNoiseFloor(spectrum.db[i], min, max);
-    // }
-    // applySpatialSmoothing(spectrum.db, adjustedSpectrum2);
-    // applySpatialSmoothing(adjustedSpectrum, adjustedSpectrum2, 2);
-    
-    for (size_t i = 0; i < 120; i++) {
-        const auto pixel_color = gradient.lut[spectrum.db[256 - 120 + i]];
-        pixel_row[i] = pixel_color;
+        // min = noise_floor;
+        
+        // Adjust dynamic range
+        // // Ensure a minimum range of 10 dB
+        //delta = min / 2 + min / 4;
+        // updateDynamicRangeWithHistogram(spectrum.db, min, max, 0.2f);
+        // for (size_t i = 0; i < 256; i++) {
+        //     if (i < 121 || i > 135){
+        //         adjustedSpectrum[i] = normalizeWithNoiseFloor(spectrum.db[i], min, max);
+        //     }
+        // }
+        // applySpatialSmoothing(spectrum.db, adjustedSpectrum);
     }
+    // applySpatialSmoothing(spectrum.db, adjustedSpectrum2);
 
-    for (size_t i = 120; i < 240; i++) {
-        const auto pixel_color = gradient.lut[spectrum.db[i - 120]];
-        pixel_row[i] = pixel_color;
+    for (size_t i = 0; i < 120; i++) {
+        pixel_row[i]       = gradient.lut[adjustedSpectrum[256 - 120 + i]];
+        pixel_row[i + 120] = gradient.lut[adjustedSpectrum[i]];
     }
     
     const auto draw_y = display.scroll(1);

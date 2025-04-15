@@ -125,12 +125,16 @@ class WaterfallWidget : public Widget {
     // float alpha{0.1f};        // Smoothing factor for dynamic range updates
     float percentile{0.1f};  // Histogram percentile for min/max range adjustment
     // Function to apply linear normalization with noise floor compensation
-    uint8_t normalizeWithNoiseFloor(uint8_t signal, const uint8_t min, const uint8_t max);
+    uint8_t normalizeWithNoiseFloor(const float signal, const float min, const float max);
+    void clearNoise(std::array<uint8_t, 256>& spectrumData, uint8_t noiseFloor, uint8_t margin);
+    void applyTemporalSmoothing(const std::array<uint8_t, 256>& currentFrame, std::array<uint8_t, 256>& smoothedFrame, 
+        std::array<uint8_t, 256>&previousFrame, float smoothingFactor);
+    void applySpatialSmoothing(std::array<uint8_t, 256>& spectrumData, int filterRadius);
+    
     // Function to update the dynamic range (min and max values) based on a histogram and percentile
     void updateDynamicRangeWithHistogram(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max, const float percentile);
     // Function to apply temporal smoothing to the output signal
-    uint8_t estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max);
-    void applySpatialSmoothing(const std::array<uint8_t, 256> signalsIn, std::array<uint8_t, 256>& signalsOut);
+    uint8_t estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn);
         
     void clear();
 };
