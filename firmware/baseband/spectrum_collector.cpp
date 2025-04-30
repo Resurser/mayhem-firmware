@@ -143,10 +143,10 @@ void SpectrumCollector::update() {
         spectrum.channel_filter_transition = channel_filter_transition;
         for (size_t i = 0; i < spectrum.db.size(); i++) {
             // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
+            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.2f;// 5.0f;
+            constexpr float mag_scale = 5.3f;// 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
             spectrum.db[i] = std::max(0U, std::min(255U, v));
         }

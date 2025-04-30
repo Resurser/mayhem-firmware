@@ -47,9 +47,9 @@ const char figures_table[32] = {
 
 char AFSKRxView::decode_baudot(uint8_t byte, ShiftState* shift_state) {
     if (*shift_state == LETTERS) {
-        return letters_table[byte & 0x1F];
+        return letters_table[byte];
     } else {
-        return figures_table[byte & 0x1F];
+        return figures_table[byte];
     }
 }
 void AFSKLogger::log_raw_data(const std::string& data) {
@@ -77,7 +77,7 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
                   &console});
 
     // Auto-configure modem for LCR RX (TODO remove)
-    field_frequency.set_value(10100000);
+    field_frequency.set_value(10100200);
     auto receiver_modem = &modem_defs[5];
     persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
     serial_format_t serial_format;
@@ -106,7 +106,6 @@ AFSKRxView::AFSKRxView(NavigationView& nav)
     baseband::set_afsk(persistent_memory::modem_baudrate(), 5, receiver_modem->mark_freq, receiver_modem->space_freq);
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
-
     receiver_model.enable();
 }
 
@@ -119,7 +118,6 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         str_console += (char)((console_color & 3) + 9);
 
         // value = deframe_word(value);
-        value &= 0x1F;                                          // ABCDEFGH
         // value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);  // EFGHABCD
         // value = ((value & 0xCC) >> 2) | ((value & 0x33) << 2);  // GHEFCDAB
         // value = ((value & 0xAA) >> 1) | ((value & 0x55) << 1);  // HGFEDCBA
@@ -128,11 +126,14 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         if (value < 32) {
             // Повний цикл
             char decoded_char = decode_baudot(value, &shift_state);
-            if (decoded_char == '\a') {  // Перемикання режимів
+            
+            if (decoded_char == '\a') {         // Перемикання режимів
                 shift_state = FIGURES;
             } else if (decoded_char == '\b') {  // Перемикання режимів
                 shift_state = LETTERS;
-            } else {
+            } else if(decoded_char == '\0' && (prev_value == decoded_char)) {
+                
+            } else{
                 str_console += (char)decoded_char;  // Printable                                   
                 // str_byte   += (char)value;
             }

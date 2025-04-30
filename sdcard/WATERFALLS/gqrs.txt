@@ -1,0 +1,13 @@
+#lines are index,r,g,b
+#if index 0 is not set, it's starting at 0,0,0,0
+#all values are ranging from 0 to 255
+
+27,0,0,10
+60,0,0,110
+71,0,0,143
+72,14,0,146
+101,100,40,224
+130,90,191,60
+157,214,214,10
+191,215,150,50
+255,255,0,0

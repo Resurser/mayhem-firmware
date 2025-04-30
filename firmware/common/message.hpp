@@ -777,10 +777,10 @@ class AFSKRxConfigureMessage : public Message {
            freq_space(freq_space) {
      }
  
-     const uint32_t baudrate;
-     const uint32_t word_length;
-     const uint32_t freq_mark;
-     const uint32_t freq_space;
+     const uint32_t baudrate = 50;
+     const uint32_t word_length = 5;
+     const uint32_t freq_mark = 2125;
+     const uint32_t freq_space = 2295;
  };
 
 class APRSRxConfigureMessage : public Message {
