@@ -34,6 +34,7 @@
 
 #include "fifo.hpp"
 #include "message.hpp"
+#include "rtty_afsk_decoder.hpp"
 
 class AFSKRxProcessor : public BasebandProcessor {
    public:
@@ -47,10 +48,10 @@ class AFSKRxProcessor : public BasebandProcessor {
     size_t samples_per_bit{};
 
     enum State {
-        WAIT_START = 0,
-        WAIT_STOP,
-        RECEIVE,
-        WAIT_HALF_STOP
+        RTTY_STATE_IDLE,
+    RTTY_STATE_START_BIT,
+    RTTY_STATE_DATA_BITS,
+    RTTY_STATE_STOP_BITS
     };
 
     std::array<complex16_t, 512> dst{};

@@ -51,74 +51,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         const int32_t sample_int = audio.p[c] * 32768.0f;
         int32_t current_sample = __SSAT(sample_int, 16) / 128;
 
-        // Delay line operations
-        delay_line[delay_line_index & 0xEF] = current_sample;
-        const int32_t delay_index = (delay_line_index - half_samples_per_bit) & 0xEF;
-        const int32_t sample_mixed = (delay_line[delay_index] * current_sample) / 4;
-        const int32_t sample_filtered = prev_mixed + sample_mixed + (prev_filtered / 2);
-
-        delay_line_index++;
-        prev_filtered = sample_filtered;
-        prev_mixed = sample_mixed;
-
-
-        // Slice the sample
-        sample_bits = (sample_bits << 1) | (sample_filtered < slice_threshold ? 1 : 0);
-
-        // Check for clean transitions (0011 or 1100)
-        if ((((sample_bits >> 2) ^ sample_bits) & 3) == 3) {
-            phase += (phase < 0x8000) ? 0x800 : -0x800;
-        }
-
-        phase += phase_inc;
-
-        if (phase >= phase_wrap) {
-            phase &= 0xFFFF;
-
-            // RTTY decoding
-            switch (state) {
-                case WAIT_START:
-                    if (!(sample_bits & 1)) {
-                        // Start bit detected
-                        state = RECEIVE;
-                        bit_counter = 0;
-                        word_bits = 0;  // Reset word bits
-                    }
-                    break;
-
-                case RECEIVE:
-                    word_bits = (word_bits >> 1) | ((sample_bits & 1) << 4);  // Shift in LSB
-                    bit_counter++;
-
-                    if (bit_counter == 5) {
-                        state = WAIT_STOP;
-                    }
-                    break;
-
-                case WAIT_STOP:
-                    if (sample_bits & 1) {
-                        // Stop bit detected
-                        state = WAIT_HALF_STOP;
-                        half_stop_counter = 0;
-                    }
-                    break;
-
-                case WAIT_HALF_STOP:
-                    half_stop_counter++;
-                    if (half_stop_counter >= half_samples_per_bit) {
-                        state = WAIT_START;
-
-                        // Process the received character (5-bit Baudot code)
-                        data_message.is_data = true;
-                        data_message.value = word_bits & 0x1F;  // Mask to 5 bits
-                        shared_memory.application_queue.push(data_message);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-        }
+        
     }
 }
 
