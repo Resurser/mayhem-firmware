@@ -155,24 +155,24 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         // value = deframe_word(value);
         
         
-        value &= 0x1F;     
-        uint32_t alt_val = deframe_word(value);                                  // ABCDEFGH
+        // value &= 0x1F;     
+        // uint32_t alt_val = deframe_word(value, is_in_figures_mode);                                  // ABCDEFGH
         // text_debug.set("<<" + to_string_dec_uint(value));
 
-        text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
-            " > "+to_string_hex(alt_val, 2));
+        // text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
+            // " > "+to_string_hex(alt_val, 2));
         
-        
-        if ((value >= 32) && (value < 127)) {
-            str_console += (char)value;  // Printable
-            str_byte    += (char)value;
-        } else if (value < 32) {
-            str_console += (char)BaudottoChar(value);  // Printable
-            str_byte    += (char)BaudottoChar(value);
-        } else {
-            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-            str_byte    += "[" + to_string_hex(value, 2) + "]";
-        }
+        str_console += lookup_ita2(value, is_in_figures_mode); 
+        // if ((value >= 32) && (value < 127)) {
+        //     str_console += (char)value;  // Printable
+        //     str_byte    += (char)value;
+        // } else if (value < 32) {
+        //     str_console += (char)BaudottoChar(value);  // Printable
+        //     str_byte    += (char)BaudottoChar(value);
+        // } else {
+        //     str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+        //     str_byte    += "[" + to_string_hex(value, 2) + "]";
+        // }
     
         
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";

@@ -63,6 +63,125 @@ RTTYRxProcessor::RTTYRxProcessor() {
 
     // configured = true;
 }
+// Обробка одного аудіосигналу
+void RTTYRxProcessor::processRTTYBit(int16_t sample) {
+    bool currentSign = (sample >= 0);
+
+    if (currentSign != lastSign) {
+        zeroCrossings++;
+        lastSign = currentSign;
+    }
+
+    measureSignalAmplitude(sample); // Фільтрація шуму
+
+    if (++sampleCount >= SAMPLES_PER_BIT) {
+        bool bit = (zeroCrossings > adaptiveThreshold / (SAMPLE_RATE / SAMPLES_PER_BIT));
+
+        // Оновлення порогового значення
+        for (int i = ADAPTIVE_WINDOW_SIZE - 1; i > 0; --i) {
+            zeroCrossHistory[i] = zeroCrossHistory[i - 1];
+        }
+        zeroCrossHistory[0] = zeroCrossings;
+        updateAdaptiveThreshold();
+
+        // Коригування частоти (AFC)
+        adaptiveFrequencyCorrection();
+
+        if (!isStartBit) {
+            if (!bit) {
+                isStartBit = true;
+                zeroCrossings = 0;
+                sampleCount = 0;
+            }
+            return;
+        }
+
+        currentChar >>= 1;
+        if (bit) currentChar |= 0x10;
+
+        if (++bitCount == 5) {
+            stopBitCount = 0;
+            sampleCount = 0;
+            return;
+        }
+
+        if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
+            char decodedChar = BAUDOT_LETTERS[currentChar & 0x1F];
+            if (decodedChar != '\0') decodedMessage += decodedChar;
+
+            gui_clear();
+            gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
+
+            currentChar = 0;
+            bitCount = 0;
+            isStartBit = false;
+        }
+
+        zeroCrossings = 0;
+        sampleCount = 0;
+    }
+}
+
+void RTTYRxProcessor::rtty_process_bit_decision(bool is_mark) {
+    char decoded_char = 0;
+
+    switch (current_rtty_state) {
+        case RTTY_STATE_IDLE:
+            if (!is_mark) {
+                current_rtty_state = RTTY_STATE_START_BIT;
+                rtty_sample_counter = 0;
+            }
+            break;
+
+        case RTTY_STATE_START_BIT:
+            rtty_sample_counter++;
+            if (rtty_sample_counter >= samples_per_half_bit) {
+                if (!is_mark) {
+                    current_rtty_state = RTTY_STATE_DATA_BITS;
+                    bit_counter = 0;
+                    current_rtty_byte = 0;
+                    rtty_sample_counter = samples_per_half_bit;
+                } else {
+                    current_rtty_state = RTTY_STATE_IDLE;
+                }
+            }
+            break;
+
+        case RTTY_STATE_DATA_BITS:
+            rtty_sample_counter++;
+            if (rtty_sample_counter >= samples_per_bit) {
+                rtty_sample_counter = 0;
+                if (is_mark) {
+                    current_rtty_byte |= (1 << bit_counter);
+                }
+                bit_counter++;
+                if (bit_counter >= 5) {
+                    current_rtty_state = RTTY_STATE_STOP_BITS;
+                    rtty_sample_counter = 0;
+                }
+            }
+            break;
+
+        case RTTY_STATE_STOP_BITS:
+            rtty_sample_counter++;
+             if (!is_mark && rtty_sample_counter < samples_per_stop_bit) {
+                 current_rtty_state = RTTY_STATE_IDLE;
+            }
+            else if (rtty_sample_counter >= samples_per_stop_bit) {
+                if (is_mark) {                    
+                    // send to UI 
+                    data_message.is_data = true;
+                    data_message.value = current_rtty_byte;
+                    shared_memory.application_queue.push(data_message);
+                } else {
+                   // Помилка стоп-біта
+                }
+                current_rtty_state = RTTY_STATE_IDLE;
+            }
+            break;
+    }
+    // return decoded_char;
+}
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     // This is called at 3072000 / 2048 = 1500Hz

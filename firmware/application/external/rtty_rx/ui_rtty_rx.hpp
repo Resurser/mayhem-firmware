@@ -71,6 +71,7 @@ class RTTYRxView : public View {
     uint32_t prev_value{0};
     std::string str_log{""};
     uint16_t rxmode{1}; //LETTERS
+    bool is_in_figures_mode = false;
     bool logging{false};
 
     RFAmpField field_rf_amp{

@@ -35,36 +35,29 @@
 #include "fifo.hpp"
 #include "message.hpp"
 
-#define SAMPLE_RATE 3072000 // 3.072 МГц
-#define DECIMATION_FACTOR 128
-#define AUDIO_SAMPLE_RATE (SAMPLE_RATE / DECIMATION_FACTOR)
-#define BAUD_RATE 50
-#define MARK_FREQ 2125
-#define SPACE_FREQ 2295
-#define SAMPLES_PER_BIT (AUDIO_SAMPLE_RATE / BAUD_RATE)
-#define STOP_BITS 1.5
-#define BUFFER_SIZE 8192
+// -------------------- Налаштування за замовчуванням --------------------
+#define SAMPLE_RATE 12000        // Частота вибірки (Гц)
+#define DEFAULT_BAUD_RATE 45.45  // Бодова швидкість (біти/сек)
+#define DEFAULT_MARK_FREQ 2125   // Маркувальна частота (Гц)
+#define DEFAULT_SPACE_FREQ 2295  // Просторова частота (Гц)
+#define ADAPTIVE_WINDOW_SIZE 5   // Вікно для адаптивного порогу
 #define PI 3.14159265358979323846
 #define VGA_GAIN 20
-#define AFC_BANDWIDTH 50 // Ширина смуги автопідстроювання частоти
+#define AFC_STEP 1                      // Крок коригування частоти
+#define AFC_BANDWIDTH 50                // Ширина смуги автопідстроювання частоти
+#define NOISE_AMPLITUDE_THRESHOLD 5000  // Мінімальна амплітуда для фільтрації шуму
 
 class RTTYRxProcessor : public BasebandProcessor {
    public:
-    RTTYRxProcessor ();
+    RTTYRxProcessor();
 
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
+
    private:
     static constexpr size_t baseband_fs = 3072000;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
 
-    size_t samples_per_bit{};
-
-    enum State {
-        WAIT_START = 0,
-        WAIT_STOP,
-        RECEIVE
-    };
 
     std::array<complex16_t, 512> dst{};
     const buffer_c16_t dst_buffer{
@@ -86,7 +79,13 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     AudioOutput audio_output{};
 
-    std::array<int32_t, 64> delay_line{0};
+    
+    // -------------------- Динамічні параметри --------------------
+    uint32_t userBaudRate = DEFAULT_BAUD_RATE;
+    uint32_t userMarkFreq = DEFAULT_MARK_FREQ;
+    uint32_t userSpaceFreq = DEFAULT_SPACE_FREQ;
+    #define SAMPLES_PER_BIT (SAMPLE_RATE / userBaudRate)
+    #define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)
     uint32_t word_length{5};
     uint16_t freq_mark{2125};
     uint16_t freq_space{2295};
@@ -94,7 +93,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     State state{};
     
     size_t   delay_line_index{};
-    uint32_t bit_counter{0};
+    // uint32_t bit_counter{0};
     uint32_t word_bits{0};
     uint32_t sample_bits{0};
     uint32_t phase{}, phase_inc{};
@@ -111,7 +110,7 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     RTTYDataMessage data_message{false, 0};
     RSSIThread rssi_thread{};
-
+    void rtty_process_bit_decision(bool is_mark);
     void configure(const RTTYRxConfigureMessage& message);
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};

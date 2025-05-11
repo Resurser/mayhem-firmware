@@ -32,6 +32,46 @@
 #include <string_view>
 #include <type_traits>
 
+
+// --- Константи ITA-2 ---
+constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F; // 11111
+constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B; // 11011
+constexpr uint8_t ITA2_CODE_MASK = 0x1F; // Маска для 5 біт
+
+// --- Таблиці символів ITA-2 (Baudot) ---
+static const char ita2_letters_table[32] = {
+ // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
+    '?', 'E', '\n','A', ' ', 'S', 'I', 'U', '\r','D', 'R', 'J', 'N', 'F', 'C', 'K', // 0x00 - 0x0F
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '?', 'M', 'X', 'V', '?'  // 0x10 - 0x1F (0x1F = LTRS)
+};
+
+static const char ita2_figures_table[32] = {
+ // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
+    '?', '3', '\n','-', ' ', '\'', '8', '7', '\r','?', '4', '\a', ',', '!', ':', '(', // 0x00 - 0x0F (\a = BEL) ('?' для $ в US варіанті)
+    '5', '+', ')', '2', '$', '6', '0', '1', '9', '?', '=', '?', '.', '/', ';', '?'  // 0x10 - 0x1F ('?' для £, =, FIG) (0x1B = FIGS)
+};
+
+// --- Функція пошуку символу ITA-2 ---
+inline char lookup_ita2(uint8_t code, bool &is_in_figures_mode) {
+    code &= ITA2_CODE_MASK;
+
+    if (code == ITA2_LTRS_SHIFT_CODE) {
+        is_in_figures_mode = false;
+        return 0;
+    }
+    if (code == ITA2_FIGS_SHIFT_CODE) {
+        is_in_figures_mode = true;
+        return 0;
+    }
+
+    if (is_in_figures_mode) {
+        return ita2_figures_table[code];
+    } else {
+        return ita2_letters_table[code];
+    }
+}
+
+
 #define LOCATE_IN_RAM __attribute__((section(".ramtext")))
 
 inline uint16_t fb_to_uint16(const std::string& fb) {

@@ -42,14 +42,10 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
     audio_output.write(audio);
 
     // Audio signal processing
-    const uint32_t half_samples_per_bit = samples_per_bit / 2;
-    const int32_t slice_threshold = -20;  // Threshold for slicing
-    const uint32_t phase_wrap = 0x10000;
-
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
-        int32_t current_sample = __SSAT(sample_int, 16) / 128;
+        // int32_t current_sample = __SSAT(sample_int, 16) / 128;
 
         
     }
@@ -245,7 +241,7 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
     delay_line_index = 0;
 
     triggered = false;
-    state = WAIT_START;
+    // state = WAIT_START;
 
     configured = true;
 }
