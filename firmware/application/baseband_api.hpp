@@ -82,7 +82,7 @@ void kill_afsk();
 void set_fsk(const size_t deviation);
 void set_aprs(const uint32_t baudrate);
 
-void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space);
+void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space, const bool reverse_bits,const bool reverse_freq);
 // todo: add set_rtty with parity and stop bits
 void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space);
 

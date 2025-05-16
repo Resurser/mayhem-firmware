@@ -38,17 +38,17 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-class RTTYLogger {
-   public:
-    Optional<File::Error> append(const std::filesystem::path& filename) {
-        return log_file.append(filename);
-    }
+// class RTTYLogger {
+//    public:
+//     Optional<File::Error> append(const std::filesystem::path& filename) {
+//         return log_file.append(filename);
+//     }
 
-    void log_raw_data(const std::string& data);
+//     void log_raw_data(const std::string& data);
 
-   private:
-    LogFile log_file{};
-};
+//    private:
+//     LogFile log_file{};
+// };
 
 class RTTYRxView : public View {
    public:
@@ -65,10 +65,18 @@ class RTTYRxView : public View {
     NavigationView& nav_;
     RxRadioState radio_state_{};
     app_settings::SettingsManager settings_{
-        "rx_rtty", app_settings::Mode::RX};
-
+        "rx_rtty",
+        app_settings::Mode::RX,
+        {
+            {"mark_index"sv, &shift_index},
+            {"shift_index"sv, &mark_index},
+        }};
     uint8_t console_color{0};
     uint32_t prev_value{0};
+
+    uint8_t mark_index{0};
+    uint8_t shift_index{0};
+    
     std::string str_log{""};
     uint16_t rxmode{1}; //LETTERS
     bool is_in_figures_mode = false;
@@ -92,24 +100,44 @@ class RTTYRxView : public View {
         {0 * 8, 0 * 16},
         nav_};
 
-    Checkbox check_log{
-        {0 * 8, 1 * 16},
-        3,
-        LanguageHelper::currentMessages[LANG_LOG],
-        false};
+    
+    Labels labels{
+        {{0 * 8, 1 * 16}, "Shift: ", Theme::getInstance()->fg_light->foreground},
+        {{12 * 8, 1 * 16}, "Mark: ", Theme::getInstance()->fg_light->foreground},
+    };
+
+    OptionsField options_shift{
+        {7 * 8, 1 * 16},
+        4,
+        {
+            {"85", 85},
+            {"170", 170},
+            {"450", 450},
+            {"850", 850},
+            {"-85",  -85},
+            {"-170", -170},
+            {"-450", -450},
+            {"-850", -850},
+        
+        }};
+
+    OptionsField options_mark{
+        {18 * 8, 1 * 16},
+        4,
+        {
+            {"1275", 1275},
+            {"1445", 1445},
+            {"2125", 2125},
+            {"2295", 2295},
+        }};
 
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},
-        LanguageHelper::currentMessages[LANG_DEBUG]};
-
-    Button button_modem_setup{
-        {screen_width - 12 * 8, 1 * 16, 96, 24},
-        LanguageHelper::currentMessages[LANG_MODEM_SETUP]};
-
+        LanguageHelper::currentMessages[LANG_DEBUG]
+    };
     Console console{
-        {0, 4 * 16, 240, screen_width}};
-
-    std::unique_ptr<RTTYLogger> logger{};
+        {0, 3 * 16, 240, screen_width}
+    };
 
     MessageHandlerRegistration message_handler_packet{
         Message::ID::RTTYData,

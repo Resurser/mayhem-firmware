@@ -32,43 +32,19 @@
 #include <cstring>
 #include <vector>
 
-
 #include "utility.hpp"
 
-#ifndef M_PI
-#define M_PI (3.14159265358979323846264338327950288)
-#endif
-
-// Оновлення порогового значення за рухомим середнім
-void RTTYRxProcessor::updateAdaptiveThreshold() {
-    int sum = 0;
-    for (int i = 0; i < ADAPTIVE_WINDOW_SIZE; ++i) {
-        sum += zeroCrossHistory[i];
+// Інверсія порядку бітів у 5-бітному символі Бодо
+uint8_t RTTYRxProcessor::reverseBitsFunction(uint8_t val) {
+    uint8_t result = 0;
+    for (int i = 0; i < 5; ++i) {
+        result <<= 1;
+        result |= (val & 1);
+        val >>= 1;
     }
-    adaptiveThreshold = sum / ADAPTIVE_WINDOW_SIZE;
+    return result;
 }
 
-// Фільтрація слабких сигналів (шумозахист)
-void RTTYRxProcessor::measureSignalAmplitude(int16_t sample) {
-    signalAmplitude += abs(sample);
-    if (sampleCount % SAMPLES_PER_BIT == 0) {
-        signalAmplitude /= SAMPLES_PER_BIT;
-        if (signalAmplitude < NOISE_AMPLITUDE_THRESHOLD) {
-            return;  // Ігноруємо шумовий сигнал
-        }
-        signalAmplitude = 0;
-    }
-}
-
-// Коригування частоти (AFC)
-void RTTYRxProcessor::adaptiveFrequencyCorrection() {
-    int estimatedFreq = zeroCrossings * (SAMPLE_RATE / SAMPLES_PER_BIT);
-    if (abs(estimatedFreq - userMarkFreq) > AFC_STEP) {
-        int frequencyDrift = AFC_STEP * ((estimatedFreq > userMarkFreq) ? -1 : 1);
-        userMarkFreq += frequencyDrift;
-        userSpaceFreq += frequencyDrift;
-    }
-}
 RTTYRxProcessor::RTTYRxProcessor() {
     // decim_0.configure(taps_200k_decim_0.taps);
     // decim_1.configure(taps_16k0_decim_1.taps);
@@ -92,63 +68,94 @@ RTTYRxProcessor::RTTYRxProcessor() {
     // triggered        = false;
     // state            = WAIT_START;
 
-    // configured = true;
+    configured = false;
+
+    decim_0.configure(taps_6k0_decim_0.taps);
+    decim_1.configure(taps_6k0_decim_1.taps);
+    decim_2.configure(taps_6k0_decim_2.taps,4);
+    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    audio_output.configure(audio_12k_hpf_300hz_config);
+
+    markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
+    spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
+     
+    configured = true;
 }
-// Обробка одного аудіосигналу
-void RTTYRxProcessor::processRTTYBit(int16_t sample) {
-    bool currentSign = (sample >= 0);
 
-    if (currentSign != lastSign) {
-        zeroCrossings++;
-        lastSign = currentSign;
-    }
+// Process a single audio sample and decode it into an RTTY bit
+void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
+    // Increment the phases for MARK and SPACE tones
+    markPhase = (markPhase + markPhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
+    spacePhase = (spacePhase + spacePhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
 
-    measureSignalAmplitude(sample); // Фільтрація шуму
+    // Accumulate the contributions of the current sample
+    accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
+    accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
 
+    // Process a bit after accumulating enough samples
     if (++sampleCount >= SAMPLES_PER_BIT) {
-        bool bit = (zeroCrossings > adaptiveThreshold / (SAMPLE_RATE / SAMPLES_PER_BIT));
+        bool bit = (accumulatedMark > accumulatedSpace);  // Determine MARK or SPACE
 
-        // Оновлення порогового значення
-        for (int i = ADAPTIVE_WINDOW_SIZE - 1; i > 0; --i) {
-            zeroCrossHistory[i] = zeroCrossHistory[i - 1];
-        }
-        zeroCrossHistory[0] = zeroCrossings;
-        updateAdaptiveThreshold();
-
-        // Коригування частоти (AFC)
-        adaptiveFrequencyCorrection();
-
+        // Handle start bit synchronization
         if (!isStartBit) {
-            if (!bit) {
+            if (!bit) {  // Start bit must be SPACE (0)
                 isStartBit = true;
-                zeroCrossings = 0;
-                sampleCount = 0;
+                resetAccumulators();
             }
             return;
         }
 
+        // Shift the detected bit into the current character
         currentChar >>= 1;
-        if (bit) currentChar |= 0x10;
+        if (bit) currentChar |= 0x10;  // Set the MSB if MARK (1)
 
+        // If 5 data bits are complete, process stop bits
         if (++bitCount == 5) {
-            stopBitCount = 0;
-            sampleCount = 0;
+            stopBitCount = 0;  // Reset stop bit counter
+            resetAccumulators();
             return;
         }
 
+        // Validate 1.5 stop bits
         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
-            // char decodedChar = BAUDOT_LETTERS[currentChar & 0x1F];
+            // char decodedChar = decodeBaudot(currentChar);
             // if (decodedChar != '\0') decodedMessage += decodedChar;
-
-        // send currentChar to UI
+            data_message.is_data = true;
+            data_message.value = (currentChar);
+            shared_memory.application_queue.push(data_message);
+            
+            // Reset for the next character
             currentChar = 0;
             bitCount = 0;
-            isStartBit = false;
+            isStartBit = false;  // Wait for the next start bit
         }
 
-        zeroCrossings = 0;
-        sampleCount = 0;
+        // Reset accumulators for the next bit
+        resetAccumulators();
     }
+}
+
+int16_t RTTYRxProcessor::fastSin(uint32_t phase) {
+    uint16_t index = (phase >> 16) & PHASE_MASK;  // Extract table index
+    uint16_t nextIndex = (index + 1) & PHASE_MASK;  // Next index (wrap around)
+    uint16_t fractional = (phase & 0xFFFF) >> 8;  // Fractional part (8-bit resolution)
+
+    // Perform linear interpolation
+    int16_t value1 = sine_table_q15[index];
+    int16_t value2 = sine_table_q15[nextIndex];
+    return value1 + ((value2 - value1) * fractional / 256);
+}
+
+// Calculate phase increment dynamically based on frequency
+uint32_t RTTYRxProcessor::calculatePhaseIncrement(uint32_t frequency) {
+    return (frequency * TABLE_SIZE * SCALE) / SAMPLE_RATE;
+}
+
+// Reset the accumulators after processing each bit or character
+void RTTYRxProcessor::resetAccumulators() {
+    accumulatedMark = 0;
+    accumulatedSpace = 0;
+    sampleCount = 0;
 }
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
@@ -169,9 +176,8 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
-        int32_t current_sample = __SSAT(sample_int, 16) / 128;
-
-        
+        int32_t current_sample = __SSAT(sample_int, 16);
+        decodeRTTYBit(current_sample);
     }
 }
 
@@ -182,14 +188,19 @@ void RTTYRxProcessor::on_message(const Message* const message) {
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     configured = false;
-    decim_0.configure(taps_6k0_decim_0.taps);
-    decim_1.configure(taps_6k0_decim_1.taps);
-    decim_2.configure(taps_6k0_decim_2.taps,4);
-    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
-    audio_output.configure(audio_12k_hpf_300hz_config);
+
+    markFreq    = message.freq_mark;
+    spaceFreq   = message.freq_space;
+    baudRate    = message.baudrate;
+    reverseBits = message.reverse_bits;
+    reverseFreq = message.reverse_freq;
     
-    // freq_mark = message.mark_freq;
-    // freq_space = message.space_freq;
+    markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
+    spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
+    data_message.is_data = false;
+            data_message.value = markFreq;
+            shared_memory.application_queue.push(data_message);
+    configured = true;
 }
 
 int main() {

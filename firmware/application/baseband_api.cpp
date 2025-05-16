@@ -157,12 +157,13 @@ void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_
     send_message(&message);
 }
 
-void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space) {
+void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space, 
+    const bool reverse_bits,const bool reverse_freq) {
     const RTTYRxConfigureMessage message{
         baudrate,
         word_length,
         freq_mark,
-        freq_space};
+        freq_space, reverse_bits, reverse_freq};
     send_message(&message);
 }
 

@@ -33,19 +33,20 @@
 #include "audio_output.hpp"
 
 #include "fifo.hpp"
+#include "sine_table_int8.hpp"
 #include "message.hpp"
 
-// -------------------- Налаштування за замовчуванням --------------------
-#define SAMPLE_RATE 12000        // Частота вибірки (Гц)
-#define DEFAULT_BAUD_RATE 50  // Бодова швидкість (біти/сек)
-#define DEFAULT_MARK_FREQ 1275   // Маркувальна частота (Гц)
-#define DEFAULT_SPACE_FREQ 1725  // Просторова частота (Гц)
-#define ADAPTIVE_WINDOW_SIZE 5   // Вікно для адаптивного порогу
-#define PI 3.14159265358979323846
-#define VGA_GAIN 20
-#define AFC_STEP 1                      // Крок коригування частоти
-#define AFC_BANDWIDTH 50                // Ширина смуги автопідстроювання частоти
-#define NOISE_AMPLITUDE_THRESHOLD 5000  // Мінімальна амплітуда для фільтрації шуму
+
+// -------------------- Configuration Constants --------------------
+#define SCALE 32768                       // Fixed-point scale factor (Q15)
+#define TABLE_SIZE 256                    // Reduced sine table size
+#define PHASE_MASK (TABLE_SIZE - 1)       // Mask to wrap phase index
+#define SAMPLE_RATE 12000                 // Audio sample rate in Hz
+#define DEFAULT_MARK_FREQ 1275
+#define DEFAULT_SPACE_FREQ 1725
+#define DEFAULT_BAUD_RATE 50                               // RTTY baud rate (bits per second)
+#define SAMPLES_PER_BIT (SAMPLE_RATE / DEFAULT_BAUD_RATE)  // Samples per bit duration
+#define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)          // 1.5 Stop bits duration
 
 class RTTYRxProcessor : public BasebandProcessor {
    public:
@@ -79,43 +80,39 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     AudioOutput audio_output{};
 
-    
     // -------------------- Динамічні параметри --------------------
-    uint16_t userBaudRate = DEFAULT_BAUD_RATE;
-    uint16_t userMarkFreq = DEFAULT_MARK_FREQ;
-    uint16_t userSpaceFreq = DEFAULT_SPACE_FREQ;
-    #define SAMPLES_PER_BIT (SAMPLE_RATE / userBaudRate)
-    #define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)
-    uint32_t word_length{5};
-    uint16_t freq_mark{2125};
-    uint16_t freq_space{2295};
-   
-    bool configured{false};
-    bool wait_start{};
-    bool bit_value{};
-    bool trigger_word{};
-    bool triggered{};
-    // -------------------- Змінні для декодування --------------------
-    int32_t lastSample = 0;
-    int zeroCrossings = 0;
-    bool lastSign = false;
+    uint16_t baudRate       = DEFAULT_BAUD_RATE;
+    uint16_t markPhaseInc   = 0;
+    uint16_t spacePhaseInc  = 0;
+    uint16_t markFreq       = DEFAULT_MARK_FREQ;
+    uint16_t spaceFreq      = DEFAULT_SPACE_FREQ;
+    bool reverseBits = false;  // Чи потрібно перевертати біти
+    bool reverseFreq = false;  // Чи потрібно міняти місцями маркерну і просторову частоту
 
-    uint8_t currentChar = 0;
-    int bitCount = 0;
-    size_t sampleCount = 0;
-    size_t stopBitCount = 0;
-    bool isStartBit = false;
-    int zeroCrossHistory[ADAPTIVE_WINDOW_SIZE] = {0};
-    int adaptiveThreshold = (DEFAULT_MARK_FREQ + DEFAULT_SPACE_FREQ) / 2;
-    int32_t signalAmplitude = 0;
+    uint32_t markPhase = 0, spacePhase = 0;             // Fixed-point phases for MARK and SPACE tones
+    int32_t accumulatedMark = 0, accumulatedSpace = 0;  // Accumulators for signal strength
+
+    uint8_t currentChar = 0;                 // Character under construction (5-bit Baudot + stop bits)
+
+    int bitCount = 0;                        // Bits processed for the current character
+    size_t sampleCount = 0;                  // Samples processed for the current bit
+    size_t stopBitCount = 0;                 // Counter for stop bit samples
+    bool isStartBit = false;                 // Start bit synchronization flag
+
+    bool configured{false};
+    bool bit_value{};
+    
 
     RTTYDataMessage data_message{false, 0};
     RSSIThread rssi_thread{};
-    void processRTTYBit(int16_t sample);
-    void updateAdaptiveThreshold();
-    void measureSignalAmplitude(int16_t sample);
-    void adaptiveFrequencyCorrection();
+    uint32_t calculatePhaseIncrement(uint32_t frequency);
+    int16_t fastSin(uint32_t phase);
+    void resetAccumulators();
+    void decodeRTTYBit(int16_t sample);
+    
+    uint8_t reverseBitsFunction(uint8_t val);
     void configure(const RTTYRxConfigureMessage& message);
+
 
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};

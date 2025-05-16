@@ -131,13 +131,14 @@ void FrequencyScale::paint(Painter& painter) {
 
     draw_filter_ranges(painter, r);
     draw_frequency_ticks(painter, r);
-
-    const Rect r_cursor{
-        118 + cursor_position, r.bottom() - filter_band_height,
-        5, filter_band_height};
-    painter.fill_rectangle(
-        r_cursor,
-        Color::red());
+    if (abs(cursor_position) > 2 ) {
+        const Rect r_cursor{
+            118 + cursor_position, r.bottom() - filter_band_height,
+            5, filter_band_height};
+        painter.fill_rectangle(
+            r_cursor,
+            Color::red());
+    }
 }
 
 void FrequencyScale::clear() {

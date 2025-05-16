@@ -40,9 +40,9 @@ namespace ui::external_app::rtty_rx {
 
 
 
-void RTTYLogger::log_raw_data(const std::string& data) {
-    log_file.write_entry(data);
-}
+// void RTTYLogger::log_raw_data(const std::string& data) {
+//     log_file.write_entry(data);
+// }
 
 void RTTYRxView::focus() {
     field_frequency.focus();
@@ -59,9 +59,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
                   &field_vga,
                   &field_volume,
                   &field_frequency,
-                  &check_log,
                   &text_debug,
-                  &button_modem_setup,
+                  &labels,
+                  &options_shift,
+                  &options_mark,
                   &console});
 
     // Auto-configure modem for LCR RX (TODO remove)
@@ -84,26 +85,48 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     field_frequency.set_step(1000);
 
-    check_log.set_value(logging);
-    check_log.on_select = [this](Checkbox&, bool v) {
-        logging = v;
+    // check_log.set_value(logging);
+    // check_log.on_select = [this](Checkbox&, bool v) {
+    //     logging = v;
+    // };
+
+    // button_modem_setup.on_select = [&nav](Button&) {
+    //     nav.push<ModemSetupView>();
+    // };
+
+    options_shift.on_change = [this](size_t index, int32_t v) {
+        shift_index = (uint8_t)index;
+        (void)v;
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(),
+                           (int32_t)options_mark.selected_index_value() + (int32_t)options_shift.selected_index_value(),
+                           false, false);
+
+        // on_settings_changed();
+    };
+    options_mark.on_change = [this](size_t index, int32_t v) {
+        mark_index = (uint8_t)index;
+        (void)v;
+        baseband::set_rtty(50, 5,
+                           options_mark.selected_index_value(),
+                           (int32_t)options_mark.selected_index_value() + (int32_t)options_shift.selected_index_value(),
+                           false, false);
+        // on_settings_changed();
     };
 
-    button_modem_setup.on_select = [&nav](Button&) {
-        nav.push<ModemSetupView>();
-    };
+    // logger = std::make_unique<RTTYLogger>();
+    // if (logger)
+    //     logger->append(logs_dir / u"RTTY.TXT");
 
-    logger = std::make_unique<RTTYLogger>();
-    if (logger)
-        logger->append(logs_dir / u"RTTY.TXT");
-
+    options_mark.set_selected_index(mark_index, false);
+    options_shift.set_selected_index(shift_index, true);
     // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(50, 5, receiver_modem->mark_freq, receiver_modem->space_freq);
+    // baseband::set_rtty(50, 5, receiver_modem->mark_freq, receiver_modem->space_freq, false, false);
     // baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
     
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
     receiver_model.enable();
+
 }
 
 char RTTYRxView::BaudottoChar(const uint32_t data) {
@@ -147,6 +170,7 @@ char RTTYRxView::BaudottoChar(const uint32_t data) {
 void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
+    text_debug.set("~ " + to_string_dec_uint(value));
 
     if (is_data) {
         // Colorize differently after message splits
@@ -176,19 +200,19 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
     
         
         // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
-
+        text_debug.set("[" + to_string_hex(value, 2) + "]");
         console.write(str_console);
-        if (logger && logging) str_log += str_byte;
+        // if (logger && logging) str_log += str_byte;
 
-        if ((value != 0x7F) && (prev_value == 0x7F)) {
+        if ((value != 10) && (prev_value == 10)) {
             // Message split
             console.writeln("");
             console_color++;
 
-            if (logger && logging) {
-                logger->log_raw_data(str_log);
-                str_log = "";
-            }
+            // if (logging) {
+            //     logger->log_raw_data(str_log);
+            //     str_log = "";
+            // }
         }
         prev_value = value;
     } else {

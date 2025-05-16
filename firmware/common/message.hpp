@@ -1501,18 +1501,26 @@ class RTTYRxConfigureMessage : public Message {
         const uint32_t baudrate,
         const uint32_t word_length,
         const uint32_t freq_mark,
-        const uint32_t freq_space)
+        const uint32_t freq_space,
+        const bool reverse_bits,
+        const bool reverse_freq    
+    )
         : Message{ID::RTTYRxConfigure},
           baudrate(baudrate),
           word_length(word_length),
           freq_mark(freq_mark),
-          freq_space(freq_space) {
+          freq_space(freq_space),
+          reverse_bits(reverse_bits),
+          reverse_freq(reverse_freq) {
     }
 
     const uint32_t baudrate;
     const uint32_t word_length;
     const uint32_t freq_mark;
     const uint32_t freq_space;
+    const bool reverse_bits;
+    const bool reverse_freq;
+    
 };
 
 class RTTYDataMessage : public Message {

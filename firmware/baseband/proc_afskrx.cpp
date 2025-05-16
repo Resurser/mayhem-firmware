@@ -46,8 +46,12 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
         int32_t current_sample = __SSAT(sample_int, 16) / 128;
-
         
+        if (++sampleCount >= 480) {
+            data_message.is_data = false;
+            data_message.value = (current_sample);  // Mask to 5 bits
+            shared_memory.application_queue.push(data_message);
+        }
     }
 }
 
