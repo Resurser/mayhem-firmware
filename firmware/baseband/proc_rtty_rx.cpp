@@ -29,8 +29,9 @@
 #include <complex>
 
 #include <complex.h>
+#include <cstring>
 #include <vector>
-#include <cmath>
+
 
 #include "utility.hpp"
 
@@ -38,6 +39,36 @@
 #define M_PI (3.14159265358979323846264338327950288)
 #endif
 
+// Оновлення порогового значення за рухомим середнім
+void RTTYRxProcessor::updateAdaptiveThreshold() {
+    int sum = 0;
+    for (int i = 0; i < ADAPTIVE_WINDOW_SIZE; ++i) {
+        sum += zeroCrossHistory[i];
+    }
+    adaptiveThreshold = sum / ADAPTIVE_WINDOW_SIZE;
+}
+
+// Фільтрація слабких сигналів (шумозахист)
+void RTTYRxProcessor::measureSignalAmplitude(int16_t sample) {
+    signalAmplitude += abs(sample);
+    if (sampleCount % SAMPLES_PER_BIT == 0) {
+        signalAmplitude /= SAMPLES_PER_BIT;
+        if (signalAmplitude < NOISE_AMPLITUDE_THRESHOLD) {
+            return;  // Ігноруємо шумовий сигнал
+        }
+        signalAmplitude = 0;
+    }
+}
+
+// Коригування частоти (AFC)
+void RTTYRxProcessor::adaptiveFrequencyCorrection() {
+    int estimatedFreq = zeroCrossings * (SAMPLE_RATE / SAMPLES_PER_BIT);
+    if (abs(estimatedFreq - userMarkFreq) > AFC_STEP) {
+        int frequencyDrift = AFC_STEP * ((estimatedFreq > userMarkFreq) ? -1 : 1);
+        userMarkFreq += frequencyDrift;
+        userSpaceFreq += frequencyDrift;
+    }
+}
 RTTYRxProcessor::RTTYRxProcessor() {
     // decim_0.configure(taps_200k_decim_0.taps);
     // decim_1.configure(taps_16k0_decim_1.taps);
@@ -106,12 +137,10 @@ void RTTYRxProcessor::processRTTYBit(int16_t sample) {
         }
 
         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
-            char decodedChar = BAUDOT_LETTERS[currentChar & 0x1F];
-            if (decodedChar != '\0') decodedMessage += decodedChar;
+            // char decodedChar = BAUDOT_LETTERS[currentChar & 0x1F];
+            // if (decodedChar != '\0') decodedMessage += decodedChar;
 
-            gui_clear();
-            gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
-
+        // send currentChar to UI
             currentChar = 0;
             bitCount = 0;
             isStartBit = false;
@@ -120,67 +149,6 @@ void RTTYRxProcessor::processRTTYBit(int16_t sample) {
         zeroCrossings = 0;
         sampleCount = 0;
     }
-}
-
-void RTTYRxProcessor::rtty_process_bit_decision(bool is_mark) {
-    char decoded_char = 0;
-
-    switch (current_rtty_state) {
-        case RTTY_STATE_IDLE:
-            if (!is_mark) {
-                current_rtty_state = RTTY_STATE_START_BIT;
-                rtty_sample_counter = 0;
-            }
-            break;
-
-        case RTTY_STATE_START_BIT:
-            rtty_sample_counter++;
-            if (rtty_sample_counter >= samples_per_half_bit) {
-                if (!is_mark) {
-                    current_rtty_state = RTTY_STATE_DATA_BITS;
-                    bit_counter = 0;
-                    current_rtty_byte = 0;
-                    rtty_sample_counter = samples_per_half_bit;
-                } else {
-                    current_rtty_state = RTTY_STATE_IDLE;
-                }
-            }
-            break;
-
-        case RTTY_STATE_DATA_BITS:
-            rtty_sample_counter++;
-            if (rtty_sample_counter >= samples_per_bit) {
-                rtty_sample_counter = 0;
-                if (is_mark) {
-                    current_rtty_byte |= (1 << bit_counter);
-                }
-                bit_counter++;
-                if (bit_counter >= 5) {
-                    current_rtty_state = RTTY_STATE_STOP_BITS;
-                    rtty_sample_counter = 0;
-                }
-            }
-            break;
-
-        case RTTY_STATE_STOP_BITS:
-            rtty_sample_counter++;
-             if (!is_mark && rtty_sample_counter < samples_per_stop_bit) {
-                 current_rtty_state = RTTY_STATE_IDLE;
-            }
-            else if (rtty_sample_counter >= samples_per_stop_bit) {
-                if (is_mark) {                    
-                    // send to UI 
-                    data_message.is_data = true;
-                    data_message.value = current_rtty_byte;
-                    shared_memory.application_queue.push(data_message);
-                } else {
-                   // Помилка стоп-біта
-                }
-                current_rtty_state = RTTY_STATE_IDLE;
-            }
-            break;
-    }
-    // return decoded_char;
 }
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
@@ -198,40 +166,12 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     auto audio = demod.execute(channel_out, audio_buffer);
     audio_output.write(audio);
 
-    std::vector<int> demodulated;
-    int baud_samples = samples_per_bit;  //
+    for (size_t c = 0; c < audio.count; c++) {
+        // Scale and saturate the sample
+        const int32_t sample_int = audio.p[c] * 32768.0f;
+        int32_t current_sample = __SSAT(sample_int, 16) / 128;
 
-    // Audio signal processing
-    for (size_t c = 0; c < audio.count; c += baud_samples) {
-        float mark_energy = 0;
-        float space_energy = 0;
-
-        for (int j = 0; j < baud_samples; ++j) {
-            if (c + j < audio.count) {
-                mark_energy += audio.p[c + j] * cos(2 * M_PI * freq_mark * j / audio_fs);    // Mark frequency 2125 Hz
-                space_energy += audio.p[c + j] * cos(2 * M_PI * freq_space * j / audio_fs);  // Space frequency 2295 Hz
-            }
-        }
-
-        if (mark_energy > space_energy) {
-            demodulated.push_back(1);
-        } else {
-            demodulated.push_back(0);
-        }
-    }
-    for (size_t i = 0; i < demodulated.size(); i += 5) {
-        uint32_t code = 0;
-        for (int j = 0; j < 5; ++j) {
-            if (i + j < demodulated.size()) {
-                code = (code << 1) | demodulated[i + j];
-            }
-        }
-
-        if (code > 0) {
-            // data_message.is_data = true;
-            // data_message.value = code;
-            // shared_memory.application_queue.push(data_message);
-        } 
+        
     }
 }
 
@@ -247,24 +187,9 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     decim_2.configure(taps_6k0_decim_2.taps,4);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
     audio_output.configure(audio_12k_hpf_300hz_config);
-    samples_per_bit = audio_fs / message.baudrate;
-
-    phase_inc = (0x10000 * message.baudrate) / audio_fs;
-    phase = 0;
-
-    trigger_word = 0;
-    word_length  = message.word_length;
+    
     // freq_mark = message.mark_freq;
     // freq_space = message.space_freq;
-    trigger_value = 0;
-    word_mask     = (1 << word_length) - 1;
-
-    // Delay line
-    delay_line_index = 0;
-
-    triggered  = false;
-    state      = WAIT_START;
-    configured = true;
 }
 
 int main() {

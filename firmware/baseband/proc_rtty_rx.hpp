@@ -37,9 +37,9 @@
 
 // -------------------- Налаштування за замовчуванням --------------------
 #define SAMPLE_RATE 12000        // Частота вибірки (Гц)
-#define DEFAULT_BAUD_RATE 45.45  // Бодова швидкість (біти/сек)
-#define DEFAULT_MARK_FREQ 2125   // Маркувальна частота (Гц)
-#define DEFAULT_SPACE_FREQ 2295  // Просторова частота (Гц)
+#define DEFAULT_BAUD_RATE 50  // Бодова швидкість (біти/сек)
+#define DEFAULT_MARK_FREQ 1275   // Маркувальна частота (Гц)
+#define DEFAULT_SPACE_FREQ 1725  // Просторова частота (Гц)
 #define ADAPTIVE_WINDOW_SIZE 5   // Вікно для адаптивного порогу
 #define PI 3.14159265358979323846
 #define VGA_GAIN 20
@@ -81,37 +81,42 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     
     // -------------------- Динамічні параметри --------------------
-    uint32_t userBaudRate = DEFAULT_BAUD_RATE;
-    uint32_t userMarkFreq = DEFAULT_MARK_FREQ;
-    uint32_t userSpaceFreq = DEFAULT_SPACE_FREQ;
+    uint16_t userBaudRate = DEFAULT_BAUD_RATE;
+    uint16_t userMarkFreq = DEFAULT_MARK_FREQ;
+    uint16_t userSpaceFreq = DEFAULT_SPACE_FREQ;
     #define SAMPLES_PER_BIT (SAMPLE_RATE / userBaudRate)
     #define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)
     uint32_t word_length{5};
     uint16_t freq_mark{2125};
     uint16_t freq_space{2295};
-
-    State state{};
-    
-    size_t   delay_line_index{};
-    // uint32_t bit_counter{0};
-    uint32_t word_bits{0};
-    uint32_t sample_bits{0};
-    uint32_t phase{}, phase_inc{};
-    int32_t  sample_mixed{}, prev_mixed{}, sample_filtered{}, prev_filtered{};
-    uint32_t word_mask{};
-    uint32_t trigger_value{};
-
+   
     bool configured{false};
     bool wait_start{};
     bool bit_value{};
     bool trigger_word{};
     bool triggered{};
+    // -------------------- Змінні для декодування --------------------
+    int32_t lastSample = 0;
+    int zeroCrossings = 0;
+    bool lastSign = false;
 
+    uint8_t currentChar = 0;
+    int bitCount = 0;
+    size_t sampleCount = 0;
+    size_t stopBitCount = 0;
+    bool isStartBit = false;
+    int zeroCrossHistory[ADAPTIVE_WINDOW_SIZE] = {0};
+    int adaptiveThreshold = (DEFAULT_MARK_FREQ + DEFAULT_SPACE_FREQ) / 2;
+    int32_t signalAmplitude = 0;
 
     RTTYDataMessage data_message{false, 0};
     RSSIThread rssi_thread{};
-    void rtty_process_bit_decision(bool is_mark);
+    void processRTTYBit(int16_t sample);
+    void updateAdaptiveThreshold();
+    void measureSignalAmplitude(int16_t sample);
+    void adaptiveFrequencyCorrection();
     void configure(const RTTYRxConfigureMessage& message);
+
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
 };
