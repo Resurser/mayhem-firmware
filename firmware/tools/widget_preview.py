@@ -65,7 +65,7 @@ widgets = {
     "Checkbox": "plum",
     "Label": "lavender",
     "TextField": "paleturquoise",
-    "OptionsField": "palegreen",
+    "OptionsField": "lightgray",
     "VuMeter": "sandybrown",
     "BigFrequency": "khaki"
 }
@@ -94,6 +94,9 @@ class WidgetParser:
             ),
             'Text': re.compile(
                 r'Text\s+(\w+)\s*\{\s*\{([^}]+)\}(?:\s*,\s*"([^"]*)")?\s*\};',
+                re.MULTILINE
+            ),'OptionsField': re.compile(
+                r'OptionsField\s+(\w+)\s*\{\s*(?:\{([^}]+)\}|{}),\s\d.*?};',
                 re.MULTILINE
             ),
             'ProgressBar': re.compile(
@@ -216,20 +219,21 @@ class WidgetPreview(tk.Tk):
             # defualt rendering
             rect_id = self.canvas.create_rectangle(
                 x1, y1, x2, y2, 
-                fill=widgets[widget.widget_type]
+                fill=widgets[widget.widget_type],
+                outline="gray"
             )
             
             type_text_id = self.canvas.create_text(
-                (x1 + x2) // 2,
-                (y1 + y2) // 2,
-                text=widget.widget_type
+                (x1 + x2) / 2,
+                (y1 + y2) / 2,
+                text="433.92" 
             )
             
             detail_text_id = self.canvas.create_text(
-                (x1 + x2) // 2,
-                (y1 + y2) // 2,
+                (x1 + x2) / 2,
+                (y1 + y2) / 2,
                 text=f"{widget.widget_type}|{widget.name}|{widget.text}",
-                state='hidden'
+                state='normal'
             )
 
             widget_texts = {
@@ -241,8 +245,8 @@ class WidgetPreview(tk.Tk):
             # hover handlers
             def on_enter(event):
                 for texts in self.all_text_elements:
-                    self.canvas.itemconfig(texts['type'], state='hidden')
-                    self.canvas.itemconfig(texts['detail'], state='hidden')
+                    self.canvas.itemconfig(texts['type'], state='normal')
+                    self.canvas.itemconfig(texts['detail'], state='normal')
                 self.canvas.itemconfig(detail_text_id, state='normal')
                 self.canvas.tag_raise(detail_text_id)
 
@@ -250,7 +254,7 @@ class WidgetPreview(tk.Tk):
                 for texts in self.all_text_elements:
                     self.canvas.itemconfig(texts['type'], state='normal')
                     self.canvas.tag_raise(texts['type'])
-                    self.canvas.itemconfig(texts['detail'], state='hidden')
+                    self.canvas.itemconfig(texts['detail'], state='normal')
 
             for item_id in [rect_id, type_text_id, detail_text_id]:
                 self.canvas.tag_bind(item_id, '<Enter>', on_enter)

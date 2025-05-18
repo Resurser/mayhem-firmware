@@ -40,9 +40,9 @@ namespace ui::external_app::rtty_rx {
 
 
 
-// void RTTYLogger::log_raw_data(const std::string& data) {
-//     log_file.write_entry(data);
-// }
+void RTTYLogger::log_raw_data(const std::string& data) {
+    log_file.write_entry(data);
+}
 
 void RTTYRxView::focus() {
     field_frequency.focus();
@@ -68,20 +68,20 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
    
-    auto receiver_modem = &modem_defs[5];
-    persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
-    serial_format_t serial_format;
+    // auto receiver_modem = &modem_defs[5];
+    // persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
+    // serial_format_t serial_format;
 
-    // serial_format.data_bits = 7;
-    // serial_format.parity = EVEN;
-    // serial_format.stop_bits = 2;
-    // serial_format.bit_order = LSB_FIRST;
-    serial_format.data_bits = 5;
-    serial_format.parity = NONE;
-    serial_format.stop_bits = 1;
-    serial_format.bit_order = MSB_FIRST;
+    // // serial_format.data_bits = 7;
+    // // serial_format.parity = EVEN;
+    // // serial_format.stop_bits = 2;
+    // // serial_format.bit_order = LSB_FIRST;
+    // serial_format.data_bits = 5;
+    // serial_format.parity = NONE;
+    // serial_format.stop_bits = 1;
+    // serial_format.bit_order = MSB_FIRST;
     
-    persistent_memory::set_serial_format(serial_format);
+    // persistent_memory::set_serial_format(serial_format);
 
     field_frequency.set_step(1000);
 
@@ -97,25 +97,27 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     options_shift.on_change = [this](size_t index, int32_t v) {
         shift_index = (uint8_t)index;
         (void)v;
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(),
-                           (int32_t)options_mark.selected_index_value() + (int32_t)options_shift.selected_index_value(),
-                           false, false);
+        
+        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
+        // text_debug.set("--options_shift " + to_string_dec_int(val));
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, false, false);
 
         // on_settings_changed();
     };
+
     options_mark.on_change = [this](size_t index, int32_t v) {
         mark_index = (uint8_t)index;
         (void)v;
-        baseband::set_rtty(50, 5,
-                           options_mark.selected_index_value(),
-                           (int32_t)options_mark.selected_index_value() + (int32_t)options_shift.selected_index_value(),
-                           false, false);
+        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
+        // text_debug.set("--options_shift " + to_string_dec_int(val));
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, false, false);
+                           
         // on_settings_changed();
     };
 
-    // logger = std::make_unique<RTTYLogger>();
-    // if (logger)
-    //     logger->append(logs_dir / u"RTTY.TXT");
+    logger = std::make_unique<RTTYLogger>();
+    if (logger)
+        logger->append(logs_dir / u"RTTY.TXT");
 
     options_mark.set_selected_index(mark_index, false);
     options_shift.set_selected_index(shift_index, true);
@@ -126,7 +128,8 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
     receiver_model.enable();
-
+    console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
+    
 }
 
 char RTTYRxView::BaudottoChar(const uint32_t data) {
@@ -167,14 +170,26 @@ char RTTYRxView::BaudottoChar(const uint32_t data) {
     return out;
 }
 
+void RTTYRxView::on_log(RTTYRxLogMessage msg)  {
+    for (uint16_t i = 0; i < msg.cnt; i += 1) {
+        console.writeln(" ");
+        console.write(to_string_dec_int(msg.samples[i])+", ");
+        if ((i % 16 == 0)){
+            console.writeln(" ");
+        }
+    }
+}
+
 void RTTYRxView::on_data(uint32_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
-    text_debug.set("~ " + to_string_dec_uint(value));
-
+    
+    
     if (is_data) {
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 9);
+        text_debug.set("~ " + to_string_dec_uint(value));
+
 
         // value = deframe_word(value);
         
@@ -186,38 +201,31 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         // text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
             // " > "+to_string_hex(alt_val, 2));
         
-        str_console += lookup_ita2(value, is_in_figures_mode); 
-        // if ((value >= 32) && (value < 127)) {
-        //     str_console += (char)value;  // Printable
-        //     str_byte    += (char)value;
-        // } else if (value < 32) {
-        //     str_console += (char)BaudottoChar(value);  // Printable
-        //     str_byte    += (char)BaudottoChar(value);
-        // } else {
-        //     str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-        //     str_byte    += "[" + to_string_hex(value, 2) + "]";
-        // }
+        if ((value >= 32)) {
+            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
+        } else if (value < 32) {
+            str_console += lookup_ita2(value, is_in_figures_mode); 
+        } else {
+        }
     
         
-        // str_byte = to_string_bin(value & 0xFF, 8) + "  ";
-        text_debug.set("[" + to_string_hex(value, 2) + "]");
+        
         console.write(str_console);
-        // if (logger && logging) str_log += str_byte;
-
         if ((value != 10) && (prev_value == 10)) {
             // Message split
             console.writeln("");
             console_color++;
 
-            // if (logging) {
-            //     logger->log_raw_data(str_log);
-            //     str_log = "";
-            // }
+            if (logging) {
+                logger->log_raw_data( to_string_dec_uint(value));
+                str_log = "";
+            }
         }
         prev_value = value;
     } else {
         // Baudrate estimation
-        text_debug.set("Baudrate estimation: ~" + to_string_dec_uint(value));
+
+        text_debug.set(" ..[" + to_string_hex(value, 2) + "]");
     }
 }
 

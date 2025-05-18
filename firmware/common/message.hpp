@@ -129,14 +129,15 @@ class Message {
         LightData = 72,
         DDCConfig = 73,
         RTTYRxConfigure = 74,
-        RTTYData = 75,
-        WeFaxRxConfigure = 76,
-        WeFaxRxStatusData = 77,
-        WeFaxRxImageData = 78,
-        WFMAMConfigure = 79,
-        NoaaAptRxConfigure = 80,
-        NoaaAptRxStatusData = 81,
-        NoaaAptRxImageData = 82,
+        RTTYRxData = 75,
+        RTTYRxLogData = 76,
+        WeFaxRxConfigure = 77,
+        WeFaxRxStatusData = 78,
+        WeFaxRxImageData = 79,
+        WFMAMConfigure = 80,
+        NoaaAptRxConfigure = 81,
+        NoaaAptRxStatusData = 82,
+        NoaaAptRxImageData = 83,
 
         MAX
     };
@@ -1523,18 +1524,26 @@ class RTTYRxConfigureMessage : public Message {
     
 };
 
-class RTTYDataMessage : public Message {
+class RTTYRxDataMessage : public Message {
    public:
-    constexpr RTTYDataMessage(
+    constexpr RTTYRxDataMessage(
         const bool is_data,
-        const uint32_t value)
-        : Message{ID::RTTYData},
+        const uint8_t value)
+        : Message{ID::RTTYRxData},
           is_data{is_data},
           value{value} {
     }
 
     bool is_data;
-    uint32_t value;
+    uint8_t value;
+};
+
+class RTTYRxLogMessage : public Message {
+   public:
+    constexpr RTTYRxLogMessage(): Message{ID::RTTYRxLogData} {}
+    
+    uint8_t samples[8]{0};
+    uint32_t cnt = 0;
 };
 
 

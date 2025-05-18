@@ -48,9 +48,10 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         int32_t current_sample = __SSAT(sample_int, 16) / 128;
         
         if (++sampleCount >= 480) {
-            data_message.is_data = false;
-            data_message.value = (current_sample);  // Mask to 5 bits
+            data_message.is_data = true;
+            data_message.value = (6);  // Mask to 5 bits
             shared_memory.application_queue.push(data_message);
+            sampleCount=0;
         }
     }
 }

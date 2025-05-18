@@ -38,17 +38,17 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-// class RTTYLogger {
-//    public:
-//     Optional<File::Error> append(const std::filesystem::path& filename) {
-//         return log_file.append(filename);
-//     }
+class RTTYLogger {
+   public:
+    Optional<File::Error> append(const std::filesystem::path& filename) {
+        return log_file.append(filename);
+    }
 
-//     void log_raw_data(const std::string& data);
+    void log_raw_data(const std::string& data);
 
-//    private:
-//     LogFile log_file{};
-// };
+   private:
+    LogFile log_file{};
+};
 
 class RTTYRxView : public View {
    public:
@@ -61,6 +61,7 @@ class RTTYRxView : public View {
 
    private:
     void on_data(uint32_t value, bool is_data);
+    void on_log(RTTYRxLogMessage msg);
 
     NavigationView& nav_;
     RxRadioState radio_state_{};
@@ -70,6 +71,7 @@ class RTTYRxView : public View {
         {
             {"mark_index"sv, &shift_index},
             {"shift_index"sv, &mark_index},
+            
         }};
     uint8_t console_color{0};
     uint32_t prev_value{0};
@@ -80,7 +82,8 @@ class RTTYRxView : public View {
     std::string str_log{""};
     uint16_t rxmode{1}; //LETTERS
     bool is_in_figures_mode = false;
-    bool logging{false};
+    bool logging{true};
+    std::unique_ptr<RTTYLogger> logger{};
 
     RFAmpField field_rf_amp{
         {13 * 8, 0 * 16}};
@@ -138,11 +141,13 @@ class RTTYRxView : public View {
     Console console{
         {0, 3 * 16, 240, screen_width}
     };
+    char BaudottoChar(const uint32_t data);
+    void on_freqchg(int64_t freq);
 
     MessageHandlerRegistration message_handler_packet{
-        Message::ID::RTTYData,
+        Message::ID::RTTYRxData,
         [this](Message* const p) {
-            const auto message = static_cast<const RTTYDataMessage*>(p);
+            const auto message = static_cast<const RTTYRxDataMessage*>(p);
             this->on_data(message->value, message->is_data);
         }};
 
@@ -152,8 +157,14 @@ class RTTYRxView : public View {
             const auto message = static_cast<const FreqChangeCommandMessage*>(p);
             this->on_freqchg(message->freq);
         }};
-    char BaudottoChar(const uint32_t data);
-    void on_freqchg(int64_t freq);
+
+   
+    MessageHandlerRegistration message_handler_log_{
+        Message::ID::RTTYRxLogData,
+        [this](const Message* const p) {
+            const auto message = *reinterpret_cast<const RTTYRxLogMessage*>(p);
+            on_log(message);
+        }};
 };
 
 }  // namespace ui::external_app::rtty_rx

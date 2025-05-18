@@ -103,7 +103,8 @@ class RTTYRxProcessor : public BasebandProcessor {
     bool bit_value{};
     
 
-    RTTYDataMessage data_message{false, 0};
+    RTTYRxDataMessage data_message{false, 0};
+    RTTYRxLogMessage log_message{};
     RSSIThread rssi_thread{};
     uint32_t calculatePhaseIncrement(uint32_t frequency);
     int16_t fastSin(uint32_t phase);
@@ -112,6 +113,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     
     uint8_t reverseBitsFunction(uint8_t val);
     void configure(const RTTYRxConfigureMessage& message);
+    void capture_config(const CaptureConfigMessage& message);
 
 
     /* NB: Threads should be the last members in the class definition. */

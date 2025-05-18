@@ -68,7 +68,7 @@ RTTYRxProcessor::RTTYRxProcessor() {
     // triggered        = false;
     // state            = WAIT_START;
 
-    configured = false;
+    // configured = false;
 
     decim_0.configure(taps_6k0_decim_0.taps);
     decim_1.configure(taps_6k0_decim_1.taps);
@@ -92,10 +92,19 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
     accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
     accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
 
+   
+        
     // Process a bit after accumulating enough samples
     if (++sampleCount >= SAMPLES_PER_BIT) {
         bool bit = (accumulatedMark > accumulatedSpace);  // Determine MARK or SPACE
-
+        
+        log_message.cnt++;
+        log_message.samples[log_message.cnt-1] = bit;
+        if (log_message.cnt == 8) {
+            shared_memory.application_queue.push(log_message);
+            log_message.cnt = 0;
+        }
+        
         // Handle start bit synchronization
         if (!isStartBit) {
             if (!bit) {  // Start bit must be SPACE (0)
@@ -104,7 +113,8 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
             }
             return;
         }
-
+        
+        
         // Shift the detected bit into the current character
         currentChar >>= 1;
         if (bit) currentChar |= 0x10;  // Set the MSB if MARK (1)
@@ -121,7 +131,7 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
             // char decodedChar = decodeBaudot(currentChar);
             // if (decodedChar != '\0') decodedMessage += decodedChar;
             data_message.is_data = true;
-            data_message.value = (currentChar);
+            data_message.value = currentChar;
             shared_memory.application_queue.push(data_message);
             
             // Reset for the next character
@@ -176,19 +186,21 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
-        int32_t current_sample = __SSAT(sample_int, 16);
-        decodeRTTYBit(current_sample);
+        // int32_t current_sample = __SSAT(sample_int, 16);
+        
+        decodeRTTYBit(sample_int);
     }
 }
 
 void RTTYRxProcessor::on_message(const Message* const message) {
     if (message->id == Message::ID::RTTYRxConfigure)
         configure(*reinterpret_cast<const RTTYRxConfigureMessage*>(message));
+    if (message->id == Message::ID::CaptureConfig)
+        capture_config(*reinterpret_cast<const CaptureConfigMessage*>(message));
 }
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     configured = false;
-
     markFreq    = message.freq_mark;
     spaceFreq   = message.freq_space;
     baudRate    = message.baudrate;
@@ -197,10 +209,17 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     
     markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
     spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
-    data_message.is_data = false;
-            data_message.value = markFreq;
-            shared_memory.application_queue.push(data_message);
+    
     configured = true;
+}
+
+
+void RTTYRxProcessor::capture_config(const CaptureConfigMessage& message) {
+    if (message.config) {
+        audio_output.set_stream(std::make_unique<StreamInput>(message.config));
+    } else {
+        audio_output.set_stream(nullptr);
+    }
 }
 
 int main() {
