@@ -139,6 +139,7 @@ struct AppSettings {
     uint8_t am_config_index = 0;
     uint8_t nbfm_config_index = 0;
     uint8_t wfm_config_index = 0;
+    uint8_t wfmam_config_index = 0;
     uint8_t squelch = 80;
     uint8_t spectrum_zoom = 4;
     uint8_t volume;

@@ -96,10 +96,10 @@ class TestRxView : public View {
     };
 
     Text text_debug_a{
-        {0 * 8, 4 * 16, 30 * 8, 16},
+        {0 * 8, 4 * 16, screen_width, 16},
         "..."};
     Text text_debug_b{
-        {0 * 8, 5 * 16, 30 * 8, 16},
+        {0 * 8, 5 * 16, screen_width, 16},
         "..."};
 
     Button button_cal{

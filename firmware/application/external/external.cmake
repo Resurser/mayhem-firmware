@@ -220,6 +220,10 @@ set(EXTCPPSRC
 	#gfxEQ
 	external/gfxeq/main.cpp
 	external/gfxeq/ui_gfxeq.cpp	
+
+	#detector_rx
+	external/detector_rx/main.cpp
+	external/detector_rx/ui_detector_rx.cpp		
 )
 
 set(EXTAPPLIST
@@ -276,4 +280,5 @@ set(EXTAPPLIST
 	scanner
 	level
 	gfxeq
+	detector_rx
 )

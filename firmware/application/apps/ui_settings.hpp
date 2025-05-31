@@ -728,7 +728,7 @@ class AppSettingsView : public View {
         {{0, 4}, "Select file to edit:", Theme::getInstance()->bg_darkest->foreground}};
 
     MenuView menu_view{
-        {0, 2 * 8, 240, 26 * 8},
+        {0, 2 * 8, screen_width, 26 * 8},
         true};
 };
 
@@ -962,7 +962,7 @@ class SetThemeView : public View {
 
     OptionsField options{
         {0 * 8, 4 * 16},
-        screen_width / 8,
+        (size_t)(screen_width / 8),
         {
             {"Default - Grey", 0},
             {"Yellow", 1},

@@ -66,7 +66,7 @@ static constexpr std::array<baseband::NBFMConfig, 3> nbfm_configs{{
 static constexpr std::array<baseband::WFMConfig, 3> wfm_configs{{
     {taps_200k_wfm_decim_0, taps_200k_wfm_decim_1},
     {taps_180k_wfm_decim_0, taps_180k_wfm_decim_1},
-    {taps_40k_wfm_decim_0, taps_40k_wfm_decim_1},
+    {taps_80k_wfm_decim_0, taps_80k_wfm_decim_1},
 }};
 
 static constexpr std::array<baseband::WFMAMConfig, 2> wfmam_configs{{
@@ -283,6 +283,7 @@ void ReceiverModel::set_configuration_without_update(
     size_t new_am_config_index,
     size_t new_nbfm_config_index,
     size_t new_wfm_config_index,
+    size_t new_wfmam_config_index,
     uint8_t new_squelch_level,
     const size_t new_spectrum_zoom) {
     settings_.mode = new_mode;
@@ -290,6 +291,7 @@ void ReceiverModel::set_configuration_without_update(
     settings_.am_config_index = new_am_config_index;
     settings_.nbfm_config_index = new_nbfm_config_index;
     settings_.wfm_config_index = new_wfm_config_index;
+    settings_.wfmam_config_index = new_wfmam_config_index;
     settings_.squelch_level = new_squelch_level;
     settings_.spectrum_zoom = new_spectrum_zoom;
 }
