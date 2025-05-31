@@ -139,7 +139,7 @@ class RTTYRxView : public View {
         LanguageHelper::currentMessages[LANG_DEBUG]
     };
     Console console{
-        {0, 3 * 16, 240, screen_width}
+        {0, 4 * 16, 240, screen_width}
     };
     char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);
@@ -163,7 +163,7 @@ class RTTYRxView : public View {
         Message::ID::RTTYRxLogData,
         [this](const Message* const p) {
             const auto message = *reinterpret_cast<const RTTYRxLogMessage*>(p);
-            on_log(message);
+            this->on_log(message);
         }};
 };
 
