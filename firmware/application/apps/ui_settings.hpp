@@ -375,14 +375,14 @@ class SetUIView : public View {
         &bitmap_sd_card_ok};
     
     Labels label2{
-        {{3 * 8, 15 * 16 + 4}, "WF colors", Theme::getInstance()->fg_light->foreground},
+        {{3 * 8, 15 * 16 + 4}, "WF use", Theme::getInstance()->fg_light->foreground},
     };
     OptionsField options_spectrum_lut_id{
         {17 * 8, 15 * 16 + 4},
         18,
         {
-            {"RGB",     0},
-            {"Inferno", 1}
+            {"Hamming",     0},
+            {"Blackman", 1}
         }
     };
 

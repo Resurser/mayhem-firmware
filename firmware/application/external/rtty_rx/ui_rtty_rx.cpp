@@ -171,12 +171,10 @@ char RTTYRxView::BaudottoChar(const uint32_t data) {
 }
 
 void RTTYRxView::on_log(RTTYRxLogMessage msg)  {
+    text_debug.set(" ");
+        
     for (uint16_t i = 0; i < msg.cnt; i += 1) {
-        console.writeln(" ");
-        console.write(to_string_dec_int(msg.samples[i])+", ");
-        if (i > 0 && (i % 16 == 0)){
-            console.writeln(" ");
-        }
+        text_debug.set(to_string_dec_int(msg.samples[i])+", ");
     }
 }
 

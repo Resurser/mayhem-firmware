@@ -135,18 +135,18 @@ void SpectrumCollector::update() {
     if (streaming && channel_spectrum_request_update) {
         /* Decimated buffer is full. Compute spectrum. */
         fft_c_preswapped(channel_spectrum, 0, 8);
-
+        
         ChannelSpectrum spectrum;
         spectrum.sampling_rate = channel_spectrum_sampling_rate;
         spectrum.channel_filter_low_frequency = channel_filter_low_frequency;
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
         for (size_t i = 0; i < spectrum.db.size(); i++) {
-            // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
+            const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
+            // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.3f;// 5.0f;
+            constexpr float mag_scale = 5.1f;// 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
             spectrum.db[i] = std::max(0U, std::min(255U, v));
         }
