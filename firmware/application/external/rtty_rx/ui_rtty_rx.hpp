@@ -69,8 +69,8 @@ class RTTYRxView : public View {
         "rx_rtty",
         app_settings::Mode::RX,
         {
-            {"mark_index"sv, &shift_index},
-            {"shift_index"sv, &mark_index},
+            {"mark_index"sv, &mark_index},
+            {"shift_index"sv, &shift_index},
             
         }};
     uint8_t console_color{0};
@@ -144,11 +144,11 @@ class RTTYRxView : public View {
     char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);
 
-    MessageHandlerRegistration message_handler_packet{
+    MessageHandlerRegistration message_handler_data{
         Message::ID::RTTYRxData,
-        [this](Message* const p) {
-            const auto message = static_cast<const RTTYRxDataMessage*>(p);
-            this->on_data(message->value, message->is_data);
+        [this](const Message* const p) {
+            const auto message = *reinterpret_cast<const RTTYRxDataMessage*>(p);
+            this->on_data(message.value, message.is_data);
         }};
 
     MessageHandlerRegistration message_handler_freqchg{
@@ -158,7 +158,12 @@ class RTTYRxView : public View {
             this->on_freqchg(message->freq);
         }};
 
-   
+   MessageHandlerRegistration message_handler_frame_sync{
+        Message::ID::DisplayFrameSync,
+        [this](const Message* const) {
+            // this->on_timer();
+        }};
+
     MessageHandlerRegistration message_handler_log_{
         Message::ID::RTTYRxLogData,
         [this](const Message* const p) {

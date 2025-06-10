@@ -128,7 +128,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
     receiver_model.enable();
-    console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
+    // console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
     
 }
 
@@ -186,7 +186,7 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
     if (is_data) {
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 9);
-        text_debug.set("~ " + to_string_dec_uint(value));
+        //text_debug.set("~ " + to_string_dec_uint(value));
 
 
         // value = deframe_word(value);
@@ -201,9 +201,8 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         
         if ((value >= 32)) {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-        } else if (value < 32) {
-            str_console += lookup_ita2(value, is_in_figures_mode); 
         } else {
+            str_console += to_string_dec_uint(value)+",";//(value, is_in_figures_mode); 
         }
     
         

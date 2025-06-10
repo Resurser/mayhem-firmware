@@ -46,13 +46,95 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
         int32_t current_sample = __SSAT(sample_int, 16) / 128;
-        
-        if (++sampleCount >= 480) {
-            data_message.is_data = true;
-            data_message.value = (6);  // Mask to 5 bits
-            shared_memory.application_queue.push(data_message);
-            sampleCount=0;
+        //  current_sample /= 128;
+
+        // Delay line put
+        delay_line[delay_line_index & 0x3F] = current_sample;
+
+        // Delay line get, and LPF
+        sample_mixed = (delay_line[(delay_line_index - (samples_per_bit / 2)) & 0x3F] * current_sample) / 4;
+        sample_filtered = prev_mixed + sample_mixed + (prev_filtered / 2);
+
+        delay_line_index++;
+
+        prev_filtered = sample_filtered;
+        prev_mixed = sample_mixed;
+
+        // Slice
+        sample_bits <<= 1;
+        sample_bits |= (sample_filtered < -20) ? 1 : 0;
+
+        // Check for "clean" transition: either 0011 or 1100
+        if ((((sample_bits >> 2) ^ sample_bits) & 3) == 3) {
+            // Adjust phase
+            if (phase < 0x8000)
+                phase += 0x800;  // Is this a proper value ?
+            else
+                phase -= 0x800;
         }
+
+        phase += phase_inc;
+
+        if (phase >= 0x10000) {
+            phase &= 0xFFFF;
+
+            if (trigger_word) {
+                // Continuous-stream value-triggered mode (AX.25) - UNTESTED
+                word_bits <<= 1;
+                word_bits |= (sample_bits & 1);
+
+                bit_counter++;
+
+                if (triggered) {
+                    if (bit_counter == word_length) {
+                        bit_counter = 0;
+
+                        data_message.is_data = true;
+                        data_message.value = word_bits & word_mask;
+                        shared_memory.application_queue.push(data_message);
+                    }
+                } else {
+                    if ((word_bits & word_mask) == trigger_value) {
+                        triggered = !triggered;
+                        bit_counter = 0;
+
+                        data_message.is_data = true;
+                        data_message.value = trigger_value;
+                        shared_memory.application_queue.push(data_message);
+                    }
+                }
+
+            } else {
+                // RS232-like modem mode
+                if (state == WAIT_START) {
+                    if (!(sample_bits & 1)) {
+                        // Got start bit
+                        state = RECEIVE;
+                        bit_counter = 0;
+                    }
+                } else if (state == WAIT_STOP) {
+                    if (sample_bits & 1) {
+                        // Got stop bit
+                        state = WAIT_START;
+                    }
+                } else {
+                    word_bits <<= 1;
+                    word_bits |= (sample_bits & 1);
+
+                    bit_counter++;
+                }
+
+                if (bit_counter == word_length) {
+                    bit_counter = 0;
+                    state = WAIT_STOP;
+
+                    data_message.is_data = true;
+                    data_message.value = word_bits;
+                    shared_memory.application_queue.push(data_message);
+                }
+            }
+        }
+        
     }
 }
 
@@ -224,9 +306,9 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
         const size_t demod_input_fs = channel_filter_output_fs;*/
 
     decim_0.configure(taps_6k0_decim_0.taps);
-    decim_1.configure(taps_6k0_narrow_decim_1.taps);
+    decim_1.configure(taps_6k0_decim_1.taps);
     decim_2.configure(taps_6k0_decim_2.taps, 4);
-    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    channel_filter.configure(taps_2k8_usb_channel.taps, 1);
     audio_output.configure(audio_12k_hpf_300hz_config);
     // decim_0.configure(taps_11k0_decim_0.taps);
     // decim_1.configure(taps_11k0_decim_1.taps);

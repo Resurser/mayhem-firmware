@@ -321,7 +321,7 @@ SetUIView::SetUIView(NavigationView& nav) {
                   &checkbox_showclock,
 
                   &label2,
-                  &options_spectrum_lut_id,
+                  &options_spectrum_view_type,
 
                   &options_clockformat,
                   &checkbox_guireturnflag,
@@ -353,7 +353,7 @@ SetUIView::SetUIView(NavigationView& nav) {
     checkbox_showsplash.set_value(pmem::config_splash());
     checkbox_showclock.set_value(!pmem::hide_clock());
     checkbox_guireturnflag.set_value(pmem::show_gui_return_icon());
-    options_spectrum_lut_id.set_selected_index(pmem::spectrum_color_id());
+    options_spectrum_view_type.set_selected_index(pmem::spectrum_view_type());
 
     const auto backlight_config = pmem::config_backlight_timer();
     checkbox_bloff.set_value(backlight_config.timeout_enabled());
@@ -394,7 +394,7 @@ SetUIView::SetUIView(NavigationView& nav) {
         pmem::set_clock_hidden(!checkbox_showclock.value());
         pmem::set_gui_return_icon(checkbox_guireturnflag.value());
         pmem::set_disable_touchscreen(checkbox_disable_touchscreen.value());
-        pmem::set_spectrum_color_id(options_spectrum_lut_id.selected_index());
+        pmem::set_spectrum_view_type(options_spectrum_view_type.selected_index());
 
         pmem::set_ui_hide_camera(!toggle_camera.value());
         pmem::set_ui_hide_sleep(!toggle_sleep.value());

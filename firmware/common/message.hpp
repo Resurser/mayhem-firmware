@@ -1515,27 +1515,27 @@ class RTTYRxConfigureMessage : public Message {
           reverse_freq(reverse_freq) {
     }
 
-    const uint32_t baudrate;
-    const uint32_t word_length;
-    const uint32_t freq_mark;
-    const uint32_t freq_space;
-    const bool reverse_bits;
-    const bool reverse_freq;
+    uint32_t baudrate{50};
+    uint32_t word_length{5};
+    uint32_t freq_mark{2125};
+    uint32_t freq_space{1675};
+    bool reverse_bits{false};
+    bool reverse_freq{false};
     
 };
 
 class RTTYRxDataMessage : public Message {
    public:
     constexpr RTTYRxDataMessage(
-        const bool is_data,
-        const uint8_t value)
+        bool is_data,
+        uint8_t value)
         : Message{ID::RTTYRxData},
           is_data{is_data},
           value{value} {
     }
 
-    bool is_data;
-    uint8_t value;
+    bool is_data = false;
+    uint8_t value = 0;
 };
 
 class RTTYRxLogMessage : public Message {
@@ -1543,7 +1543,7 @@ class RTTYRxLogMessage : public Message {
     constexpr RTTYRxLogMessage(): Message{ID::RTTYRxLogData} {}
     
     uint8_t samples[8]{0};
-    uint32_t cnt = 0;
+    uint8_t cnt = 0;
 };
 
 

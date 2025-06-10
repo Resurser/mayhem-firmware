@@ -72,9 +72,9 @@ RTTYRxProcessor::RTTYRxProcessor() {
 
     decim_0.configure(taps_6k0_decim_0.taps);
     decim_1.configure(taps_6k0_decim_1.taps);
-    decim_2.configure(taps_6k0_decim_2.taps,4);
-    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
-    audio_output.configure(audio_12k_hpf_300hz_config);
+    decim_2.configure(taps_6k0_decim_2.taps, 4);
+    channel_filter.configure(taps_2k8_usb_channel.taps, 1);
+    audio_output.configure(audio_12k_hpf_300hz_config);//, audio_12k_deemph_300_6_config);
 
     markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
     spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
@@ -92,18 +92,9 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
     accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
     accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
 
-   
-        
     // Process a bit after accumulating enough samples
     if (++sampleCount >= SAMPLES_PER_BIT) {
         bool bit = (accumulatedMark > accumulatedSpace);  // Determine MARK or SPACE
-        
-        log_message.cnt++;
-        log_message.samples[log_message.cnt-1] = bit;
-        if (log_message.cnt == 8) {
-            shared_memory.application_queue.push(log_message);
-            log_message.cnt = 0;
-        }
         
         // Handle start bit synchronization
         if (!isStartBit) {
@@ -115,6 +106,7 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
         }
         
         
+
         // Shift the detected bit into the current character
         currentChar >>= 1;
         if (bit) currentChar |= 0x10;  // Set the MSB if MARK (1)
@@ -124,6 +116,13 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
             stopBitCount = 0;  // Reset stop bit counter
             resetAccumulators();
             return;
+        }
+        
+        log_message.cnt++;
+        log_message.samples[log_message.cnt-1] = currentChar;
+        if (log_message.cnt == 8) {
+            shared_memory.application_queue.push(log_message);
+            log_message.cnt = 0;
         }
 
         // Validate 1.5 stop bits
@@ -185,10 +184,9 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
 
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
-        const int32_t sample_int = audio.p[c] * 32768.0f;
-        int32_t current_sample = __SSAT(sample_int, 16);
-        
-        decodeRTTYBit(current_sample);
+        const int32_t sample_int = audio.p[c] * 32767.5f;
+        // int32_t current_sample = __SSAT(sample_int, 16)/12768;  // Scale to Q15 format        
+        decodeRTTYBit(sample_int);
     }
 }
 
@@ -206,6 +204,12 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     baudRate    = message.baudrate;
     reverseBits = message.reverse_bits;
     reverseFreq = message.reverse_freq;
+
+    decim_0.configure(taps_6k0_decim_0.taps);
+    decim_1.configure(taps_6k0_decim_1.taps);
+    decim_2.configure(taps_6k0_decim_2.taps, 4);
+    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    audio_output.configure(audio_12k_hpf_300hz_config);//, audio_12k_deemph_300_6_config);
     
     markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
     spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically

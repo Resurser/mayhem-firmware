@@ -45,13 +45,12 @@ class AFSKRxProcessor : public BasebandProcessor {
     static constexpr size_t baseband_fs = 3072000;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
 
-    size_t samples_per_bit{};
+    size_t samples_per_bit{240};
 
     enum State {
-        RTTY_STATE_IDLE,
-    RTTY_STATE_START_BIT,
-    RTTY_STATE_DATA_BITS,
-    RTTY_STATE_STOP_BITS
+        WAIT_START = 0,
+        WAIT_STOP,
+        RECEIVE
     };
 
     std::array<complex16_t, 512> dst{};

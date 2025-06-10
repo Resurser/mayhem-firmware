@@ -153,7 +153,7 @@ struct misc_config_t {
     bool config_sdcard_high_speed_io : 1;
     bool config_disable_config_mode : 1;
     bool beep_on_packets : 1;
-    uint8_t spectrum_color_id: 1;
+    uint8_t spectrum_view_type: 1;
     bool ddc_enabled : 1;   
     
     uint8_t PLACEHOLDER_1;
@@ -984,14 +984,12 @@ bool ui_button_long_press_delay() {
 bool ui_battery_charge_hint() {
     return data->ui_config2.battery_charge_hint;
 }
-
-uint8_t spectrum_color_id() {
-    return data->misc_config.spectrum_color_id;
+uint8_t spectrum_view_type() {
+    return data->misc_config.spectrum_view_type;
 }
 bool ddc_enabled() {
     return data->misc_config.ddc_enabled;
 }
-
 void set_ui_hide_speaker(bool v) {
     data->ui_config2.hide_speaker = v;
 }
@@ -1048,8 +1046,8 @@ void set_ui_button_long_press_delay(bool v) {
 void set_ui_battery_charge_hint(bool v) {
     data->ui_config2.battery_charge_hint = v;
 }
-void set_spectrum_color_id(uint8_t v) {
-    data->misc_config.spectrum_color_id = v;
+void set_spectrum_view_type(uint8_t v) {
+    data->misc_config.spectrum_view_type = v;
 }
 void set_ddc_enabled(bool v) {
     data->misc_config.ddc_enabled = v;
