@@ -70,32 +70,36 @@ RTTYRxProcessor::RTTYRxProcessor() {
 
     // configured = false;
 
-    decim_0.configure(taps_6k0_decim_0.taps);
-    decim_1.configure(taps_6k0_decim_1.taps);
-    decim_2.configure(taps_6k0_decim_2.taps, 4);
-    channel_filter.configure(taps_2k8_usb_channel.taps, 1);
-    audio_output.configure(audio_12k_hpf_300hz_config);//, audio_12k_deemph_300_6_config);
-
-    markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
-    spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
-     
-    configured = true;
+    
 }
 
 // Process a single audio sample and decode it into an RTTY bit
-void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
+void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
     // Increment the phases for MARK and SPACE tones
-    markPhase = (markPhase + markPhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
-    spacePhase = (spacePhase + spacePhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
+    // markPhase   = (markPhase + markPhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
+    // spacePhase  = (spacePhase + spacePhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
+    markPhase = (markPhase + markPhaseInc) % 65536;
+    spacePhase = (spacePhase + spacePhaseInc) % 65536;
 
-    // Accumulate the contributions of the current sample
-    accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
-    accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
+    // Instead of indexing the huge table, we reduce the phase by shifting:
+    // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
+    uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
+    uint16_t spaceIndex = spacePhase >> 8;
+
+    // Accumulate the contributions for the current sample.
+    // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
+    accumulatedMark += (sample * sine_table_q15[markIndex]) / SCALE;
+    accumulatedSpace += (sample * sine_table_q15[spaceIndex]) / SCALE;
+    // // Accumulate the contributions of the current sample
+    // accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
+    // accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
 
     // Process a bit after accumulating enough samples
     if (++sampleCount >= SAMPLES_PER_BIT) {
         bool bit = (accumulatedMark > accumulatedSpace);  // Determine MARK or SPACE
-        
+        if (reverseFreq) {
+            bit = !bit;
+        }
         // Handle start bit synchronization
         if (!isStartBit) {
             if (!bit) {  // Start bit must be SPACE (0)
@@ -129,6 +133,9 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
             // char decodedChar = decodeBaudot(currentChar);
             // if (decodedChar != '\0') decodedMessage += decodedChar;
+            if (reverseBits) {
+                currentChar = reverseBitsFunction(currentChar);
+            }
             data_message.is_data = true;
             data_message.value = currentChar;
             shared_memory.application_queue.push(data_message);
@@ -144,7 +151,7 @@ void RTTYRxProcessor::decodeRTTYBit(int16_t sample) {
     }
 }
 
-int16_t RTTYRxProcessor::fastSin(uint32_t phase) {
+int32_t RTTYRxProcessor::fastSin(uint32_t phase) {
     uint16_t index = (phase >> 16) & PHASE_MASK;  // Extract table index
     uint16_t nextIndex = (index + 1) & PHASE_MASK;  // Next index (wrap around)
     uint16_t fractional = (phase & 0xFFFF) >> 8;  // Fractional part (8-bit resolution)
@@ -157,7 +164,7 @@ int16_t RTTYRxProcessor::fastSin(uint32_t phase) {
 
 // Calculate phase increment dynamically based on frequency
 uint32_t RTTYRxProcessor::calculatePhaseIncrement(uint32_t frequency) {
-    return (frequency * TABLE_SIZE * SCALE) / SAMPLE_RATE;
+    return (frequency * TABLE_SIZE) / SAMPLE_RATE;
 }
 
 // Reset the accumulators after processing each bit or character
@@ -184,8 +191,9 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
 
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
-        const int32_t sample_int = audio.p[c] * 32767.5f;
-        // int32_t current_sample = __SSAT(sample_int, 16)/12768;  // Scale to Q15 format        
+        const int32_t sample_int = audio.p[c] * SCALE;
+
+        int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format        
         decodeRTTYBit(sample_int);
     }
 }

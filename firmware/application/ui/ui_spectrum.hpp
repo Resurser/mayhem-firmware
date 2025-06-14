@@ -125,21 +125,19 @@ class WaterfallWidget : public Widget {
 
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
    private:
-    std::array<uint8_t, 256> prevFrame{};
     // float alpha{0.1f};        // Smoothing factor for dynamic range updates
     float percentile{0.1f};  // Histogram percentile for min/max range adjustment
     // Function to apply linear normalization with noise floor compensation
     void applySavitzkyGolay(const std::array<unsigned char, 256> data, std::array<unsigned char, 256>& smoothed);
     uint8_t linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor);
-    
+
     void clearNoise(std::array<uint8_t, 256>& spectrumData, uint8_t noiseFloor, uint8_t margin);
-    void applyTemporalSmoothing(const std::array<uint8_t, 256>& currentFrame, std::array<uint8_t, 256>& smoothedFrame, const float smoothingFactor);
     void applySpatialSmoothing(std::array<uint8_t, 256>& spectrumData, uint8_t filterRadius);
 
     // Function to update the dynamic range (min and max values) based on a histogram and percentile
     void updateDynamicRangeWithHistogram(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max, const float percentile);
     // Function to apply temporal smoothing to the output signal
-    uint8_t estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn);
+    uint8_t estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max);
 
     void clear();
 };

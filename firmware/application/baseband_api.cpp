@@ -489,4 +489,11 @@ void request_audio_beep(uint32_t freq, uint32_t sample_rate, uint32_t duration_m
     send_message(&message);
 }
 
+
+// void set_signal_zoom(const uint8_t zoom_) {
+// 	DDCConfigMessage message { freq };
+// 	send_message(&message);
+// }
+
+
 } /* namespace baseband */

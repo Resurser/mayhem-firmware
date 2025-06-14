@@ -60,6 +60,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
                   &field_volume,
                   &field_frequency,
                   &text_debug,
+                  &checkbox_disable_touchscreen,
                   &labels,
                   &options_shift,
                   &options_mark,
@@ -85,10 +86,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     field_frequency.set_step(1000);
 
-    // check_log.set_value(logging);
-    // check_log.on_select = [this](Checkbox&, bool v) {
-    //     logging = v;
-    // };
+    checkbox_disable_touchscreen.set_value(logging);
+    checkbox_disable_touchscreen.on_select = [this](Checkbox&, bool v) {
+        logging = v;
+    };
 
     // button_modem_setup.on_select = [&nav](Button&) {
     //     nav.push<ModemSetupView>();
@@ -100,7 +101,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         
         uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
         // text_debug.set("--options_shift " + to_string_dec_int(val));
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, false, false);
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
 
         // on_settings_changed();
     };
@@ -110,7 +111,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         (void)v;
         uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
         // text_debug.set("--options_shift " + to_string_dec_int(val));
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, false, false);
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
                            
         // on_settings_changed();
     };
@@ -132,6 +133,27 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     
 }
 
+// void RTTYRxView::apply_config(){
+//     audio::output::stop();
+//     receiver_model.disable();
+//     baseband::shutdown();
+
+//     baseband::run_image(portapack::spi_flash::image_tag_capture);
+//     receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
+
+//     baseband::set_sample_rate(, get_oversample_rate(DETECTOR_BW));
+//     // The radio needs to know the effective sampling rate.
+//     auto actual_sampling_rate = get_actual_sample_rate(DETECTOR_BW);
+//     receiver_model.set_sampling_rate(actual_sampling_rate);
+//     receiver_model.set_baseband_bandwidth(filter_bandwidth_for_sampling_rate(actual_sampling_rate));
+
+//     audio::set_rate(audio::Rate::Hz_12000);
+//     audio::output::start();
+//     receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
+
+//     receiver_model.enable();
+
+// }
 char RTTYRxView::BaudottoChar(const uint32_t data) {
     int out = 0;
     const char letters[32] = {
@@ -172,21 +194,23 @@ char RTTYRxView::BaudottoChar(const uint32_t data) {
 
 void RTTYRxView::on_log(RTTYRxLogMessage msg)  {
     text_debug.set(" ");
-        
-    for (uint16_t i = 0; i < msg.cnt; i += 1) {
-        text_debug.set(to_string_dec_int(msg.samples[i])+", ");
+    std::string str_log = "";
+
+    for (uint16_t i = 0; i < msg.cnt; i++) {
+        str_log += to_string_dec_int(msg.samples[i])+", ";
     }
+    text_debug.set(str_log);
 }
 
-void RTTYRxView::on_data(uint32_t value, bool is_data) {
+void RTTYRxView::on_data(uint8_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
     
     
     if (is_data) {
         // Colorize differently after message splits
-        str_console += (char)((console_color & 3) + 9);
-        //text_debug.set("~ " + to_string_dec_uint(value));
+        str_console += (char)((console_color & 3) + 11);
+        // text_debug.set("~ " + to_string_dec_uint(value));
 
 
         // value = deframe_word(value);
@@ -199,22 +223,21 @@ void RTTYRxView::on_data(uint32_t value, bool is_data) {
         // text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
             // " > "+to_string_hex(alt_val, 2));
         
-        if ((value >= 32)) {
+        if (value >= 32) {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
         } else {
-            str_console += to_string_dec_uint(value)+",";//(value, is_in_figures_mode); 
+            str_console += BaudottoChar(value)+", ";//(value, is_in_figures_mode); 
         }
     
-        
-        
         console.write(str_console);
+        
         if ((value != 10) && (prev_value == 10)) {
             // Message split
             console.writeln("");
             console_color++;
 
             if (logging) {
-                logger->log_raw_data( to_string_dec_uint(value));
+                logger->log_raw_data(to_string_dec_uint(value));
                 str_log = "";
             }
         }

@@ -1526,9 +1526,7 @@ class RTTYRxConfigureMessage : public Message {
 
 class RTTYRxDataMessage : public Message {
    public:
-    constexpr RTTYRxDataMessage(
-        bool is_data,
-        uint8_t value)
+    constexpr RTTYRxDataMessage(const bool is_data = false, const uint8_t value = 0)
         : Message{ID::RTTYRxData},
           is_data{is_data},
           value{value} {

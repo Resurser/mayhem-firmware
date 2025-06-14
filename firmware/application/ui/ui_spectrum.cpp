@@ -289,7 +289,7 @@ void WaterfallWidget::on_hide() {
 
 uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor) {
     // Adjust the signal by subtracting the noise floor
-    signal = std::max(signal, noiseFloor);
+    signal = std::max(signal, min);
     // Normalize the adjusted signal
     return static_cast<uint8_t>((signal - min) * 255 / (max - min));
 }
@@ -366,24 +366,12 @@ void WaterfallWidget::clearNoise(std::array<uint8_t, 256>& spectrumData, uint8_t
     }
 }
 
-void WaterfallWidget::applyTemporalSmoothing(const std::array<uint8_t, 256>& currentFrame, std::array<uint8_t, 256>& smoothedFrame, const float smoothingFactor) {
-    if (prevFrame.empty()){
-        smoothedFrame = currentFrame; 
-    } else {
-        for (size_t i = 0; i < currentFrame.size(); ++i) {
-            smoothedFrame[i] = (uint8_t)((1.0f - smoothingFactor) * prevFrame[i]) + (uint8_t)(smoothingFactor * currentFrame[i]);
-        }
-    }
-
-    prevFrame = smoothedFrame; // Update previous frame
-}
-
 void WaterfallWidget::applySpatialSmoothing(std::array<uint8_t, 256>& spectrumData, uint8_t filterRadius) {
     std::array<uint8_t, 256> tempData = spectrumData;
     for (size_t i = 0; i < spectrumData.size(); ++i) {
         int sum = 0, count = 0;
         for (int j = -filterRadius; j <= filterRadius; ++j) {
-            size_t idx = std::min(std::max(static_cast<int>(i) + j, 0), static_cast<int>(spectrumData.size() - 1));
+            size_t idx = std::min(std::max(static_cast<int>(i) + j, 0), static_cast<int>(tempData.size() - 1));
             sum += tempData[idx];
             // std::array<uint8_t, 256> spectrum_db = spectrum.db;
             count++;
@@ -392,45 +380,49 @@ void WaterfallWidget::applySpatialSmoothing(std::array<uint8_t, 256>& spectrumDa
     }
 }
 
-uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn){
+uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 256> signalsIn, uint8_t& min, uint8_t& max){
     std::array<uint8_t,256> sortedData = signalsIn;
     std::sort(sortedData.begin(), sortedData.end());
+    min = sortedData[0];
+    max = sortedData[sortedData.size()-1];
+    
     return sortedData[sortedData.size() / 2]; // Median value
 }
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;
-    std::array<uint8_t, 256> spectrum_db;
-    spectrum_db = spectrum.db;
+    std::array<uint8_t, 256> spectrum_db = spectrum.db;
     // std::array<uint8_t, 256> adjustedSpectrum2{};
     // const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
     // uint8_t max = 255;
     // uint8_t min = 255;
     // uint8_t min = estimateNoiseFloor(spectrum.db);
     if (pmem::spectrum_view_type()) {
+        std::array<uint8_t, 256> spectrum_db2 = spectrum_db;
         // delta = 24;
-        uint8_t max = 250;
+        uint8_t min = 255;
+        uint8_t max = 0;
+        uint8_t noise_floor = estimateNoiseFloor(spectrum_db2, min, max);
+        updateDynamicRangeWithHistogram(spectrum_db2, min, max, 0.1f);
+        clearNoise(spectrum_db2, noise_floor, 5);
+        
+        switch (pmem::spectrum_view_type())
+        {
+            case 1:
+                /* code */
+                break;
+            
+            case 2:
+                applySpatialSmoothing(spectrum_db2, 2);
 
-        // uint8_t min = 255;
-        uint8_t min = estimateNoiseFloor(spectrum_db);
-        clearNoise(spectrum_db, min, 10);
-            // min = noise_floor;
+                break;
+            
+            default:
+                break;
+        }
 
-            // Adjust dynamic range
-            // // Ensure a minimum range of 10 dB
-            // delta = min / 2 + min / 4;
-            // updateDynamicRangeWithHistogram(spectrum.db, min, max, 0.2f);
-            // for (size_t i = 0; i < 256; i++) {
-            //     if (i < 121 || i > 135){
-            //         spectrum_db[i] = normalizeWithNoiseFloor(spectrum.db[i], min, max);
-            //     }
-            // }
-            // applySpatialSmoothing(spectrum.db, spectrum_db);
-            // applySavitzkyGolay(spectrum.db, spectrum_db);
-
-        applyTemporalSmoothing(spectrum.db, spectrum_db, 0.3);
-        if (pmem::spectrum_view_type() == 2) {
-            applySpatialSmoothing(spectrum_db, 2);
+        for (size_t i = 0; i < 256; i++) {
+            spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db2[i], min, max, noise_floor);
         }
     }
     

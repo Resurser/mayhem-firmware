@@ -82,8 +82,8 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     // -------------------- Динамічні параметри --------------------
     uint16_t baudRate       = DEFAULT_BAUD_RATE;
-    uint16_t markPhaseInc   = 0;
-    uint16_t spacePhaseInc  = 0;
+    uint32_t markPhaseInc   = 0;
+    uint32_t spacePhaseInc  = 0;
     uint16_t markFreq       = DEFAULT_MARK_FREQ;
     uint16_t spaceFreq      = DEFAULT_SPACE_FREQ;
     bool reverseBits = false;  // Чи потрібно перевертати біти
@@ -102,14 +102,13 @@ class RTTYRxProcessor : public BasebandProcessor {
     bool configured{false};
     bool bit_value{};
     
-
     RTTYRxDataMessage data_message{false, 0};
     RTTYRxLogMessage log_message{};
     RSSIThread rssi_thread{};
     uint32_t calculatePhaseIncrement(uint32_t frequency);
-    int16_t fastSin(uint32_t phase);
+    int32_t fastSin(uint32_t phase);
     void resetAccumulators();
-    void decodeRTTYBit(int16_t sample);
+    void decodeRTTYBit(int32_t sample);
     
     uint8_t reverseBitsFunction(uint8_t val);
     void configure(const RTTYRxConfigureMessage& message);

@@ -375,15 +375,15 @@ class SetUIView : public View {
         &bitmap_sd_card_ok};
     
     Labels label2{
-        {{3 * 8, 15 * 16 + 4}, "Waterfall view", Theme::getInstance()->fg_light->foreground},
+        {{3 * 8, 15 * 16 + 4}, "Spectrum", Theme::getInstance()->fg_light->foreground},
     };
     OptionsField options_spectrum_view_type{
         {17 * 8, 15 * 16 + 4},
-        18,
+        14,
         {
             {"Default",0},
-            {"Smoothed", 1},
-            {"Autoscaled", 2}
+            {"Smooth", 1},
+            {"Scaling", 2}
         }
     };
 

@@ -153,10 +153,10 @@ struct misc_config_t {
     bool config_sdcard_high_speed_io : 1;
     bool config_disable_config_mode : 1;
     bool beep_on_packets : 1;
-    uint8_t spectrum_view_type: 1;
     bool ddc_enabled : 1;   
+    bool PLACEHOLDER_1 : 1;   
     
-    uint8_t PLACEHOLDER_1;
+    uint8_t spectrum_view_type: 2;
     uint8_t PLACEHOLDER_2;
     uint8_t PLACEHOLDER_3;
 };

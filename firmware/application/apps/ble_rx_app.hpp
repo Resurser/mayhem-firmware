@@ -286,6 +286,17 @@ class BLERxView : public View {
     RSSI rssi{
         {24 * 8, 0, 6 * 8, 4}};
 
+    /**
+     * @brief Represents a communication channel with specific configuration parameters.
+     *
+     * The Channel object is initialized with a set of parameters:
+     * - The first parameter (e.g., 24 * 8): Typically represents the buffer size or data rate in bits/bytes.
+     * - The second parameter (e.g., 5): May indicate the channel number, priority, or another identifier.
+     * - The third parameter (e.g., 6 * 8): Could represent another size, frequency, or timing parameter.
+     * - The fourth parameter (e.g., 4): May specify the number of retries, error correction level, or another configuration value.
+     *
+     * @note The exact meaning of each parameter depends on the Channel class definition.
+     */
     Channel channel{
         {24 * 8, 5, 6 * 8, 4}};
 

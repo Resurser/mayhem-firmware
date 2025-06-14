@@ -60,24 +60,27 @@ class RTTYRxView : public View {
     std::string title() const override { return "RTTY RX"; };
 
    private:
-    void on_data(uint32_t value, bool is_data);
+    void on_data(uint8_t value, bool is_data);
     void on_log(RTTYRxLogMessage msg);
 
     NavigationView& nav_;
     RxRadioState radio_state_{};
+    
+    uint8_t mark_index{0};
+    uint8_t shift_index{0};
+    bool reverse_bits{false};
+   
     app_settings::SettingsManager settings_{
         "rx_rtty",
         app_settings::Mode::RX,
         {
             {"mark_index"sv, &mark_index},
             {"shift_index"sv, &shift_index},
-            
+            {"reverse_bits"sv, &reverse_bits},            
         }};
     uint8_t console_color{0};
     uint32_t prev_value{0};
 
-    uint8_t mark_index{0};
-    uint8_t shift_index{0};
     
     std::string str_log{""};
     uint16_t rxmode{1}; //LETTERS
@@ -105,18 +108,18 @@ class RTTYRxView : public View {
 
     
     Labels labels{
-        {{0 * 8, 1 * 16}, "Shift: ", Theme::getInstance()->fg_light->foreground},
-        {{12 * 8, 1 * 16}, "Mark: ", Theme::getInstance()->fg_light->foreground},
+        {{0 * 8, 1 * 16}, "S: ", Theme::getInstance()->fg_light->foreground},
+        {{8 * 8, 1 * 16}, "M: ", Theme::getInstance()->fg_light->foreground},
     };
 
     OptionsField options_shift{
-        {7 * 8, 1 * 16},
+        {4 * 8, 1 * 16},
         4,
         {
-            {"85", 85},
-            {"170", 170},
-            {"450", 450},
-            {"850", 850},
+            {" 85", 85},
+            {" 170", 170},
+            {" 450", 450},
+            {" 850", 850},
             {"-85",  -85},
             {"-170", -170},
             {"-450", -450},
@@ -125,7 +128,7 @@ class RTTYRxView : public View {
         }};
 
     OptionsField options_mark{
-        {18 * 8, 1 * 16},
+        {12 * 8, 1 * 16},
         4,
         {
             {"1275", 1275},
@@ -133,7 +136,10 @@ class RTTYRxView : public View {
             {"2125", 2125},
             {"2295", 2295},
         }};
-
+    Checkbox checkbox_disable_touchscreen{
+        {18 * 8, 1 * 16},
+        10,
+        "Rev. bits"};
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},
         LanguageHelper::currentMessages[LANG_DEBUG]
@@ -143,12 +149,13 @@ class RTTYRxView : public View {
     };
     char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);
+    void apply_config();
 
     MessageHandlerRegistration message_handler_data{
         Message::ID::RTTYRxData,
-        [this](const Message* const p) {
-            const auto message = *reinterpret_cast<const RTTYRxDataMessage*>(p);
-            this->on_data(message.value, message.is_data);
+        [this](Message* const p) {
+            const auto message = static_cast<const RTTYRxDataMessage*>(p);
+            this->on_data(message->value, message->is_data);
         }};
 
     MessageHandlerRegistration message_handler_freqchg{
