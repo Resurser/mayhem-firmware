@@ -68,6 +68,11 @@ void SpectrumCollector::set_decimation_factor(
     channel_spectrum_decimator.set_factor(decimation_factor);
 }
 
+void SpectrumCollector::set_smooth_factor(
+    const uint8_t new_smooth_factor) {
+    smooth_factor = smooth_factor;
+}
+
 /* TODO: Refactor to register task with idle thread?
  * It's sad that the idle thread has to call all the way back here just to
  * perform the deferred task on the buffer of data we prepared.
@@ -130,6 +135,22 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
+static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t size = 4) {
+    int halfWindow = size / 2;
+    for (size_t i = 0; i < signal.size(); ++i) {
+        std::vector<uint8_t> window;
+        for (int j = -halfWindow; j <= halfWindow; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
+                window.push_back(signal[idx]);
+            }
+        }
+        std::nth_element(window.begin(), window.begin() + window.size() / 2, window.end());
+        filtered[i] = window[window.size() / 2];
+    }
+}
+
+
 void SpectrumCollector::update() {
     // Called from idle thread (after EVT_MASK_SPECTRUM is flagged)
     if (streaming && channel_spectrum_request_update) {
@@ -146,9 +167,14 @@ void SpectrumCollector::update() {
             // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.5f;// 5.0f;
+            constexpr float mag_scale = 5.2f;// 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
             spectrum.db[i] = std::max(0U, std::min(255U, v));
+        }
+        if (smooth_factor > 1){
+            std::array<uint8_t, 256> db_filtered;
+            spectrum_db_filter_median(spectrum.db, db_filtered, smooth_factor);
+            spectrum.db = db_filtered;
         }
         fifo.in(spectrum);
     }

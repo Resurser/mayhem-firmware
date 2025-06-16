@@ -32,42 +32,6 @@ constexpr T clamp(const T& value, const T& min, const T& max) {
     return (value < min) ? min : (value > max) ? max : value;
 }
 
-#if 0
-uint32_t gcd(const uint32_t u, const uint32_t v) {
-	/* From http://en.wikipedia.org/wiki/Binary_GCD_algorithm */
-
-	if( u == v ) {
-		return u;
-	}
-
-	if( u == 0 ) {
-		return v;
-	}
-
-	if( v == 0 ) {
-		return u;
-	}
-
-	if( ~u & 1 ) {
-		if( v & 1 ) {
-			return gcd(u >> 1, v);
-		} else {
-			return gcd(u >> 1, v >> 1) << 1;
-		}
-	}
-
-	if( ~v & 1 ) {
-		return gcd(u, v >> 1);
-	}
-
-	if( u > v ) {
-		return gcd((u - v) >> 1, v);
-	}
-
-	return gcd((v - u) >> 1, u);
-}
-#endif
-
 std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length) {
     std::string text;
     for (size_t i = 0; i < bits.size(); i += word_length) {
