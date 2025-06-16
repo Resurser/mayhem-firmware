@@ -93,9 +93,9 @@ class ThemeRed : public ThemeTemplate {
     ThemeRed();
 };
 
-class ThemeCyan : public ThemeTemplate {
+class ThemeDark : public ThemeTemplate {
    public:
-    ThemeCyan();
+    ThemeDark();
 };
 
 class Theme {
@@ -106,7 +106,7 @@ class Theme {
         Aqua = 2,
         Green = 3,
         Red = 4,
-        Cyan = 5,
+        Dark = 5,
         MAX
     };
     static ThemeTemplate* getInstance();
