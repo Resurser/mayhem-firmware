@@ -373,19 +373,20 @@ class SetUIView : public View {
     ImageToggle toggle_sd_card{
         {23 * 8, 14 * 16 + 2, 16, 16},
         &bitmap_sd_card_ok};
-    
+
     Labels label2{
-        {{3 * 8, 15 * 16 + 4}, "Spectrum", Theme::getInstance()->fg_light->foreground},
+        {{3 * 8, 15 * 16 + 4},
+         "Spectrum ",
+         Theme::getInstance()->fg_light->foreground},
     };
+
     OptionsField options_spectrum_view_type{
         {17 * 8, 15 * 16 + 4},
         14,
-        {
-            {"Default",0},
-            {"Smooth", 1},
-            {"Scaling", 2}
-        }
-    };
+        {{"Default", 0},
+         {"S-G 5", 1},
+         {"S-G 7", 2},
+         {"Linear", 3}}};
 
     Button button_save{
         {2 * 8, 17 * 16, 12 * 8, 32},

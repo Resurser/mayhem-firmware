@@ -140,12 +140,13 @@ class RTTYRxView : public View {
         {18 * 8, 1 * 16},
         10,
         "Rev. bits"};
+
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},
         LanguageHelper::currentMessages[LANG_DEBUG]
     };
     Console console{
-        {0, 4 * 16, 240, screen_width}
+        {0, 4 * 16, screen_width, screen_width}
     };
     char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);

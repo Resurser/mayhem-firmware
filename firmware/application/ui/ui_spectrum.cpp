@@ -296,7 +296,7 @@ uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t m
 void WaterfallWidget::applySavitzkyGolay7(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
     static const int coeffs[7] = {-3, 3, 6, 7, 6, 3, -3};
     uint8_t halfWin = 3;
-    
+
     for(uint8_t i = 0; i < halfWin; i++){
         smoothed[i] = data[i];
         smoothed[240 - (halfWin + i)] = data[240 - (halfWin + i)];    
@@ -319,12 +319,12 @@ void WaterfallWidget::applySavitzkyGolay7(const std::array<uint8_t, 240> data, s
 }
 
 void WaterfallWidget::applySavitzkyGolay5(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
-    static const int coeffs[5] =  {-3, 12, 17, 12, -3 };
+    static const int coeffs[5] =  {-3, 12, 16, 12, -3 };
 
     int halfWin = 2;
     for(int i = 0; i < halfWin; i++){
         smoothed[i] = data[i];
-        smoothed[data.size() - (halfWin + i)] = data[data.size() - (halfWin + i)];    
+        smoothed[240 - (halfWin + i)] = data[240 - (halfWin + i)];    
     }
     for (int i = halfWin; i < 240 - halfWin; i++) {
         int32_t sum = 0; // Use 32-bit int to prevent overflow
@@ -334,11 +334,11 @@ void WaterfallWidget::applySavitzkyGolay5(const std::array<uint8_t, 240> data, s
         }
 
         uint8_t value = sum >> 5; // Normalize back to fixed-point range
-        // if (value > 255){
-        //     value = 255;
-        // } else if (value < 0){
-        //     value = 0;
-        // }
+        if (value > 255){
+            value = 255;
+        } else if (value < 0){
+            value = 0;
+        }
         smoothed[i] = (uint8_t)value;
     }
 }
@@ -372,17 +372,9 @@ uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 240> signa
     uint8_t noiseFloor = sortedData[120];
     
     // Ensure minimum range for visualization
-    if ((max - noiseFloor) < 10) {
-        max = noiseFloor + 10;
+    if ((max - min) < 22) {
+        max = min + 22;
     }
-
-    // if (max > 255){
-    //     max = 255;
-    // }
-    
-    // if (min < 0){
-    //     min = 0;
-    // }
         
     return noiseFloor; // Median value
 }
@@ -397,34 +389,38 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // uint8_t min = estimateNoiseFloor(spectrum.db);
     
     for (size_t i = 0; i < 120; i++) {
-        spectrum_db[i]       = spectrum.db[240 - 120 + i];
+        spectrum_db[i]       = spectrum.db[256 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
-    
-    if (pmem::spectrum_view_type()) { 
-        uint8_t min = 255;
-        uint8_t max = 0;
-        uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-        // updateDynamicRangeWithHistogram(spectrum_db_upd, min, max, 0.1f);
-        clearNoise(spectrum_db, noise_floor, 20);        
-        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
+    uint8_t min = 255;
+    uint8_t max = 0;
+    uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
         
-        switch (pmem::spectrum_view_type())
-        {
+    if (pmem::spectrum_view_type()) {
+        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
+                
+        switch (pmem::spectrum_view_type()) {
             case 1:
-                applySavitzkyGolay5(spectrum_db, spectrum_db_upd);// Initialize with the first value
-               
+                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);  // Initialize with the first value
+                spectrum_db = spectrum_db_upd;
                 break;
-            
             case 2:
-                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);
+                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);  // Initialize with the first value
+                spectrum_db = spectrum_db_upd;
                 break;
-            
+            case 3:
+                // noise_floor = min + ((max - min) / 3);
+                clearNoise(spectrum_db, noise_floor, 30);
+
+                for (size_t i = 0; i < 240; i++) {
+                    spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db_upd[i], min, max, noise_floor);
+                }
+                break;
             default:
                 break;
         }
     }
-    
+
     for (size_t i = 0; i < 240; i++) {
         pixel_row[i]       = gradient.lut[spectrum_db[i]];
         //  gradient.lut[spectrum_db[240 - 120 + i]];

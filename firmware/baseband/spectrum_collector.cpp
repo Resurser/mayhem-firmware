@@ -126,12 +126,52 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     // Three term Blackman window.
     constexpr float alpha = 0.42f;
     constexpr float beta = 0.5f * 0.5f;
-    constexpr float gamma = 0.08f * 0.05f;
+    constexpr float gamma = 0.08f * 0.08f;
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
-static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, 
-    const size_t window_size = 5) {
+static void spectrum_db_filter_gausian(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, uint8_t kernel = 4){
+    int half_kernel = kernel / 2;
+    for (size_t i = 0; i < signal.size(); ++i) {
+        int sum = 0, count = 0;
+        for (int j = -half_kernel; j <= half_kernel; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
+                sum += signal[idx];
+                count++;
+            }
+        }
+        filtered[i] = sum / count;
+    }
+}
+static void spectrum_db_filter_wiener(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
+    int half_window = window_size / 2;
+    for (size_t i = 0; i < 256; ++i) {
+        float localMean = 0, localVariance = 0;
+        int count = 0;
+        for (int j = -half_window; j <= half_window; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < 256) {
+                localMean += signal[idx];
+                count++;
+            }
+        }
+        localMean /= count;
+        for (int j = -half_window; j <= half_window; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < 256) {
+                localVariance += std::pow(signal[idx] - localMean, 2);
+            }
+        }
+        localVariance /= count;
+        float noiseVariance = 1;  // Assumed or precomputed
+        float gain = (localVariance - noiseVariance) / localVariance;
+        gain = std::max(0.0f, gain);  // Ensure non-negative gain
+        filtered[i] = static_cast<uint8_t>(localMean + gain * (signal[i] - localMean));
+    }
+}
+
+static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
     size_t size = window_size;
     if (window_size > 127) size = 127;
     if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
@@ -162,19 +202,23 @@ void SpectrumCollector::update() {
         spectrum.channel_filter_low_frequency = channel_filter_low_frequency;
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
+        
         for (size_t i = 0; i < spectrum.db.size(); i++) {
-            const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
+            // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
+            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.3f;// 5.0f;
+            constexpr float mag_scale = 5.0f;// 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
+        
             spectrum.db[i] = std::max(0U, std::min(255U, v));
         }
         
-        // std::array<uint8_t, 256> db_filtered;
-        // spectrum_db_filter_median(spectrum.db, db_filtered, smooth_factor);
-        // spectrum.db = db_filtered;
+        std::array<uint8_t, 256> db_filtered;
+        // spectrum_db_filter_median(spectrum.db, db_filtered, 3);
+        // spectrum_db_filter_gausian(spectrum.db, db_filtered, 2);
+        spectrum_db_filter_gausian(spectrum.db, db_filtered, 5);
+        spectrum.db = db_filtered;
         
         fifo.in(spectrum);
     }
