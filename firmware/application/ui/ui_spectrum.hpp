@@ -125,10 +125,10 @@ class WaterfallWidget : public Widget {
 
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
    private:
-    // float alpha{0.1f};        // Smoothing factor for dynamic range updates
-    float percentile{0.1f};  // Histogram percentile for min/max range adjustment
     // Function to apply linear normalization with noise floor compensation
-    void applySavitzkyGolay(const std::array<unsigned char, 240> data, std::array<unsigned char, 240>& smoothed);
+    void applySavitzkyGolay7(const std::array<unsigned char, 240> data, std::array<unsigned char, 240>& smoothed);
+    void applySavitzkyGolay5(const std::array<unsigned char, 240> data, std::array<unsigned char, 240>& smoothed);
+    
     uint8_t linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor);
 
     void clearNoise(std::array<uint8_t, 240>& spectrumData, uint8_t noiseFloor, uint8_t margin);

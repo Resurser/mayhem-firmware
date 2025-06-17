@@ -564,6 +564,7 @@ class NBFMConfigureMessage : public Message {
     const iir_biquad_config_t audio_hpf_config;
     const iir_biquad_config_t audio_deemph_config;
     const uint8_t squelch_level;
+    // const size_t channel_spectrum_smooth_factor;
 };
 
 class WFMConfigureMessage : public Message {
@@ -590,6 +591,7 @@ class WFMConfigureMessage : public Message {
     const size_t deviation;
     const iir_biquad_config_t audio_hpf_config;
     const iir_biquad_config_t audio_deemph_config;
+    // const size_t channel_spectrum_smooth_factor;
 };
 
 class WFMAMConfigureMessage : public Message {
@@ -655,6 +657,7 @@ class AMConfigureMessage : public Message {
     const Modulation modulation;
     const iir_biquad_config_t audio_hpf_lpf_config;
     const size_t channel_spectrum_decimation_factor;
+    // const size_t channel_spectrum_smooth_factor;
 };
 
 // TODO: Put this somewhere else, or at least the implementation part.

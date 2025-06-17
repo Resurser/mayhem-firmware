@@ -68,11 +68,6 @@ void SpectrumCollector::set_decimation_factor(
     channel_spectrum_decimator.set_factor(decimation_factor);
 }
 
-void SpectrumCollector::set_smooth_factor(
-    const uint8_t new_smooth_factor) {
-    smooth_factor = smooth_factor;
-}
-
 /* TODO: Refactor to register task with idle thread?
  * It's sad that the idle thread has to call all the way back here just to
  * perform the deferred task on the buffer of data we prepared.
@@ -135,7 +130,12 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
-static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t size = 4) {
+static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, 
+    const size_t window_size = 5) {
+    size_t size = window_size;
+    if (window_size > 127) size = 127;
+    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
+
     int halfWindow = size / 2;
     for (size_t i = 0; i < signal.size(); ++i) {
         std::vector<uint8_t> window;
@@ -167,15 +167,15 @@ void SpectrumCollector::update() {
             // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.2f;// 5.0f;
+            constexpr float mag_scale = 5.3f;// 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
             spectrum.db[i] = std::max(0U, std::min(255U, v));
         }
-        if (smooth_factor > 1){
-            std::array<uint8_t, 256> db_filtered;
-            spectrum_db_filter_median(spectrum.db, db_filtered, smooth_factor);
-            spectrum.db = db_filtered;
-        }
+        
+        // std::array<uint8_t, 256> db_filtered;
+        // spectrum_db_filter_median(spectrum.db, db_filtered, smooth_factor);
+        // spectrum.db = db_filtered;
+        
         fifo.in(spectrum);
     }
 

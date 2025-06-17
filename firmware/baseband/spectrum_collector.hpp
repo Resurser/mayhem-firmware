@@ -38,10 +38,7 @@
 class SpectrumCollector {
    public:
     void on_message(const Message* const message);
-
     void set_decimation_factor(const size_t decimation_factor);
-    void set_smooth_factor(const uint8_t new_smooth_factor);
-
     void feed(
         const buffer_c16_t& channel,
         const int32_t filter_low_frequency,
@@ -49,7 +46,6 @@ class SpectrumCollector {
         const int32_t filter_transition);
 
    private:
-    uint8_t smooth_factor = 0;
     BlockDecimator<complex16_t, 256> channel_spectrum_decimator{1};
     ChannelSpectrum fifo_data[1 << ChannelSpectrumConfigMessage::fifo_k]{};
     ChannelSpectrumFIFO fifo{fifo_data, ChannelSpectrumConfigMessage::fifo_k};

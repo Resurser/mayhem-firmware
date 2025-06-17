@@ -288,77 +288,62 @@ void WaterfallWidget::on_hide() {
 }
 
 uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor) {
-    // Adjust the signal by subtracting the noise floor
     signal = std::max(signal, noiseFloor);
-    // Normalize the adjusted signal
     return static_cast<uint8_t>((signal - min) * 255 / (max - min));
 }
 
 // Apply Savitzky-Golay filter using fixed-point arithmetic
-void WaterfallWidget::applySavitzkyGolay(const std::array<unsigned char, 240> data, std::array<unsigned char, 240> &smoothed) {
-    static const int SG_N = 5; // Number of coefficients
-    static const int coeffs[SG_N] = {-3, 12, 17, 12, -3}; // Coefficients for Savitzky-Golay filter
-    smoothed[0] = data[0];
-    smoothed[1] = data[1];
-
-    smoothed[data.size()-2] = data[data.size()-2];
-    smoothed[data.size()-1] = data[data.size()-1];
+void WaterfallWidget::applySavitzkyGolay7(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
+    static const int coeffs[7] = {-3, 3, 6, 7, 6, 3, -3};
+    uint8_t halfWin = 3;
     
-    for (int i = 2; i < 240 - 2; i++) {
-        int16_t value = (data[i - 2] * coeffs[0] +
-                       data[i - 1] * coeffs[1] +
-                       data[i] * coeffs[2] +
-                       data[i + 1] * coeffs[3] +
-                       data[i + 2] * coeffs[4]) >> 5; // Normalize sum
+    for(uint8_t i = 0; i < halfWin; i++){
+        smoothed[i] = data[i];
+        smoothed[240 - (halfWin + i)] = data[240 - (halfWin + i)];    
+    }
+    for (int i = halfWin; i < 240 - halfWin; i++) {
+        int32_t sum = 0; // Use 32-bit int to prevent overflow
 
-        if (value > 255)
-            value = 255;
-        else if (value < 0)
-            value = 0;
+        for (int j = -halfWin; j <= halfWin; j++) {
+            sum += (int32_t)coeffs[j + halfWin] * data[i + j];
+        }
 
+        uint8_t value = sum >> 5; // Normalize back to fixed-point range
+        // if (value > 255){
+        //     value = 255;
+        // } else if (value < 0){
+        //     value = 0;
+        // }
         smoothed[i] = (uint8_t)value;
     }
 }
 
-// Function to update the dynamic range (min and max values) based on a histogram and percentile
-void WaterfallWidget::updateDynamicRangeWithHistogram(const std::array<uint8_t, 240> signalsIn, uint8_t& min, uint8_t& max, const float percentile) {
-    // Create a histogram for the input signal
-    const uint16_t _buffer_size = 240;
-    std::array<uint8_t, _buffer_size> histogram{};
-    std::array<uint8_t, _buffer_size> cumulativeSum{};
+void WaterfallWidget::applySavitzkyGolay5(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
+    static const int coeffs[5] =  {-3, 12, 17, 12, -3 };
 
-    for (uint8_t value : signalsIn) {
-        histogram[value]++;
+    int halfWin = 2;
+    for(int i = 0; i < halfWin; i++){
+        smoothed[i] = data[i];
+        smoothed[data.size() - (halfWin + i)] = data[data.size() - (halfWin + i)];    
     }
+    for (int i = halfWin; i < 240 - halfWin; i++) {
+        int32_t sum = 0; // Use 32-bit int to prevent overflow
 
-    // Calculate cumulative sums
-    cumulativeSum[0] = histogram[0];
-    for (size_t i = 1; i < _buffer_size; ++i) {
-        cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
-    }
-
-    // Determine min and max based on the desired percentile
-    int totalCount = _buffer_size;
-    int minCount = static_cast<int>(totalCount * percentile);
-    int maxCount = static_cast<int>(totalCount * (1.0f - percentile));
-
-    for (size_t i = 0; i < _buffer_size; ++i) {
-        if (cumulativeSum[i] > minCount) {
-            min = i;
-            break;
+        for (int j = -halfWin; j <= halfWin; j++) {
+            sum += (int32_t)coeffs[j + halfWin] * data[i + j];
         }
-    }
 
-    for (size_t i = _buffer_size-1; i > 0; --i) {
-        if (cumulativeSum[i] < maxCount) {
-            max = i;
-            break;
-        }
+        uint8_t value = sum >> 5; // Normalize back to fixed-point range
+        // if (value > 255){
+        //     value = 255;
+        // } else if (value < 0){
+        //     value = 0;
+        // }
+        smoothed[i] = (uint8_t)value;
     }
 }
 
-
-void WaterfallWidget::clearNoise(std::array<uint8_t, 240>& spectrumData, uint8_t noiseFloor, uint8_t margin) {
+void WaterfallWidget::clearNoise(std::array<uint8_t, 240>& spectrumData, uint8_t noiseFloor, uint8_t margin = 20) {
     for (auto& bin : spectrumData) {
         if (bin < noiseFloor + margin) {
             bin = 0; // Suppress noise
@@ -382,15 +367,13 @@ void WaterfallWidget::applySpatialSmoothing(std::array<uint8_t, 240>& spectrumDa
 uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 240> signalsIn, uint8_t& min, uint8_t& max){
     std::array<uint8_t,240> sortedData = signalsIn;
     std::sort(sortedData.begin(), sortedData.end());
-    // min = sortedData[0];
+    min = sortedData[0];
     max = sortedData[239];
     uint8_t noiseFloor = sortedData[120];
-    min = noiseFloor - 5; // Small margin below noise floor
-    max += 5;  // Small margin above strongest signal
-
+    
     // Ensure minimum range for visualization
-    if ((max - min) < 10) {
-        max = min + 10;
+    if ((max - noiseFloor) < 10) {
+        max = noiseFloor + 10;
     }
 
     // if (max > 255){
@@ -413,54 +396,39 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // uint8_t min = 255;
     // uint8_t min = estimateNoiseFloor(spectrum.db);
     
-    for (size_t i = 0; i < 240; i++) {
-        spectrum_db[i] = spectrum.db[i];
+    for (size_t i = 0; i < 120; i++) {
+        spectrum_db[i]       = spectrum.db[240 - 120 + i];
+        spectrum_db[i + 120] = spectrum.db[i];
     }
-    if (pmem::spectrum_view_type()) {
-        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
-        // delta = 24;
-        float smooth_factor = 0.25f;
-                
+    
+    if (pmem::spectrum_view_type()) { 
         uint8_t min = 255;
         uint8_t max = 0;
-        uint8_t noise_floor = estimateNoiseFloor(spectrum_db_upd, min, max);
-        
+        uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
         // updateDynamicRangeWithHistogram(spectrum_db_upd, min, max, 0.1f);
-        clearNoise(spectrum_db_upd, noise_floor, 5);
+        clearNoise(spectrum_db, noise_floor, 20);        
+        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
         
-        for (size_t i = 0; i < 240; i++) {
-            spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db_upd[i], min, max, noise_floor);
-        }
-
         switch (pmem::spectrum_view_type())
         {
             case 1:
-                spectrum_db_upd[0] = spectrum_db[0]; // Initialize with the first value
-
-                for (size_t i = 1; i < spectrum_db.size(); ++i) {
-                    spectrum_db_upd[i] = static_cast<uint8_t>(
-                        (1.0f - smooth_factor) * spectrum_db_upd[i - 1] 
-                        + 
-                        spectrum_db[i] * smooth_factor
-                    );
-                }
+                applySavitzkyGolay5(spectrum_db, spectrum_db_upd);// Initialize with the first value
+               
                 break;
             
             case 2:
-                // applySpatialSmoothing(spectrum_db, 2);
-
+                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);
                 break;
             
             default:
                 break;
         }
-
-        
     }
     
-    for (size_t i = 0; i < 120; i++) {
-        pixel_row[i]       = gradient.lut[spectrum_db[240 - 120 + i]];
-        pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
+    for (size_t i = 0; i < 240; i++) {
+        pixel_row[i]       = gradient.lut[spectrum_db[i]];
+        //  gradient.lut[spectrum_db[240 - 120 + i]];
+        // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
     }
     
     const auto draw_y = display.scroll(1);

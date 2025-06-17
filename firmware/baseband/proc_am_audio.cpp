@@ -136,9 +136,6 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
         spectrum_zoom = 4;
     }
     channel_spectrum.set_decimation_factor(spectrum_zoom);
-    channel_spectrum.set_smooth_factor(4);
-
-    
     spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
     
     ddc.set_sample_rate(decim_1_output_fs);
