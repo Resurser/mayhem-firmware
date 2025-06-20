@@ -46,7 +46,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
         int32_t current_sample = __SSAT(sample_int, 16) / 128;
-        //  current_sample /= 128;
+        // current_sample /= 128;
 
         // Delay line put
         delay_line[delay_line_index & 0x3F] = current_sample;
@@ -134,7 +134,6 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
                 }
             }
         }
-        
     }
 }
 
@@ -154,9 +153,9 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 //     uint16_t markPhaseInc = calculatePhaseIncrement(markFreq);
 //     uint16_t spacePhaseInc = calculatePhaseIncrement(spaceFreq);
 
-//     for (size_t i = 0; i < bufferSize; ++i) {
-//         decodeRTTYBit(audioBuffer[i], markPhaseInc, spacePhaseInc);
-//     }
+// for (size_t i = 0; i < bufferSize; ++i) {
+//     decodeRTTYBit(audioBuffer[i], markPhaseInc, spacePhaseInc);
+// }
 // }
 
 // void AFSKRxProcessor::decodeRTTYBit(int16_t sample, uint16_t markPhaseInc, uint16_t spacePhaseInc) {
@@ -164,133 +163,132 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
 //     markPhase = (markPhase + markPhaseInc) % PHASE_RESOLUTION;
 //     spacePhase = (spacePhase + spacePhaseInc) % PHASE_RESOLUTION;
 
-//     // Instead of indexing the huge table, we reduce the phase by shifting:
-//     // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
-//     uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
-//     uint16_t spaceIndex = spacePhase >> 8;
+// // Instead of indexing the huge table, we reduce the phase by shifting:
+// // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
+// uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
+// uint16_t spaceIndex = spacePhase >> 8;
 
-//     // Accumulate the contributions for the current sample.
-//     // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
-//     accumulatedMark += (sample * sinTable[markIndex]) / SCALE;
-//     accumulatedSpace += (sample * sinTable[spaceIndex]) / SCALE;
+// // Accumulate the contributions for the current sample.
+// // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
+// accumulatedMark += (sample * sinTable[markIndex]) / SCALE;
+// accumulatedSpace += (sample * sinTable[spaceIndex]) / SCALE;
 
-//     // Once enough samples that constitute one bit are accumulated, decide on the bit.
-//     if (++sampleCount >= SAMPLES_PER_BIT) {
-//         bool bit = (accumulatedMark > accumulatedSpace);  // If MARK accumulator > SPACE, bit is 1.
+// // Once enough samples that constitute one bit are accumulated, decide on the bit.
+// if (++sampleCount >= SAMPLES_PER_BIT) {
+//     bool bit = (accumulatedMark > accumulatedSpace);  // If MARK accumulator > SPACE, bit is 1.
 
-//         // First, synchronize using the start bit. The convention here is that the start bit is SPACE (0).
-//         if (!isStartBit) {
-//             if (!bit) {  // Received start bit (0) as expected.
-//                 isStartBit = true;
-//                 resetAccumulators();
-//             }
-//             return;  // Do not process further until we've synchronized.
-//         }
-
-//         // Shift the detected bit into the current character buffer.
-//         // We build the character from its 5 Baudot data bits.
-//         currentChar >>= 1;  // Shift right to make room for the new bit.
-//         if (bit) {
-//             currentChar |= 0x10;  // Set the top bit (bit 4) if MARK (1) is detected.
-//         }
-
-//         // When 5 data bits are accumulated, proceed to process the stop bits.
-//         if (++bitCount == 5) {
-//             stopBitCount = 0;  // Prepare to validate the stop bits.
-//             resetAccumulators();
-//             return;
-//         }
-
-//         // Now, during stop bit processing, validate that we see a valid stop bit (ideally SPACE or MARK depending on protocol).
-//         // For 1.5 stop bits, we require SAMPLES_STOP_BITS samples.
-//         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
-//             // For simplicity, assume the stop bit is valid if we reach here.
-            
-
-//             // Refresh the display with the decoded text.
-//             gui_clear();
-//             gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
-
-//             // Reset state to decode the next character.
-//             currentChar = 0;
-//             bitCount = 0;
-//             isStartBit = false;  // Await the next start bit.
-//         }
-
-//         // Reset accumulators for the next bit period.
+// // First, synchronize using the start bit. The convention here is that the start bit is SPACE (0).
+// if (!isStartBit) {
+//     if (!bit) {  // Received start bit (0) as expected.
+//         isStartBit = true;
 //         resetAccumulators();
 //     }
+//     return;  // Do not process further until we've synchronized.
+// }
+
+// // Shift the detected bit into the current character buffer.
+// // We build the character from its 5 Baudot data bits.
+// currentChar >>= 1;  // Shift right to make room for the new bit.
+// if (bit) {
+//     currentChar |= 0x10;  // Set the top bit (bit 4) if MARK (1) is detected.
+// }
+
+// // When 5 data bits are accumulated, proceed to process the stop bits.
+// if (++bitCount == 5) {
+//     stopBitCount = 0;  // Prepare to validate the stop bits.
+//     resetAccumulators();
+//     return;
+// }
+
+// // Now, during stop bit processing, validate that we see a valid stop bit (ideally SPACE or MARK depending on protocol).
+// // For 1.5 stop bits, we require SAMPLES_STOP_BITS samples.
+// if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
+//     // For simplicity, assume the stop bit is valid if we reach here.
+
+// // Refresh the display with the decoded text.
+// gui_clear();
+// gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
+
+// // Reset state to decode the next character.
+// currentChar = 0;
+// bitCount = 0;
+// isStartBit = false;  // Await the next start bit.
+// }
+
+// // Reset accumulators for the next bit period.
+// resetAccumulators();
+// }
 // }
 // decodeRTTYBit(int16_t sample, uint16_t markPhaseInc, uint16_t spacePhaseInc) {
-//     // Update phases for MARK and SPACE; keep within 0..PHASE_RESOLUTION-1
-//     markPhase = (markPhase + markPhaseInc) % PHASE_RESOLUTION;
-//     spacePhase = (spacePhase + spacePhaseInc) % PHASE_RESOLUTION;
+// // Update phases for MARK and SPACE; keep within 0..PHASE_RESOLUTION-1
+// markPhase = (markPhase + markPhaseInc) % PHASE_RESOLUTION;
+// spacePhase = (spacePhase + spacePhaseInc) % PHASE_RESOLUTION;
 
-//     // Instead of indexing the huge table, we reduce the phase by shifting:
-//     // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
-//     uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
-//     uint16_t spaceIndex = spacePhase >> 8;
+// // Instead of indexing the huge table, we reduce the phase by shifting:
+// // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
+// uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
+// uint16_t spaceIndex = spacePhase >> 8;
 
-//     // Accumulate the contributions for the current sample.
-//     // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
-//     accumulatedMark += (sample * sinTable[markIndex]) / SCALE;
-//     accumulatedSpace += (sample * sinTable[spaceIndex]) / SCALE;
+// // Accumulate the contributions for the current sample.
+// // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
+// accumulatedMark += (sample * sinTable[markIndex]) / SCALE;
+// accumulatedSpace += (sample * sinTable[spaceIndex]) / SCALE;
 
-//     // Once enough samples that constitute one bit are accumulated, decide on the bit.
-//     if (++sampleCount >= SAMPLES_PER_BIT) {
-//         bool bit = (accumulatedMark > accumulatedSpace);  // If MARK accumulator > SPACE, bit is 1.
+// // Once enough samples that constitute one bit are accumulated, decide on the bit.
+// if (++sampleCount >= SAMPLES_PER_BIT) {
+//     bool bit = (accumulatedMark > accumulatedSpace);  // If MARK accumulator > SPACE, bit is 1.
 
-//         // First, synchronize using the start bit. The convention here is that the start bit is SPACE (0).
-//         if (!isStartBit) {
-//             if (!bit) {  // Received start bit (0) as expected.
-//                 isStartBit = true;
-//                 resetAccumulators();
-//             }
-//             return;  // Do not process further until we've synchronized.
-//         }
-
-//         // Shift the detected bit into the current character buffer.
-//         // We build the character from its 5 Baudot data bits.
-//         currentChar >>= 1;  // Shift right to make room for the new bit.
-//         if (bit) {
-//             currentChar |= 0x10;  // Set the top bit (bit 4) if MARK (1) is detected.
-//         }
-
-//         // When 5 data bits are accumulated, proceed to process the stop bits.
-//         if (++bitCount == 5) {
-//             stopBitCount = 0;  // Prepare to validate the stop bits.
-//             resetAccumulators();
-//             return;
-//         }
-
-//         // Now, during stop bit processing, validate that we see a valid stop bit (ideally SPACE or MARK depending on protocol).
-//         // For 1.5 stop bits, we require SAMPLES_STOP_BITS samples.
-//         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
-//             // For simplicity, assume the stop bit is valid if we reach here.
-//             char decodedChar = decodeBaudot(currentChar);
-//             if (decodedChar != '\0') {
-//                 decodedMessage += decodedChar;
-//             }
-
-//             // Refresh the display with the decoded text.
-//             // gui_clear();
-//             //gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
-
-//             // Reset state to decode the next character.
-//             currentChar = 0;
-//             bitCount = 0;
-//             isStartBit = false;  // Await the next start bit.
-//         }
-
-//         // Reset accumulators for the next bit period.
+// // First, synchronize using the start bit. The convention here is that the start bit is SPACE (0).
+// if (!isStartBit) {
+//     if (!bit) {  // Received start bit (0) as expected.
+//         isStartBit = true;
 //         resetAccumulators();
 //     }
+//     return;  // Do not process further until we've synchronized.
+// }
+
+// // Shift the detected bit into the current character buffer.
+// // We build the character from its 5 Baudot data bits.
+// currentChar >>= 1;  // Shift right to make room for the new bit.
+// if (bit) {
+//     currentChar |= 0x10;  // Set the top bit (bit 4) if MARK (1) is detected.
+// }
+
+// // When 5 data bits are accumulated, proceed to process the stop bits.
+// if (++bitCount == 5) {
+//     stopBitCount = 0;  // Prepare to validate the stop bits.
+//     resetAccumulators();
+//     return;
+// }
+
+// // Now, during stop bit processing, validate that we see a valid stop bit (ideally SPACE or MARK depending on protocol).
+// // For 1.5 stop bits, we require SAMPLES_STOP_BITS samples.
+// if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
+//     // For simplicity, assume the stop bit is valid if we reach here.
+//     char decodedChar = decodeBaudot(currentChar);
+//     if (decodedChar != '\0') {
+//         decodedMessage += decodedChar;
+//     }
+
+// // Refresh the display with the decoded text.
+// // gui_clear();
+// //gui_draw_text(10, 10, decodedMessage.c_str(), GUI_COLOR_WHITE, GUI_COLOR_BLACK);
+
+// // Reset state to decode the next character.
+// currentChar = 0;
+// bitCount = 0;
+// isStartBit = false;  // Await the next start bit.
+// }
+
+// // Reset accumulators for the next bit period.
+// resetAccumulators();
+// }
 // }
 
 void AFSKRxProcessor::on_message(const Message* const message) {
     if (message->id == Message::ID::AFSKRxConfigure)
         configure(*reinterpret_cast<const AFSKRxConfigureMessage*>(message));
-        // initSinTable();
+    // initSinTable();
 }
 
 void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {

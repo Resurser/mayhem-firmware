@@ -55,19 +55,19 @@ AMOptionsView::AMOptionsView(
     // restore zoom selection
     freqman_set_bandwidth_option(AM_MODULATION, options_config);  // adding the common message from freqman.cpp to the options_config
     options_config.set_by_value(receiver_model.am_configuration());
-    
+
     zoom_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_spectrum_zoom(n);
         view->set_zoom_factor(AM_MODULATION, n);
         view->set_previous_zoom_option(n);
     };
-    
+
     options_config.on_change = [this, view](size_t, OptionsField::value_t n) {
         receiver_model.set_am_configuration(n);
     };
-    
+
     receiver_model.set_spectrum_zoom(view->get_zoom_factor(AM_MODULATION));
-    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));    
+    zoom_config.set_by_value(view->get_zoom_factor(AM_MODULATION));
 }
 
 /* NBFMOptionsView *******************************************************/
@@ -83,7 +83,7 @@ NBFMOptionsView::NBFMOptionsView(
                   &text_squelch,
                   &field_squelch});
 
-    freqman_set_bandwidth_option(NFM_MODULATION, options_config); // adding the common message from freqman.cpp to the options_config
+    freqman_set_bandwidth_option(NFM_MODULATION, options_config);  // adding the common message from freqman.cpp to the options_config
     options_config.set_by_value(receiver_model.nbfm_configuration());
     options_config.on_change = [this](size_t, OptionsField::value_t n) {
         receiver_model.set_nbfm_configuration(n);
@@ -219,29 +219,28 @@ AnalogAudioView::AnalogAudioView(
                   &field_volume,
                   &text_ctcss,
                   &record_view,
-                  &waterfall}
-                );
+                  &waterfall});
     // Filename Datetime and Frequency
     record_view.set_filename_date_frequency(true);
 
     field_frequency.on_show_options = [this]() {
         this->on_show_options_frequency();
     };
-	field_frequency.on_change = [this](rf::Frequency f) {
-		//this->on_tuning_frequency_changed(f);
-		this->on_field_frequency_changed(f);
-	};
-	field_frequency.on_edit = [this, &nav]() {
-		 //TODO: Provide separate modal method/scheme?
+    field_frequency.on_change = [this](rf::Frequency f) {
+        // this->on_tuning_frequency_changed(f);
+        this->on_field_frequency_changed(f);
+    };
+    field_frequency.on_edit = [this, &nav]() {
+        // TODO: Provide separate modal method/scheme?
         auto new_view = nav.push<FrequencyKeypadView>(receiver_model.target_frequency());
-		new_view->on_changed = [this](rf::Frequency f) {
-			this->current_freq = f;
+        new_view->on_changed = [this](rf::Frequency f) {
+            this->current_freq = f;
             this->center_freq = f;
             this->update_ddc(0);
             receiver_model.set_target_frequency(center_freq);
-			this->field_frequency.set_value(f);
-		};
-	};
+            this->field_frequency.set_value(f);
+        };
+    };
 
     field_lna.on_show_options = [this]() {
         this->on_show_options_rf_gain();
@@ -271,10 +270,10 @@ AnalogAudioView::AnalogAudioView(
     };
 
     audio::output::start();
-    
+
     current_freq = receiver_model.target_frequency();
-	center_freq = current_freq;
-    
+    center_freq = current_freq;
+
     // This call starts the correct baseband image to run
     // and sets the radio up as necessary for the given modulation.
     on_modulation_changed(modulation);
@@ -378,7 +377,7 @@ void AnalogAudioView::on_baseband_bandwidth_changed(uint32_t bandwidth_hz) {
 
 void AnalogAudioView::on_modulation_changed(ReceiverModel::Mode modulation) {
     // This app doesn't know what to do with "Capture" mode.
-     if (modulation == ReceiverModel::Mode::Capture) {
+    if (modulation == ReceiverModel::Mode::Capture) {
         if (modulation > previous_modulation)
             modulation = ReceiverModel::Mode::SpectrumAnalysis;
         else
@@ -414,40 +413,40 @@ void AnalogAudioView::set_options_widget(std::unique_ptr<Widget> new_widget) {
 }
 
 void AnalogAudioView::update_ddc(int32_t f) {
-	DDCConfigMessage packet_message { f };
-	shared_memory.application_queue.push(packet_message);
+    DDCConfigMessage packet_message{f};
+    shared_memory.application_queue.push(packet_message);
 
-	baseband::set_ddc_freq(f);
+    baseband::set_ddc_freq(f);
 }
 
 void AnalogAudioView::on_field_frequency_changed(rf::Frequency f) {
-	if (!ddc_enable) {
-		current_freq = f;
+    if (!ddc_enable) {
+        current_freq = f;
         center_freq = f;
 
         update_ddc(0);
         receiver_model.set_target_frequency(center_freq);
-		return;
-	}
+        return;
+    }
 
-	current_freq = f;
-	static const int32_t limit = 40000;
+    current_freq = f;
+    static const int32_t limit = 40000;
 
-	int32_t ddc_freq = f - center_freq;
+    int32_t ddc_freq = f - center_freq;
 
-	if (ddc_freq < -limit) {
-		center_freq = center_freq + ddc_freq + limit;
-		receiver_model.set_target_frequency(center_freq);
+    if (ddc_freq < -limit) {
+        center_freq = center_freq + ddc_freq + limit;
+        receiver_model.set_target_frequency(center_freq);
 
-		ddc_freq = -limit;
-	} else if (ddc_freq > limit) {
-		center_freq = center_freq + ddc_freq - limit;
-		receiver_model.set_target_frequency(center_freq);
+        ddc_freq = -limit;
+    } else if (ddc_freq > limit) {
+        center_freq = center_freq + ddc_freq - limit;
+        receiver_model.set_target_frequency(center_freq);
 
-		ddc_freq = limit;
-	}
+        ddc_freq = limit;
+    }
 
-	update_ddc(ddc_freq);
+    update_ddc(ddc_freq);
 }
 
 void AnalogAudioView::on_show_options_frequency() {
@@ -523,7 +522,7 @@ void AnalogAudioView::on_show_options_modulation() {
             chDbgPanic("Unhandled Mode");
             break;
     }
-    
+
     set_options_widget(std::move(widget));
     options_modulation.set_style(Theme::getInstance()->option_active);
 }
@@ -605,9 +604,9 @@ void AnalogAudioView::update_modulation(ReceiverModel::Mode modulation) {
     }
 
     record_view.set_sampling_rate(sampling_rate);
-    center_freq = current_freq;	
-	receiver_model.set_target_frequency(center_freq);
-	update_ddc(0);
+    center_freq = current_freq;
+    receiver_model.set_target_frequency(center_freq);
+    update_ddc(0);
 
     if (!is_wideband_spectrum_mode) {
         audio::output::unmute();

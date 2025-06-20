@@ -22,14 +22,15 @@
 #include "utility.hpp"
 
 #include <cstdint>
-#define M_PI		3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #ifndef I
-    #define I _Complex_I
+#define I _Complex_I
 #endif
 
 template <typename T>
 constexpr T clamp(const T& value, const T& min, const T& max) {
-    return (value < min) ? min : (value > max) ? max : value;
+    return (value < min) ? min : (value > max) ? max
+                                               : value;
 }
 
 std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length) {
@@ -44,7 +45,7 @@ std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length)
         if (word_length < 7) {
             corrector = 0x20;
         }
-        text.push_back(static_cast<char>(value + corrector)); // Додаємо 0x20 для перетворення в читабельний текст
+        text.push_back(static_cast<char>(value + corrector));  // Додаємо 0x20 для перетворення в читабельний текст
     }
     return text;
 }

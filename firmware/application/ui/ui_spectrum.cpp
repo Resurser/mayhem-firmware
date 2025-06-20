@@ -104,10 +104,10 @@ void FrequencyScale::set_channel_filter(
 }
 
 void FrequencyScale::set_ddc_freq(const int freq) {
-	if (ddc_freq != freq) {
-		ddc_freq = freq;
-		set_dirty();
-	}
+    if (ddc_freq != freq) {
+        ddc_freq = freq;
+        set_dirty();
+    }
 }
 
 void FrequencyScale::set_cursor_position(const int32_t position) {
@@ -131,7 +131,7 @@ void FrequencyScale::paint(Painter& painter) {
 
     draw_filter_ranges(painter, r);
     draw_frequency_ticks(painter, r);
-    if (abs(cursor_position) > 2 ) {
+    if (abs(cursor_position) > 2) {
         const Rect r_cursor{
             118 + cursor_position, r.bottom() - filter_band_height,
             5, filter_band_height};
@@ -153,13 +153,12 @@ void FrequencyScale::clear_background(Painter& painter, const Rect r) {
 void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
     const auto x_center = r.width() / 2;
 
-    //const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
-    const Rect tick {
-		r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate, 
-		r.bottom() - filter_band_height * 2,
-		1, 
-		filter_band_height * 2 
-	};
+    // const Rect tick{r.left() + x_center, r.top(), 1, r.height()};
+    const Rect tick{
+        r.left() + x_center + ddc_freq * spectrum_bins / spectrum_sampling_rate,
+        r.bottom() - filter_band_height * 2,
+        1,
+        filter_band_height * 2};
     painter.fill_rectangle(tick, Theme::getInstance()->bg_darkest->foreground);
 
     constexpr int tick_count_max = 4;
@@ -180,8 +179,9 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const std::string zero_pad =
             ((magnitude_n % 3) == 0) ? "" : ((magnitude_n % 3) == 1) ? "0"
                                                                      : "00";
-        const std::string unit = 
-            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k" : "";
+        const std::string unit =
+            (magnitude_n >= 6) ? "M" : (magnitude_n >= 3) ? "k"
+                                                          : "";
 
         const std::string label = to_string_dec_uint(tick_offset) + zero_pad + unit;
         const auto label_width = style().font.size_of(label).width();
@@ -202,7 +202,7 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
 
 void FrequencyScale::draw_filter_ranges(Painter& painter, const Rect r) {
     if (channel_filter_low_frequency != channel_filter_high_frequency) {
-        //const auto x_center = r.width() / 2;
+        // const auto x_center = r.width() / 2;
         const auto x_center = r.width() / 2 + ddc_freq * spectrum_bins / spectrum_sampling_rate;
 
         const auto x_low = x_center + channel_filter_low_frequency * spectrum_bins / spectrum_sampling_rate;
@@ -287,146 +287,78 @@ void WaterfallWidget::on_hide() {
     display.scroll_disable();
 }
 
-uint8_t WaterfallWidget::linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor) {
-    signal = std::max(signal, noiseFloor);
-    return static_cast<uint8_t>((signal - min) * 255 / (max - min));
-}
-
 // Apply Savitzky-Golay filter using fixed-point arithmetic
-void WaterfallWidget::applySavitzkyGolay7(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
-    static const int coeffs[7] = {-3, 3, 6, 7, 6, 3, -3};
-    uint8_t halfWin = 3;
+void WaterfallWidget::applySavitzkyGolay(const std::array<unsigned char, 240> spectrum_db_in,
+                                         std::array<unsigned char, 240>& spectrum_db_out) {
+    static const int SG_N = 5;  // Number of coefficients
+    static const int coeffs[SG_N] = {-3, 12, 17, 12, -3};  // Coefficients for Savitzky-Golay filter
+    size_t size = spectrum_db_in.size();
+    spectrum_db_out[0] = spectrum_db_in[0];
+    spectrum_db_out[1] = spectrum_db_in[1];
+    spectrum_db_out[size - 2] = spectrum_db_in[size - 2];
+    spectrum_db_out[size - 1] = spectrum_db_in[size - 1];
 
-    for(uint8_t i = 0; i < halfWin; i++){
-        smoothed[i] = data[i];
-        smoothed[240 - (halfWin + i)] = data[240 - (halfWin + i)];    
-    }
-    for (int i = halfWin; i < 240 - halfWin; i++) {
-        int32_t sum = 0; // Use 32-bit int to prevent overflow
+    for (size_t i = 2; i < size - 2; i++) {
+        int32_t value = (spectrum_db_in[i - 2] * coeffs[0] +
+                         spectrum_db_in[i - 1] * coeffs[1] +
+                         spectrum_db_in[i] * coeffs[2] +
+                         spectrum_db_in[i + 1] * coeffs[3] +
+                         spectrum_db_in[i + 2] * coeffs[4]) >> 5;  // Normalize sum
 
-        for (int j = -halfWin; j <= halfWin; j++) {
-            sum += (int32_t)coeffs[j + halfWin] * data[i + j];
-        }
-
-        uint8_t value = sum >> 5; // Normalize back to fixed-point range
-        // if (value > 255){
-        //     value = 255;
-        // } else if (value < 0){
-        //     value = 0;
-        // }
-        smoothed[i] = (uint8_t)value;
-    }
-}
-
-void WaterfallWidget::applySavitzkyGolay5(const std::array<uint8_t, 240> data, std::array<uint8_t, 240> &smoothed) {
-    static const int coeffs[5] =  {-3, 12, 16, 12, -3 };
-
-    int halfWin = 2;
-    for(int i = 0; i < halfWin; i++){
-        smoothed[i] = data[i];
-        smoothed[240 - (halfWin + i)] = data[240 - (halfWin + i)];    
-    }
-    for (int i = halfWin; i < 240 - halfWin; i++) {
-        int32_t sum = 0; // Use 32-bit int to prevent overflow
-
-        for (int j = -halfWin; j <= halfWin; j++) {
-            sum += (int32_t)coeffs[j + halfWin] * data[i + j];
-        }
-
-        uint8_t value = sum >> 5; // Normalize back to fixed-point range
-        if (value > 255){
+        if (value > 255)
             value = 255;
-        } else if (value < 0){
+        else if (value < 0)
             value = 0;
-        }
-        smoothed[i] = (uint8_t)value;
-    }
-}
 
-void WaterfallWidget::clearNoise(std::array<uint8_t, 240>& spectrumData, uint8_t noiseFloor, uint8_t margin = 20) {
-    for (auto& bin : spectrumData) {
-        if (bin < noiseFloor + margin) {
-            bin = 0; // Suppress noise
-        }
+        spectrum_db_out[i] = (uint8_t)value;
     }
-}
-
-void WaterfallWidget::applySpatialSmoothing(std::array<uint8_t, 240>& spectrumData, uint8_t filterRadius) {
-    std::array<uint8_t, 240> tempData = spectrumData;
-    for (size_t i = 0; i < spectrumData.size(); ++i) {
-        int sum = 0, count = 0;
-        for (int j = -filterRadius; j <= filterRadius; ++j) {
-            size_t idx = std::min(std::max(static_cast<int>(i) + j, 0), static_cast<int>(tempData.size() - 1));
-            sum += tempData[idx];
-            count++;
-        }
-        spectrumData[i] = sum / count;
-    }
-}
-
-uint8_t WaterfallWidget::estimateNoiseFloor(const std::array<uint8_t, 240> signalsIn, uint8_t& min, uint8_t& max){
-    std::array<uint8_t,240> sortedData = signalsIn;
-    std::sort(sortedData.begin(), sortedData.end());
-    min = sortedData[0];
-    max = sortedData[239];
-    uint8_t noiseFloor = sortedData[120];
-    
-    // Ensure minimum range for visualization
-    if ((max - min) < 22) {
-        max = min + 22;
-    }
-        
-    return noiseFloor; // Median value
 }
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;
     std::array<uint8_t, 240> spectrum_db;
-    // std::array<uint8_t, 256> adjustedSpectrum2{};
-    // const std::array<ui::Color, 256> spectrum_color = (pmem::spectrum_color_id() ? spectrum_inferno_lut : spectrum_rgb3_lut);
-    // uint8_t max = 255;
-    // uint8_t min = 255;
-    // uint8_t min = estimateNoiseFloor(spectrum.db);
-    
+
     for (size_t i = 0; i < 120; i++) {
-        spectrum_db[i]       = spectrum.db[256 - 120 + i];
+        spectrum_db[i] = spectrum.db[256 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
-    uint8_t min = 255;
-    uint8_t max = 0;
-    uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-        
+
     if (pmem::spectrum_view_type()) {
-        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
-                
+        // std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
+        // uint8_t min = 255;
+        // uint8_t max = 0;
+        // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
+
         switch (pmem::spectrum_view_type()) {
+            case 0:
+                // clearNoise(spectrum_db, noise_floor, 15);
+                break;
             case 1:
-                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);  // Initialize with the first value
-                spectrum_db = spectrum_db_upd;
+                // for (size_t i = 0; i < 240; i++) {
+                // spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db_upd[i], min, max, noise_floor);
+                // }
                 break;
             case 2:
-                applySavitzkyGolay7(spectrum_db, spectrum_db_upd);  // Initialize with the first value
-                spectrum_db = spectrum_db_upd;
+                // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
+                // clearNoise(spectrum_db_upd, noise_floor, 15);
+                // spectrum_db = spectrum_db_upd;
                 break;
             case 3:
-                // noise_floor = min + ((max - min) / 3);
-                clearNoise(spectrum_db, noise_floor, 30);
-
-                for (size_t i = 0; i < 240; i++) {
-                    spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db_upd[i], min, max, noise_floor);
-                }
+                // clearNoise(spectrum_db, noise_floor, 15);
+                // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
                 break;
             default:
                 break;
         }
+        // spectrum_db = spectrum_db_upd;
     }
 
     for (size_t i = 0; i < 240; i++) {
-        pixel_row[i]       = gradient.lut[spectrum_db[i]];
-        //  gradient.lut[spectrum_db[240 - 120 + i]];
+        pixel_row[i] = gradient.lut[spectrum_db[i]];
+        // gradient.lut[spectrum_db[240 - 120 + i]];
         // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
     }
-    
+
     const auto draw_y = display.scroll(1);
 
     display.draw_pixels(
@@ -440,6 +372,7 @@ bool WaterfallWidget::on_touch(const TouchEvent event) {
             on_touch_select(event.point.x(), event.point.y());
         }
     }
+
     return true;
 }
 
@@ -454,7 +387,7 @@ void WaterfallWidget::clear() {
 WaterfallView::WaterfallView(const bool cursor) {
     add_children({&waterfall_widget,
                   &frequency_scale});
-    
+
     frequency_scale.set_focusable(cursor);
     // Making the event climb up all the way up to here kinda sucks
     frequency_scale.on_select = [this](int32_t offset) {

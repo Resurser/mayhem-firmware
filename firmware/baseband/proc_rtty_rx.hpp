@@ -36,12 +36,11 @@
 #include "sine_table_int8.hpp"
 #include "message.hpp"
 
-
 // -------------------- Configuration Constants --------------------
-#define SCALE 32768                       // Fixed-point scale factor (Q15)
-#define TABLE_SIZE 256                    // Reduced sine table size
-#define PHASE_MASK (TABLE_SIZE - 1)       // Mask to wrap phase index
-#define SAMPLE_RATE 12000                 // Audio sample rate in Hz
+#define SCALE 32768                  // Fixed-point scale factor (Q15)
+#define TABLE_SIZE 256               // Reduced sine table size
+#define PHASE_MASK (TABLE_SIZE - 1)  // Mask to wrap phase index
+#define SAMPLE_RATE 12000            // Audio sample rate in Hz
 #define DEFAULT_MARK_FREQ 1275
 #define DEFAULT_SPACE_FREQ 1725
 #define DEFAULT_BAUD_RATE 50                               // RTTY baud rate (bits per second)
@@ -59,7 +58,6 @@ class RTTYRxProcessor : public BasebandProcessor {
     static constexpr size_t baseband_fs = 3072000;
     static constexpr size_t audio_fs = baseband_fs / 8 / 8 / 4;
 
-
     std::array<complex16_t, 512> dst{};
     const buffer_c16_t dst_buffer{
         dst.data(),
@@ -68,10 +66,9 @@ class RTTYRxProcessor : public BasebandProcessor {
     std::array<float, 32> audio{};
     const buffer_f32_t audio_buffer{
         audio.data(),
-        audio.size()
-    };
-    
-    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
+        audio.size()};
+
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
@@ -81,27 +78,27 @@ class RTTYRxProcessor : public BasebandProcessor {
     AudioOutput audio_output{};
 
     // -------------------- Динамічні параметри --------------------
-    uint16_t baudRate       = DEFAULT_BAUD_RATE;
-    uint32_t markPhaseInc   = 0;
-    uint32_t spacePhaseInc  = 0;
-    uint16_t markFreq       = DEFAULT_MARK_FREQ;
-    uint16_t spaceFreq      = DEFAULT_SPACE_FREQ;
+    uint16_t baudRate = DEFAULT_BAUD_RATE;
+    uint32_t markPhaseInc = 0;
+    uint32_t spacePhaseInc = 0;
+    uint16_t markFreq = DEFAULT_MARK_FREQ;
+    uint16_t spaceFreq = DEFAULT_SPACE_FREQ;
     bool reverseBits = false;  // Чи потрібно перевертати біти
     bool reverseFreq = false;  // Чи потрібно міняти місцями маркерну і просторову частоту
 
     uint32_t markPhase = 0, spacePhase = 0;             // Fixed-point phases for MARK and SPACE tones
     int32_t accumulatedMark = 0, accumulatedSpace = 0;  // Accumulators for signal strength
 
-    uint8_t currentChar = 0;                 // Character under construction (5-bit Baudot + stop bits)
+    uint8_t currentChar = 0;  // Character under construction (5-bit Baudot + stop bits)
 
-    int bitCount = 0;                        // Bits processed for the current character
-    size_t sampleCount = 0;                  // Samples processed for the current bit
-    size_t stopBitCount = 0;                 // Counter for stop bit samples
-    bool isStartBit = false;                 // Start bit synchronization flag
+    int bitCount = 0;         // Bits processed for the current character
+    size_t sampleCount = 0;   // Samples processed for the current bit
+    size_t stopBitCount = 0;  // Counter for stop bit samples
+    bool isStartBit = false;  // Start bit synchronization flag
 
     bool configured{false};
     bool bit_value{};
-    
+
     RTTYRxDataMessage data_message{false, 0};
     RTTYRxLogMessage log_message{};
     RSSIThread rssi_thread{};
@@ -109,11 +106,10 @@ class RTTYRxProcessor : public BasebandProcessor {
     int32_t fastSin(uint32_t phase);
     void resetAccumulators();
     void decodeRTTYBit(int32_t sample);
-    
+
     uint8_t reverseBitsFunction(uint8_t val);
     void configure(const RTTYRxConfigureMessage& message);
     void capture_config(const CaptureConfigMessage& message);
-
 
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};

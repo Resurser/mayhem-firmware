@@ -21,9 +21,23 @@
 
 #define CORDIC_TAB 16
 
-static int32_t cordic_tab [CORDIC_TAB] = {
-	12867, 7596, 4013, 2037, 1022, 511, 255, 
-	127, 63, 31, 15, 7, 3, 1, 0, 0, 
+static int32_t cordic_tab[CORDIC_TAB] = {
+    12867,
+    7596,
+    4013,
+    2037,
+    1022,
+    511,
+    255,
+    127,
+    63,
+    31,
+    15,
+    7,
+    3,
+    1,
+    0,
+    0,
 };
 
-#define CORDIC_SCALE	16384.0
+#define CORDIC_SCALE 16384.0

@@ -36,7 +36,7 @@ using namespace modems;
 using namespace ui;
 
 namespace ui::external_app::afsk_rx {
-    
+
 const char letters_table[32] = {
     '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
     'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '\a', 'M', 'X', 'V', '\b'};
@@ -126,15 +126,14 @@ void AFSKRxView::on_data(uint32_t value, bool is_data) {
         if (value < 32) {
             // Повний цикл
             char decoded_char = decode_baudot(value, &shift_state);
-            
-            if (decoded_char == '\a') {         // Перемикання режимів
+
+            if (decoded_char == '\a') {  // Перемикання режимів
                 shift_state = FIGURES;
             } else if (decoded_char == '\b') {  // Перемикання режимів
                 shift_state = LETTERS;
-            } else if(decoded_char == '\0' && (prev_value == decoded_char)) {
-                
-            } else{
-                str_console += (char)decoded_char;  // Printable                                   
+            } else if (decoded_char == '\0' && (prev_value == decoded_char)) {
+            } else {
+                str_console += (char)decoded_char;  // Printable
                 // str_byte   += (char)value;
             }
         } else {

@@ -38,8 +38,6 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-
-
 void RTTYLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
@@ -68,7 +66,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     // Auto-configure modem for LCR RX (TODO remove)
     field_frequency.set_value(settings_.raw().rx_frequency);
-   
+
     // auto receiver_modem = &modem_defs[5];
     // persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
     // serial_format_t serial_format;
@@ -81,7 +79,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // serial_format.parity = NONE;
     // serial_format.stop_bits = 1;
     // serial_format.bit_order = MSB_FIRST;
-    
+
     // persistent_memory::set_serial_format(serial_format);
 
     field_frequency.set_step(1000);
@@ -98,7 +96,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     options_shift.on_change = [this](size_t index, int32_t v) {
         shift_index = (uint8_t)index;
         (void)v;
-        
+
         uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
         // text_debug.set("--options_shift " + to_string_dec_int(val));
         baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
@@ -112,7 +110,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
         // text_debug.set("--options_shift " + to_string_dec_int(val));
         baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
-                           
+
         // on_settings_changed();
     };
 
@@ -125,12 +123,11 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // Auto-configure modem for LCR RX (will be removed later)
     // baseband::set_rtty(50, 5, receiver_modem->mark_freq, receiver_modem->space_freq, false, false);
     // baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
-    
+
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
     receiver_model.enable();
     // console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
-    
 }
 
 // void RTTYRxView::apply_config(){
@@ -138,66 +135,64 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 //     receiver_model.disable();
 //     baseband::shutdown();
 
-//     baseband::run_image(portapack::spi_flash::image_tag_capture);
-//     receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
+// baseband::run_image(portapack::spi_flash::image_tag_capture);
+// receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
 
-//     baseband::set_sample_rate(, get_oversample_rate(DETECTOR_BW));
-//     // The radio needs to know the effective sampling rate.
-//     auto actual_sampling_rate = get_actual_sample_rate(DETECTOR_BW);
-//     receiver_model.set_sampling_rate(actual_sampling_rate);
-//     receiver_model.set_baseband_bandwidth(filter_bandwidth_for_sampling_rate(actual_sampling_rate));
+// baseband::set_sample_rate(, get_oversample_rate(DETECTOR_BW));
+// // The radio needs to know the effective sampling rate.
+// auto actual_sampling_rate = get_actual_sample_rate(DETECTOR_BW);
+// receiver_model.set_sampling_rate(actual_sampling_rate);
+// receiver_model.set_baseband_bandwidth(filter_bandwidth_for_sampling_rate(actual_sampling_rate));
 
-//     audio::set_rate(audio::Rate::Hz_12000);
-//     audio::output::start();
-//     receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
+// audio::set_rate(audio::Rate::Hz_12000);
+// audio::output::start();
+// receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
 
-//     receiver_model.enable();
+// receiver_model.enable();
 
 // }
 char RTTYRxView::BaudottoChar(const uint32_t data) {
     int out = 0;
     const char letters[32] = {
-        '\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
-        '\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
-        'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
-        'O',	'B',	'G',	' ',	'M',	'X',	'V',	' '
-    };
+        '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U',
+        '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
+        'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q',
+        'O', 'B', 'G', ' ', 'M', 'X', 'V', ' '};
     const char figures[32] = {
-        '\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
-        '\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
-        '5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
-        '9',	'?',	'&',	' ',	'.',	'/',	';',	' '
-    };
+        '\0', '3', '\n', '-', ' ', '\a', '8', '7',
+        '\r', '$', '4', '\'', ',', '!', ':', '(',
+        '5', '"', ')', '2', '#', '6', '0', '1',
+        '9', '?', '&', ' ', '.', '/', ';', ' '};
 
     switch (data) {
-    case 0x1F:		/* letters */
-        rxmode = 1;
-        break;
-    case 0x1B:		/* figures */
-        rxmode = 2;
-        break;
-    case 0x04:		/* unshift-on-space */
-//        if (progdefaults.UOSrx)
-//            rxmode = LETTERS;
-        return ' ';
-        break;
-    default:
-        if (rxmode == 2)
-            out = figures[data];
-        else
-            out = letters[data];
-        break;
+        case 0x1F: /* letters */
+            rxmode = 1;
+            break;
+        case 0x1B: /* figures */
+            rxmode = 2;
+            break;
+        case 0x04: /* unshift-on-space */
+                   // if (progdefaults.UOSrx)
+            // rxmode = LETTERS;
+            return ' ';
+            break;
+        default:
+            if (rxmode == 2)
+                out = figures[data];
+            else
+                out = letters[data];
+            break;
     }
 
     return out;
 }
 
-void RTTYRxView::on_log(RTTYRxLogMessage msg)  {
+void RTTYRxView::on_log(RTTYRxLogMessage msg) {
     text_debug.set(" ");
     std::string str_log = "";
 
     for (uint16_t i = 0; i < msg.cnt; i++) {
-        str_log += to_string_dec_int(msg.samples[i])+", ";
+        str_log += to_string_dec_int(msg.samples[i]) + ", ";
     }
     text_debug.set(str_log);
 }
@@ -205,32 +200,29 @@ void RTTYRxView::on_log(RTTYRxLogMessage msg)  {
 void RTTYRxView::on_data(uint8_t value, bool is_data) {
     std::string str_console = "\x1B";
     std::string str_byte = "";
-    
-    
+
     if (is_data) {
         // Colorize differently after message splits
         str_console += (char)((console_color & 3) + 11);
         // text_debug.set("~ " + to_string_dec_uint(value));
 
-
         // value = deframe_word(value);
-        
-        
-        // value &= 0x1F;     
+
+        // value &= 0x1F;
         // uint32_t alt_val = deframe_word(value, is_in_figures_mode);                                  // ABCDEFGH
         // text_debug.set("<<" + to_string_dec_uint(value));
 
         // text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
-            // " > "+to_string_hex(alt_val, 2));
-        
+        // " > "+to_string_hex(alt_val, 2));
+
         if (value >= 32) {
             str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
         } else {
-            str_console += BaudottoChar(value)+", ";//(value, is_in_figures_mode); 
+            str_console += BaudottoChar(value) + ", ";  //(value, is_in_figures_mode);
         }
-    
+
         console.write(str_console);
-        
+
         if ((value != 10) && (prev_value == 10)) {
             // Message split
             console.writeln("");
@@ -259,4 +251,4 @@ RTTYRxView::~RTTYRxView() {
     baseband::shutdown();
 }
 
-}  // namespace ui::external_app::afsk_rx
+}  // namespace ui::external_app::rtty_rx

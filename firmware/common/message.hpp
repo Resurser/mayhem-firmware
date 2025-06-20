@@ -798,24 +798,24 @@ class TXProgressMessage : public Message {
 };
 
 class AFSKRxConfigureMessage : public Message {
-    public:
-     constexpr AFSKRxConfigureMessage (
-         const uint32_t baudrate,
-         const uint32_t word_length,
-         const uint32_t freq_mark,
-         const uint32_t freq_space)
-         : Message{ID::AFSKRxConfigure},
-           baudrate(baudrate),
-           word_length(word_length),
-           freq_mark(freq_mark),
-           freq_space(freq_space) {
-     }
- 
-     const uint32_t baudrate = 50;
-     const uint32_t word_length = 5;
-     const uint32_t freq_mark = 2125;
-     const uint32_t freq_space = 2295;
- };
+   public:
+    constexpr AFSKRxConfigureMessage(
+        const uint32_t baudrate,
+        const uint32_t word_length,
+        const uint32_t freq_mark,
+        const uint32_t freq_space)
+        : Message{ID::AFSKRxConfigure},
+          baudrate(baudrate),
+          word_length(word_length),
+          freq_mark(freq_mark),
+          freq_space(freq_space) {
+    }
+
+    const uint32_t baudrate = 50;
+    const uint32_t word_length = 5;
+    const uint32_t freq_mark = 2125;
+    const uint32_t freq_space = 2295;
+};
 
 class APRSRxConfigureMessage : public Message {
    public:
@@ -1488,27 +1488,24 @@ class I2CDevListChangedMessage : public Message {
 
 class DDCConfigMessage : public Message {
    public:
-	constexpr DDCConfigMessage(
-		int32_t freq
-	) : Message { ID::DDCConfig },
-		freq { freq }
-	{
-	}
+    constexpr DDCConfigMessage(
+        int32_t freq)
+        : Message{ID::DDCConfig},
+          freq{freq} {
+    }
 
-	int32_t freq = 0;
+    int32_t freq = 0;
 };
-
 
 class RTTYRxConfigureMessage : public Message {
    public:
-    constexpr RTTYRxConfigureMessage (
+    constexpr RTTYRxConfigureMessage(
         const uint32_t baudrate,
         const uint32_t word_length,
         const uint32_t freq_mark,
         const uint32_t freq_space,
         const bool reverse_bits,
-        const bool reverse_freq    
-    )
+        const bool reverse_freq)
         : Message{ID::RTTYRxConfigure},
           baudrate(baudrate),
           word_length(word_length),
@@ -1524,7 +1521,6 @@ class RTTYRxConfigureMessage : public Message {
     uint32_t freq_space{1675};
     bool reverse_bits{false};
     bool reverse_freq{false};
-    
 };
 
 class RTTYRxDataMessage : public Message {
@@ -1541,12 +1537,12 @@ class RTTYRxDataMessage : public Message {
 
 class RTTYRxLogMessage : public Message {
    public:
-    constexpr RTTYRxLogMessage(): Message{ID::RTTYRxLogData} {}
-    
+    constexpr RTTYRxLogMessage()
+        : Message{ID::RTTYRxLogData} {}
+
     uint8_t samples[8]{0};
     uint8_t cnt = 0;
 };
-
 
 class WeFaxRxConfigureMessage : public Message {
    public:

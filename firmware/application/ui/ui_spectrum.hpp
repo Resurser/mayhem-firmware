@@ -70,7 +70,6 @@ class AudioSpectrumView : public View {
         true};
 };
 
-/// @brief 
 class FrequencyScale : public Widget {
    public:
     std::function<void(int32_t offset)> on_select{};
@@ -124,22 +123,10 @@ class WaterfallWidget : public Widget {
     bool on_touch(const TouchEvent event) override;
 
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
+
    private:
-    // float alpha{0.1f};        // Smoothing factor for dynamic range updates
-    float percentile{0.1f};  // Histogram percentile for min/max range adjustment
     // Function to apply linear normalization with noise floor compensation
-    void applySavitzkyGolay7(const std::array<unsigned char, 240> data, std::array<unsigned char, 240>& smoothed);
-    void applySavitzkyGolay5(const std::array<unsigned char, 240> data, std::array<unsigned char, 240>& smoothed);
-    
-    uint8_t linearNormalizeWithNoiseFloor(uint8_t signal, uint8_t min, uint8_t max, uint8_t noiseFloor);
-
-    void clearNoise(std::array<uint8_t, 240>& spectrumData, uint8_t noiseFloor, uint8_t margin);
-    void applySpatialSmoothing(std::array<uint8_t, 240>& spectrumData, uint8_t filterRadius);
-
-    // Function to update the dynamic range (min and max values) based on a histogram and percentile
-    void updateDynamicRangeWithHistogram(const std::array<uint8_t, 240> signalsIn, uint8_t& min, uint8_t& max, const float percentile);
-    // Function to apply temporal smoothing to the output signal
-    uint8_t estimateNoiseFloor(const std::array<uint8_t, 240> signalsIn, uint8_t& min, uint8_t& max);
+    void applySavitzkyGolay(const std::array<unsigned char, 240> spectrum_db_in, std::array<unsigned char, 240>& spectrum_db_out);
 
     void clear();
 };

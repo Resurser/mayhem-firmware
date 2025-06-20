@@ -25,9 +25,9 @@
 #include "external_app.hpp"
 
 namespace ui::external_app::test_rx {
-    void initialize_app(ui::NavigationView& nav) {
-        nav.push<TestRxView>();
-    }
+void initialize_app(ui::NavigationView& nav) {
+    nav.push<TestRxView>();
+}
 }  // namespace ui::external_app::test_rx
 
 extern "C" {

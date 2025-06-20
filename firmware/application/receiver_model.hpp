@@ -109,7 +109,7 @@ class ReceiverModel {
 
     size_t spectrum_zoom() const;
     void set_spectrum_zoom(size_t v);
-    
+
     void set_antenna_bias();
 
     volume_t headphone_volume() const;
@@ -135,8 +135,7 @@ class ReceiverModel {
         size_t new_wfm_config_index,
         size_t new_wfmam_config_index,
         uint8_t new_squelch_level,
-        const size_t new_spectrum_zoom
-    );
+        const size_t new_spectrum_zoom);
 
     void configure_from_app_settings(const app_settings::AppSettings& settings);
 

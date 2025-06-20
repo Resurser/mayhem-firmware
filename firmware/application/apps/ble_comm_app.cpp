@@ -45,7 +45,6 @@ void BLECommLogger::log_raw_data(const std::string& data) {
     log_file.write_entry(data);
 }
 
-
 namespace ui {
 static std::uint64_t get_freq_by_channel_number(uint8_t channel_number) {
     uint64_t freq_hz;

@@ -41,11 +41,12 @@ class NarrowbandAMAudio : public BasebandProcessor {
     void execute(const buffer_c8_t& buffer) override;
     void on_message(const Message* const message) override;
 
-	void set_spectrum_zoom(const size_t x);
+    void set_spectrum_zoom(const size_t x);
+
    private:
     static constexpr size_t baseband_fs = 3072000;
-    static constexpr auto   spectrum_rate_hz = 60.0f;
-	static constexpr size_t decim_2_decimation_factor = 8;
+    static constexpr auto spectrum_rate_hz = 60.0f;
+    static constexpr size_t decim_2_decimation_factor = 8;
     static constexpr size_t channel_filter_decimation_factor = 1;
 
     std::array<complex16_t, 512> dst{};
@@ -57,7 +58,7 @@ class NarrowbandAMAudio : public BasebandProcessor {
         audio.data(),
         audio.size()};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0 { };
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
@@ -66,8 +67,8 @@ class NarrowbandAMAudio : public BasebandProcessor {
     int32_t channel_filter_transition = 0;
     bool configured{false};
 
-    dsp::DDC ddc { };
-    
+    dsp::DDC ddc{};
+
     // bool modulation_ssb = false;  // Origianlly we only had 2 AM demod types {DSB = 0, SSB = 1} , and we could handle it with bool var , 1 bit.
     int8_t modulation_ssb = 0;  // Now we have 3 AM demod types we will send now index integer  {DSB = 0, SSB = 1, SSB_FM = 2}
     dsp::demodulate::AM demod_am{};
@@ -78,8 +79,8 @@ class NarrowbandAMAudio : public BasebandProcessor {
 
     SpectrumCollector channel_spectrum{};
     size_t spectrum_interval_samples = 0;
-	size_t spectrum_samples = 0;
-	size_t spectrum_zoom = 4;  // default zoom factor for waterfall spectrum.
+    size_t spectrum_samples = 0;
+    size_t spectrum_zoom = 4;  // default zoom factor for waterfall spectrum.
 
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};

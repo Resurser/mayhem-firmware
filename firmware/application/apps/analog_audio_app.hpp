@@ -230,7 +230,7 @@ class AnalogAudioView : public View {
 
    private:
     static constexpr ui::Dim header_height = 3 * 16;
-    
+
     NavigationView& nav_;
     RxRadioState radio_state_{};
     uint8_t iq_phase_calibration_value{15};  // initial default RX IQ phase calibration value , used for both max2837 & max2839
@@ -258,9 +258,9 @@ class AnalogAudioView : public View {
     uint16_t spec_trigger = 63;
     ReceiverModel::Mode previous_modulation{0};
     rf::Frequency current_freq = 0;
-	rf::Frequency center_freq = 0;
-	bool ddc_enable = false;
-    
+    rf::Frequency center_freq = 0;
+    bool ddc_enable = false;
+
     RSSI rssi{
         {21 * 8, 0, 6 * 8, 4}};
 

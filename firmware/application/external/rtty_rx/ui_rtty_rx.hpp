@@ -65,25 +65,24 @@ class RTTYRxView : public View {
 
     NavigationView& nav_;
     RxRadioState radio_state_{};
-    
+
     uint8_t mark_index{0};
     uint8_t shift_index{0};
     bool reverse_bits{false};
-   
+
     app_settings::SettingsManager settings_{
         "rx_rtty",
         app_settings::Mode::RX,
         {
             {"mark_index"sv, &mark_index},
             {"shift_index"sv, &shift_index},
-            {"reverse_bits"sv, &reverse_bits},            
+            {"reverse_bits"sv, &reverse_bits},
         }};
     uint8_t console_color{0};
     uint32_t prev_value{0};
 
-    
     std::string str_log{""};
-    uint16_t rxmode{1}; //LETTERS
+    uint16_t rxmode{1};  // LETTERS
     bool is_in_figures_mode = false;
     bool logging{true};
     std::unique_ptr<RTTYLogger> logger{};
@@ -106,7 +105,6 @@ class RTTYRxView : public View {
         {0 * 8, 0 * 16},
         nav_};
 
-    
     Labels labels{
         {{0 * 8, 1 * 16}, "S: ", Theme::getInstance()->fg_light->foreground},
         {{8 * 8, 1 * 16}, "M: ", Theme::getInstance()->fg_light->foreground},
@@ -120,11 +118,11 @@ class RTTYRxView : public View {
             {" 170", 170},
             {" 450", 450},
             {" 850", 850},
-            {"-85",  -85},
+            {"-85", -85},
             {"-170", -170},
             {"-450", -450},
             {"-850", -850},
-        
+
         }};
 
     OptionsField options_mark{
@@ -143,11 +141,9 @@ class RTTYRxView : public View {
 
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},
-        LanguageHelper::currentMessages[LANG_DEBUG]
-    };
+        LanguageHelper::currentMessages[LANG_DEBUG]};
     Console console{
-        {0, 4 * 16, screen_width, screen_width}
-    };
+        {0, 4 * 16, screen_width, screen_width}};
     char BaudottoChar(const uint32_t data);
     void on_freqchg(int64_t freq);
     void apply_config();
@@ -166,7 +162,7 @@ class RTTYRxView : public View {
             this->on_freqchg(message->freq);
         }};
 
-   MessageHandlerRegistration message_handler_frame_sync{
+    MessageHandlerRegistration message_handler_frame_sync{
         Message::ID::DisplayFrameSync,
         [this](const Message* const) {
             // this->on_timer();

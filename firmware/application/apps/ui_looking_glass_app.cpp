@@ -31,7 +31,6 @@
 using namespace portapack;
 namespace pmem = portapack::persistent_memory;
 
-
 namespace ui {
 void GlassView::focus() {
     range_presets.focus();

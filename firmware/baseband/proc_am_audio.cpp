@@ -35,15 +35,15 @@ void NarrowbandAMAudio::execute(const buffer_c8_t& buffer) {
     }
 
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);
-    
+
     spectrum_samples += decim_0_out.count;
-	if( spectrum_samples >= spectrum_interval_samples ) {
-		spectrum_samples -= spectrum_interval_samples;
-		channel_spectrum.feed(decim_0_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
-	}
+    if (spectrum_samples >= spectrum_interval_samples) {
+        spectrum_samples -= spectrum_interval_samples;
+        channel_spectrum.feed(decim_0_out, channel_filter_low_f, channel_filter_high_f, channel_filter_transition);
+    }
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);
-	const auto ddc_out     = ddc.execute(decim_1_out, dst_buffer);
-	const auto decim_2_out = decim_2.execute(ddc_out, dst_buffer);
+    const auto ddc_out = ddc.execute(decim_1_out, dst_buffer);
+    const auto decim_2_out = decim_2.execute(ddc_out, dst_buffer);
     const auto channel_out = channel_filter.execute(decim_2_out, dst_buffer);
 
     // TODO: Feed channel_stats post-decimation data?
@@ -94,7 +94,7 @@ void NarrowbandAMAudio::on_message(const Message* const message) {
         case Message::ID::DDCConfig:
             ddc_config(*reinterpret_cast<const DDCConfigMessage*>(message));
             break;
-            
+
         default:
             break;
     }
@@ -121,25 +121,25 @@ void NarrowbandAMAudio::configure(const AMConfigureMessage& message) {
     channel_filter_low_f = message.channel_filter.low_frequency_normalized * channel_filter_input_fs;
     channel_filter_high_f = message.channel_filter.high_frequency_normalized * channel_filter_input_fs;
     channel_filter_transition = message.channel_filter.transition_normalized * channel_filter_input_fs;
-    
-    //channel_spectrum.set_decimation_factor(1.0f);
-    modulation_ssb = (int)message.modulation;  // now sending by message , 3 types of AM demod :   enum class Modulation : int32_t {DSB = 0, SSB = 1, SSB_FM = 2}
+
+    // channel_spectrum.set_decimation_factor(1.0f);
+    modulation_ssb = (int)message.modulation;              // now sending by message , 3 types of AM demod :   enum class Modulation : int32_t {DSB = 0, SSB = 1, SSB_FM = 2}
     audio_output.configure(message.audio_hpf_lpf_config);  // hpf in all AM demod modes (AM-6K/9K, USB/LSB,DSB), except Wefax (lpf there).
-    
-    if (message.channel_spectrum_decimation_factor == 1 || 
+
+    if (message.channel_spectrum_decimation_factor == 1 ||
         message.channel_spectrum_decimation_factor == 2) {
         spectrum_zoom = (message.channel_spectrum_decimation_factor * 4);
     } else if (message.channel_spectrum_decimation_factor > 3 ||
-        message.channel_spectrum_decimation_factor < 9) {
+               message.channel_spectrum_decimation_factor < 9) {
         spectrum_zoom = message.channel_spectrum_decimation_factor;
     } else {
         spectrum_zoom = 4;
     }
     channel_spectrum.set_decimation_factor(spectrum_zoom);
     spectrum_interval_samples = decim_0_output_fs / (spectrum_rate_hz * spectrum_zoom);
-    
+
     ddc.set_sample_rate(decim_1_output_fs);
-    
+
     configured = true;
 }
 
@@ -152,7 +152,7 @@ void NarrowbandAMAudio::capture_config(const CaptureConfigMessage& message) {
 }
 
 void NarrowbandAMAudio::ddc_config(const DDCConfigMessage& message) {
-	ddc.set_freq(message.freq);
+    ddc.set_freq(message.freq);
 }
 
 int main() {

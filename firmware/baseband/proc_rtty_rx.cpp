@@ -69,8 +69,6 @@ RTTYRxProcessor::RTTYRxProcessor() {
     // state            = WAIT_START;
 
     // configured = false;
-
-    
 }
 
 // Process a single audio sample and decode it into an RTTY bit
@@ -83,7 +81,7 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
 
     // Instead of indexing the huge table, we reduce the phase by shifting:
     // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
-    uint16_t markIndex = markPhase >> 8;   // Equivalent to dividing by 256
+    uint16_t markIndex = markPhase >> 8;  // Equivalent to dividing by 256
     uint16_t spaceIndex = spacePhase >> 8;
 
     // Accumulate the contributions for the current sample.
@@ -108,8 +106,6 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
             }
             return;
         }
-        
-        
 
         // Shift the detected bit into the current character
         currentChar >>= 1;
@@ -121,9 +117,9 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
             resetAccumulators();
             return;
         }
-        
+
         log_message.cnt++;
-        log_message.samples[log_message.cnt-1] = currentChar;
+        log_message.samples[log_message.cnt - 1] = currentChar;
         if (log_message.cnt == 8) {
             shared_memory.application_queue.push(log_message);
             log_message.cnt = 0;
@@ -139,7 +135,7 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
             data_message.is_data = true;
             data_message.value = currentChar;
             shared_memory.application_queue.push(data_message);
-            
+
             // Reset for the next character
             currentChar = 0;
             bitCount = 0;
@@ -152,9 +148,9 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
 }
 
 int32_t RTTYRxProcessor::fastSin(uint32_t phase) {
-    uint16_t index = (phase >> 16) & PHASE_MASK;  // Extract table index
+    uint16_t index = (phase >> 16) & PHASE_MASK;    // Extract table index
     uint16_t nextIndex = (index + 1) & PHASE_MASK;  // Next index (wrap around)
-    uint16_t fractional = (phase & 0xFFFF) >> 8;  // Fractional part (8-bit resolution)
+    uint16_t fractional = (phase & 0xFFFF) >> 8;    // Fractional part (8-bit resolution)
 
     // Perform linear interpolation
     int16_t value1 = sine_table_q15[index];
@@ -193,7 +189,7 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * SCALE;
 
-        int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format        
+        int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format
         decodeRTTYBit(sample_int);
     }
 }
@@ -207,9 +203,9 @@ void RTTYRxProcessor::on_message(const Message* const message) {
 
 void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     configured = false;
-    markFreq    = message.freq_mark;
-    spaceFreq   = message.freq_space;
-    baudRate    = message.baudrate;
+    markFreq = message.freq_mark;
+    spaceFreq = message.freq_space;
+    baudRate = message.baudrate;
     reverseBits = message.reverse_bits;
     reverseFreq = message.reverse_freq;
 
@@ -217,14 +213,13 @@ void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
     decim_1.configure(taps_6k0_decim_1.taps);
     decim_2.configure(taps_6k0_decim_2.taps, 4);
     channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
-    audio_output.configure(audio_12k_hpf_300hz_config);//, audio_12k_deemph_300_6_config);
-    
-    markPhaseInc = calculatePhaseIncrement(markFreq);  // Calculate MARK phase increment dynamically
+    audio_output.configure(audio_12k_hpf_300hz_config);  //, audio_12k_deemph_300_6_config);
+
+    markPhaseInc = calculatePhaseIncrement(markFreq);    // Calculate MARK phase increment dynamically
     spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
-    
+
     configured = true;
 }
-
 
 void RTTYRxProcessor::capture_config(const CaptureConfigMessage& message) {
     if (message.config) {

@@ -325,7 +325,7 @@ SetUIView::SetUIView(NavigationView& nav) {
 
                   &options_clockformat,
                   &checkbox_guireturnflag,
-                  
+
                   &labels,
                   &toggle_camera,
                   &toggle_sleep,
@@ -336,7 +336,7 @@ SetUIView::SetUIView(NavigationView& nav) {
                   &toggle_mute,
                   &toggle_fake_brightness,
                   &toggle_sd_card,
-                  
+
                   &button_save,
                   &button_cancel});
 

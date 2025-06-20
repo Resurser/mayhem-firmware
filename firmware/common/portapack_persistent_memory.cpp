@@ -128,7 +128,7 @@ struct ui_config2_t {
     bool hide_bias_tee : 1;
     bool hide_clock : 1;
     bool hide_sd_card : 1;
-    
+
     bool hide_mute : 1;
     bool hide_fake_brightness : 1;
     bool hide_numeric_battery : 1;
@@ -139,7 +139,7 @@ struct ui_config2_t {
     bool button_long_press_delay : 1;
     bool battery_charge_hint : 1;
     bool UNUSED_6 : 1;
-    
+
     uint8_t theme_id;
 };
 static_assert(sizeof(ui_config2_t) == sizeof(uint32_t));
@@ -153,10 +153,10 @@ struct misc_config_t {
     bool config_sdcard_high_speed_io : 1;
     bool config_disable_config_mode : 1;
     bool beep_on_packets : 1;
-    bool ddc_enabled : 1;   
-    bool PLACEHOLDER_1 : 1;   
-    
-    uint8_t spectrum_view_type: 2;
+    bool ddc_enabled : 1;
+    bool PLACEHOLDER_1 : 1;
+
+    uint8_t spectrum_view_type : 2;
     uint8_t PLACEHOLDER_2;
     uint8_t PLACEHOLDER_3;
 };

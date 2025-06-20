@@ -31,13 +31,13 @@
 #define M_PI (3.14159265358979323846264338327950288)
 #endif
 
-#define CORDIC_HALF_PI	(M_PI * CORDIC_SCALE / 2)
-#define CORDIC_PI		(M_PI * CORDIC_SCALE)
+#define CORDIC_HALF_PI (M_PI * CORDIC_SCALE / 2)
+#define CORDIC_PI (M_PI * CORDIC_SCALE)
 
 namespace dsp {
 
-void cordic(int32_t theta, int32_t *s, int32_t *c);
+void cordic(int32_t theta, int32_t* s, int32_t* c);
 
 }
 
-#endif/*__CORDIC_H__*/
+#endif /*__CORDIC_H__*/

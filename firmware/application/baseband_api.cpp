@@ -148,7 +148,7 @@ void set_sstv_data(const uint8_t vis_code, const uint32_t pixel_duration) {
     send_message(&message);
 }
 
-void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space ) {
+void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space) {
     const AFSKRxConfigureMessage message{
         baudrate,
         word_length,
@@ -157,8 +157,7 @@ void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_
     send_message(&message);
 }
 
-void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space, 
-    const bool reverse_bits,const bool reverse_freq) {
+void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space, const bool reverse_bits, const bool reverse_freq) {
     const RTTYRxConfigureMessage message{
         baudrate,
         word_length,
@@ -443,8 +442,8 @@ void set_sample_rate(uint32_t sample_rate, OversampleRate oversample_rate) {
 }
 
 void set_ddc_freq(const int32_t freq) {
-	DDCConfigMessage message { freq };
-	send_message(&message);
+    DDCConfigMessage message{freq};
+    send_message(&message);
 }
 
 void capture_start(CaptureConfig* const config) {
@@ -489,11 +488,9 @@ void request_audio_beep(uint32_t freq, uint32_t sample_rate, uint32_t duration_m
     send_message(&message);
 }
 
-
 // void set_signal_zoom(const uint8_t zoom_) {
 // 	DDCConfigMessage message { freq };
 // 	send_message(&message);
 // }
-
 
 } /* namespace baseband */

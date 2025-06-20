@@ -23,39 +23,39 @@
 
 namespace dsp {
 
-void cordic(int32_t theta, int32_t *s, int32_t *c) {
-	uint8_t pi = 0;
+void cordic(int32_t theta, int32_t* s, int32_t* c) {
+    uint8_t pi = 0;
 
-	if (theta > CORDIC_HALF_PI) {
-		theta -= CORDIC_PI;
-		pi = 1;
-	} else if (theta < -CORDIC_HALF_PI) {
-		theta += CORDIC_PI;
-		pi = 1;
-	}
+    if (theta > CORDIC_HALF_PI) {
+        theta -= CORDIC_PI;
+        pi = 1;
+    } else if (theta < -CORDIC_HALF_PI) {
+        theta += CORDIC_PI;
+        pi = 1;
+    }
 
-  	int32_t d, tx, ty, tz;
-  	int32_t x = *c, y = *s, z = theta;
-  
-  	for (uint8_t k = 0; k < CORDIC_TAB; k++) {
-    	d = (z >= 0) ? 0 : -1;
+    int32_t d, tx, ty, tz;
+    int32_t x = *c, y = *s, z = theta;
 
-    	tx = x - (((y >> k) ^ d) - d);
-    	ty = y + (((x >> k) ^ d) - d);
-    	tz = z - ((cordic_tab[k] ^ d) - d);
+    for (uint8_t k = 0; k < CORDIC_TAB; k++) {
+        d = (z >= 0) ? 0 : -1;
 
-    	x = tx;
-    	y = ty;
-    	z = tz;
-  	}
+        tx = x - (((y >> k) ^ d) - d);
+        ty = y + (((x >> k) ^ d) - d);
+        tz = z - ((cordic_tab[k] ^ d) - d);
 
-	if (pi) {
- 		x = -x; 
- 		y = -y;
- 	}
+        x = tx;
+        y = ty;
+        z = tz;
+    }
 
-	*c = x; 
-	*s = y;
+    if (pi) {
+        x = -x;
+        y = -y;
+    }
+
+    *c = x;
+    *s = y;
 }
 
-}
+}  // namespace dsp

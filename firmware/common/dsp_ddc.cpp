@@ -25,39 +25,39 @@
 namespace dsp {
 
 void DDC::set_sample_rate(const int32_t x) {
-	sample_rate = x;
+    sample_rate = x;
 }
 
 void DDC::set_freq(const int32_t x) {
-	phase_inc = (2.0 * CORDIC_PI * x) / sample_rate;
+    phase_inc = (2.0 * CORDIC_PI * x) / sample_rate;
 }
 
 buffer_c16_t DDC::execute(const buffer_c16_t& src, const buffer_c16_t& dst) {
-	auto src_p = src.p;
-	auto dst_p = dst.p;
+    auto src_p = src.p;
+    auto dst_p = dst.p;
 
-	for (size_t count = 0; count < src.count; count++) {
-		int32_t i = src_p->real() * 0.607252935 * CORDIC_SCALE;
-		int32_t q = src_p->imag() * 0.607252935 * CORDIC_SCALE;
-		
-		cordic(phase, &i, &q);
-		
-		dst_p->real(i / CORDIC_SCALE);
-		dst_p->imag(q / CORDIC_SCALE);
-		
-		phase += phase_inc;
+    for (size_t count = 0; count < src.count; count++) {
+        int32_t i = src_p->real() * 0.607252935 * CORDIC_SCALE;
+        int32_t q = src_p->imag() * 0.607252935 * CORDIC_SCALE;
 
-		if (phase < -CORDIC_PI) {
-			phase += CORDIC_PI * 2;
-		} else if (phase > CORDIC_PI) {
-			phase -= CORDIC_PI * 2;
-		}
-		
-		src_p++;
-		dst_p++;
-	}
+        cordic(phase, &i, &q);
 
-	return { dst.p, src.count, src.sampling_rate };
+        dst_p->real(i / CORDIC_SCALE);
+        dst_p->imag(q / CORDIC_SCALE);
+
+        phase += phase_inc;
+
+        if (phase < -CORDIC_PI) {
+            phase += CORDIC_PI * 2;
+        } else if (phase > CORDIC_PI) {
+            phase -= CORDIC_PI * 2;
+        }
+
+        src_p++;
+        dst_p++;
+    }
+
+    return {dst.p, src.count, src.sampling_rate};
 }
 
-}
+}  // namespace dsp

@@ -29,20 +29,17 @@
 namespace dsp {
 
 class DDC {
-
-public:
-
+   public:
     void set_sample_rate(const int32_t x);
     void set_freq(const int32_t x);
-    
+
     buffer_c16_t execute(const buffer_c16_t& src, const buffer_c16_t& dst);
 
-private:
-
-	int32_t	sample_rate { 0 };
-	int32_t	phase_inc { 0 };
-	int32_t	phase { 0 };
+   private:
+    int32_t sample_rate{0};
+    int32_t phase_inc{0};
+    int32_t phase{0};
 };
-}
+}  // namespace dsp
 
-#endif/*__DSP_DDC_H__*/
+#endif /*__DSP_DDC_H__*/

@@ -22,6 +22,7 @@
 #include "spectrum_collector.hpp"
 
 #include "dsp_fft.hpp"
+#include "dsp_iq_balancer.hpp"
 
 #include "utility.hpp"
 #include "event_m4.hpp"
@@ -94,6 +95,12 @@ void SpectrumCollector::post_message(const buffer_c16_t& data) {
     // Called from baseband processing thread.
     if (streaming && !channel_spectrum_request_update) {
         fft_swap(data, channel_spectrum);
+        // IQBalancerCMSIS iq;
+        // iq.estimate(data.p->real(), q_signal);  // Оцінити параметри компенсації
+        // iq.apply(i_signal, q_signal);     // Застосувати корекцію
+
+        // const auto& params = iq.getParams();
+
         channel_spectrum_sampling_rate = data.sampling_rate;
         channel_spectrum_request_update = true;
         EventDispatcher::events_flag(EVT_MASK_SPECTRUM);
@@ -126,11 +133,11 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     // Three term Blackman window.
     constexpr float alpha = 0.42f;
     constexpr float beta = 0.5f * 0.5f;
-    constexpr float gamma = 0.08f * 0.08f;
+    constexpr float gamma = 0.08f * 0.05f;
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
-static void spectrum_db_filter_gausian(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, uint8_t kernel = 4){
+static void spectrum_db_filter_gausian(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, uint8_t kernel = 4) {
     int half_kernel = kernel / 2;
     for (size_t i = 0; i < signal.size(); ++i) {
         int sum = 0, count = 0;
@@ -144,6 +151,7 @@ static void spectrum_db_filter_gausian(const std::array<uint8_t, 256>& signal, s
         filtered[i] = sum / count;
     }
 }
+
 static void spectrum_db_filter_wiener(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
     int half_window = window_size / 2;
     for (size_t i = 0; i < 256; ++i) {
@@ -174,7 +182,7 @@ static void spectrum_db_filter_wiener(const std::array<uint8_t, 256>& signal, st
 static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
     size_t size = window_size;
     if (window_size > 127) size = 127;
-    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
+    if (window_size % 2 == 0) size++;  // Забезпечити непарний розмір вікна
 
     int halfWindow = size / 2;
     for (size_t i = 0; i < signal.size(); ++i) {
@@ -190,36 +198,35 @@ static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, st
     }
 }
 
-
 void SpectrumCollector::update() {
     // Called from idle thread (after EVT_MASK_SPECTRUM is flagged)
     if (streaming && channel_spectrum_request_update) {
         /* Decimated buffer is full. Compute spectrum. */
         fft_c_preswapped(channel_spectrum, 0, 8);
-        
+
         ChannelSpectrum spectrum;
         spectrum.sampling_rate = channel_spectrum_sampling_rate;
         spectrum.channel_filter_low_frequency = channel_filter_low_frequency;
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
-        
+
         for (size_t i = 0; i < spectrum.db.size(); i++) {
-            // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
+            const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
+            // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.0f;// 5.0f;
+            constexpr float mag_scale = 5.1f;  // 5.0f;
             const unsigned int v = (db * mag_scale) + 255.0f;
-        
+
             spectrum.db[i] = std::max(0U, std::min(255U, v));
         }
-        
+
         std::array<uint8_t, 256> db_filtered;
         // spectrum_db_filter_median(spectrum.db, db_filtered, 3);
-        // spectrum_db_filter_gausian(spectrum.db, db_filtered, 2);
-        spectrum_db_filter_gausian(spectrum.db, db_filtered, 5);
+        spectrum_db_filter_wiener(spectrum.db, db_filtered, 5);
+        // spectrum_db_filter_gausian(spectrum.db, db_filtered, 5);
         spectrum.db = db_filtered;
-        
+
         fifo.in(spectrum);
     }
 

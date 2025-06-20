@@ -123,7 +123,6 @@ class TestRxView : public View {
     void on_packet(const testapp::Packet& packet);
 };
 
-
 }  // namespace ui::external_app::test_rx
 
 #endif /*__UI_TEST_RX_H__*/

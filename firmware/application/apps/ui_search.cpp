@@ -106,7 +106,7 @@ SearchView::SearchView(
     bind(options_snap, settings_.snap_step);
 
     progress_timers.set_max(DETECT_DELAY);
-    
+
     on_range_changed();
     receiver_model.enable();
 }
@@ -287,7 +287,7 @@ void SearchView::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // Leftmost and rightmost 2 bins are ignored
     // std::array<ui::Color, 256> spectrum_color;
     // spectrum_color_lut(pmem::spectrum_color_id(), spectrum_color);
-    
+
     for (bin = 0; bin < 256; bin++) {
         if ((bin < 2) || (bin > 253) || ((bin >= 122) && (bin < 134))) {
             power = 0;

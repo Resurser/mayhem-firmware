@@ -254,7 +254,7 @@ class SetRadioView : public View {
         {18, 14 * 16},
         5,
         "Slide tune "};
-    
+
     Button button_save{
         {2 * 8, 16 * 16, 12 * 8, 32},
         "Save"};
@@ -287,10 +287,10 @@ class SetUIView : public View {
         {3 * 8, 3 * 16},
         20,
         "Backlight off after:"};
-        OptionsField options_bloff{
-            {60, 4 * 16 + 8},
-            20,
-            {
+    OptionsField options_bloff{
+        {60, 4 * 16 + 8},
+        20,
+        {
             {"5 seconds", backlight_timeout_t::Timeout5Sec},
             {"15 seconds", backlight_timeout_t::Timeout15Sec},
             {"30 seconds", backlight_timeout_t::Timeout30Sec},
@@ -310,7 +310,7 @@ class SetUIView : public View {
         {3 * 8, 8 * 16},
         20,
         "Show clock with:"};
-    
+
     OptionsField options_clockformat{
         {60, 9 * 16 + 8},
         20,

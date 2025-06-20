@@ -74,7 +74,7 @@ class AFSKRxView : public View {
     RxRadioState radio_state_{};
     app_settings::SettingsManager settings_{
         "rx_afsk", app_settings::Mode::RX};
-    
+
     uint8_t console_color{0};
     uint32_t prev_value{0};
     std::string str_log{""};

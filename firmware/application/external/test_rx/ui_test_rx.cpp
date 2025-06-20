@@ -78,7 +78,6 @@ TestRxView::TestRxView(NavigationView& nav)
         logger->append("saucepan.txt");
 
     receiver_model.enable();
-    
 }
 
 TestRxView::~TestRxView() {
@@ -124,4 +123,4 @@ void TestRxView::on_packet(const testapp::Packet& packet) {
         longitude = packet.GPS_longitude();*/
 }
 
-}  // namespace ui::external_app::afsk_rx
+}  // namespace ui::external_app::test_rx

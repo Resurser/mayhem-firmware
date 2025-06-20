@@ -25,9 +25,9 @@
 #include "external_app.hpp"
 
 namespace ui::external_app::afsk_rx {
-    void initialize_app(ui::NavigationView& nav) {
-        nav.push<AFSKRxView>();
-    }
+void initialize_app(ui::NavigationView& nav) {
+    nav.push<AFSKRxView>();
+}
 }  // namespace ui::external_app::afsk_rx
 
 extern "C" {
@@ -78,6 +78,6 @@ __attribute__((section(".external_app.app_afsk_rx.application_information"), use
     /*.desired_menu_position = */ -1,
 
     /*.m4_app_tag = portapack::spi_flash::image_tag_afsk_rx */ {'P', 'A', 'F', 'R'}, /*PFSR PAFR*/
-    /*.m4_app_offset = */ 0x00000000,  // will be filled at compile time
+    /*.m4_app_offset = */ 0x00000000,                                                // will be filled at compile time
 };
 }

@@ -32,27 +32,26 @@
 #include <string_view>
 #include <type_traits>
 
-
 // --- Константи ITA-2 ---
-constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F; // 11111
-constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B; // 11011
-constexpr uint8_t ITA2_CODE_MASK = 0x1F; // Маска для 5 біт
+constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F;  // 11111
+constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B;  // 11011
+constexpr uint8_t ITA2_CODE_MASK = 0x1F;        // Маска для 5 біт
 
 // --- Таблиці символів ITA-2 (Baudot) ---
 static const char ita2_letters_table[32] = {
- // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
-    '?', 'E', '\n','A', ' ', 'S', 'I', 'U', '\r','D', 'R', 'J', 'N', 'F', 'C', 'K', // 0x00 - 0x0F
-    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '?', 'M', 'X', 'V', '?'  // 0x10 - 0x1F (0x1F = LTRS)
+    // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
+    '?', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',  // 0x00 - 0x0F
+    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '?', 'M', 'X', 'V', '?'     // 0x10 - 0x1F (0x1F = LTRS)
 };
 
 static const char ita2_figures_table[32] = {
- // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
-    '?', '3', '\n','-', ' ', '\'', '8', '7', '\r','?', '4', '\a', ',', '!', ':', '(', // 0x00 - 0x0F (\a = BEL) ('?' для $ в US варіанті)
-    '5', '+', ')', '2', '$', '6', '0', '1', '9', '?', '=', '?', '.', '/', ';', '?'  // 0x10 - 0x1F ('?' для £, =, FIG) (0x1B = FIGS)
+    // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
+    '?', '3', '\n', '-', ' ', '\'', '8', '7', '\r', '?', '4', '\a', ',', '!', ':', '(',  // 0x00 - 0x0F (\a = BEL) ('?' для $ в US варіанті)
+    '5', '+', ')', '2', '$', '6', '0', '1', '9', '?', '=', '?', '.', '/', ';', '?'       // 0x10 - 0x1F ('?' для £, =, FIG) (0x1B = FIGS)
 };
 
 // --- Функція пошуку символу ITA-2 ---
-inline char lookup_ita2(uint8_t code, bool &is_in_figures_mode) {
+inline char lookup_ita2(uint8_t code, bool& is_in_figures_mode) {
     code &= ITA2_CODE_MASK;
 
     if (code == ITA2_LTRS_SHIFT_CODE) {
@@ -70,7 +69,6 @@ inline char lookup_ita2(uint8_t code, bool &is_in_figures_mode) {
         return ita2_letters_table[code];
     }
 }
-
 
 #define LOCATE_IN_RAM __attribute__((section(".ramtext")))
 
@@ -126,7 +124,7 @@ constexpr size_t log_2(const size_t n, const size_t p = 0) {
     return (n <= 1) ? p : log_2(n / 2, p + 1);
 }
 
-std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length = 5) ;
+std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length = 5);
 float fast_log2(const float val);
 float fast_pow2(const float val);
 
@@ -167,9 +165,11 @@ struct is_flags_type {
 template <typename TEnum>
 constexpr bool is_flags_type_v = is_flags_type<TEnum>::value;
 
-#define ENABLE_FLAGS_OPERATORS(type) \
-    template <>                      \
-    struct is_flags_type<type> { static constexpr bool value = true; };
+#define ENABLE_FLAGS_OPERATORS(type)        \
+    template <>                             \
+    struct is_flags_type<type> {            \
+        static constexpr bool value = true; \
+    };
 
 template <typename TEnum>
 constexpr std::enable_if_t<is_flags_type_v<TEnum>, TEnum> operator|(TEnum a, TEnum b) {
@@ -255,7 +255,6 @@ struct range_t {
         return !contains(value);
     }
 };
-
 
 std::string join(char c, std::initializer_list<std::string_view> strings);
 

@@ -93,13 +93,13 @@ class AFSKRxProcessor : public BasebandProcessor {
     bool triggered{};
 
     uint16_t markPhase{0};
-    uint16_t spacePhase{0};  // Current phases for MARK and SPACE (0..PHASE_RESOLUTION-1)
+    uint16_t spacePhase{0};                           // Current phases for MARK and SPACE (0..PHASE_RESOLUTION-1)
     int32_t accumulatedMark{0}, accumulatedSpace{0};  // Fixed-point accumulators
-    int bitCount{0};                        // Number of data bits accumulated in the current character
-    size_t sampleCount{0};                  // Number of samples accumulated for the current bit
-    size_t stopBitCount{0};                 // Count of samples during stop bit validation
-    bool isStartBit = false;                 // True when decoder is synchronized via the start bit
-    
+    int bitCount{0};                                  // Number of data bits accumulated in the current character
+    size_t sampleCount{0};                            // Number of samples accumulated for the current bit
+    size_t stopBitCount{0};                           // Count of samples during stop bit validation
+    bool isStartBit = false;                          // True when decoder is synchronized via the start bit
+
     // -------------------- Reduced Sine Table --------------------
     // Instead of a huge sine table, we use a table with SINE_TABLE_SIZE entries.
     // Each entry is a Q15 fixed-point representation of sin(2π*i/SINE_TABLE_SIZE).
