@@ -228,6 +228,18 @@ set(EXTCPPSRC
 	#detector_rx
 	external/detector_rx/main.cpp
 	external/detector_rx/ui_detector_rx.cpp		
+
+	#space_invaders
+	external/spaceinv/main.cpp
+	external/spaceinv/ui_spaceinv.cpp		
+
+	#blackjack
+	external/blackjack/main.cpp
+	external/blackjack/ui_blackjack.cpp
+
+	#battleship
+	external/battleship/main.cpp
+	external/battleship/ui_battleship.cpp		
 )
 
 set(EXTAPPLIST
@@ -286,4 +298,7 @@ set(EXTAPPLIST
 	level
 	gfxeq
 	detector_rx
+	spaceinv
+	blackjack
+	battleship
 )
