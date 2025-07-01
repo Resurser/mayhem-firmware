@@ -319,6 +319,13 @@ set(add_to_firmware TRUE)
 set(MODE_FLAGS "-O3")
 
 
+### WFM Audio
+
+set(MODE_CPPSRC
+	proc_wfm_audio.cpp
+)
+DeclareTargets(PWFM wfm_audio)
+
 ### ADS-B RX
 
 set(MODE_CPPSRC
@@ -479,12 +486,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PSPE wideband_spectrum)
 
-### WFM Audio
-
-set(MODE_CPPSRC
-	proc_wfm_audio.cpp
-)
-DeclareTargets(PWFM wfm_audio)
 
 ### SubGhz Decoders
 

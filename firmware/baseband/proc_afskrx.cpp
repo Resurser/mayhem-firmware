@@ -78,7 +78,7 @@ void AFSKRxProcessor::execute(const buffer_c8_t& buffer) {
         if (phase >= 0x10000) {
             phase &= 0xFFFF;
 
-            if (trigger_word) {
+            if (false) {
                 // Continuous-stream value-triggered mode (AX.25) - UNTESTED
                 word_bits <<= 1;
                 word_bits |= (sample_bits & 1);
@@ -318,7 +318,7 @@ void AFSKRxProcessor::configure(const AFSKRxConfigureMessage& message) {
     phase = 0;
 
     trigger_word = 0;  // message.trigger_word;
-    word_length = message.word_length;
+    word_length = 5;
     trigger_value = 0;  // message.trigger_value;
     word_mask = (1 << word_length) - 1;
 

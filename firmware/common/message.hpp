@@ -310,8 +310,13 @@ class AudioSpectrumMessage : public Message {
 };
 
 struct ChannelSpectrum {
+    uint8_t max_db{0};
+    uint8_t min_db{255};
+    uint8_t avg_db{127};
+    
     std::array<uint8_t, 256> db{{0}};
     uint32_t sampling_rate{0};
+
     int32_t channel_filter_low_frequency{0};
     int32_t channel_filter_high_frequency{0};
     int32_t channel_filter_transition{0};

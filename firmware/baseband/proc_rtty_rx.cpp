@@ -120,11 +120,7 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
 
         log_message.cnt++;
         log_message.samples[log_message.cnt - 1] = currentChar;
-        if (log_message.cnt == 8) {
-            shared_memory.application_queue.push(log_message);
-            log_message.cnt = 0;
-        }
-
+        
         // Validate 1.5 stop bits
         if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
             // char decodedChar = decodeBaudot(currentChar);
@@ -132,6 +128,11 @@ void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
             if (reverseBits) {
                 currentChar = reverseBitsFunction(currentChar);
             }
+            if (log_message.cnt == 8) {
+                shared_memory.application_queue.push(log_message);
+                log_message.cnt = 0;
+            }
+
             data_message.is_data = true;
             data_message.value = currentChar;
             shared_memory.application_queue.push(data_message);

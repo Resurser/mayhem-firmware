@@ -74,6 +74,8 @@ void fft_swap(const std::array<complex16_t, N>& src, std::array<T, N>& dst) {
     }
 }
 
+// Swaps the elements of the input array 'src' into the output array 'dst' according to bit-reversed indices.
+// Both arrays must have a size that is a power of two.
 template <typename T, size_t N>
 void fft_swap(const std::array<T, N>& src, std::array<T, N>& dst) {
     static_assert(power_of_two(N), "only defined for N == power of two");

@@ -22,14 +22,12 @@
 #include "spectrum_collector.hpp"
 
 #include "dsp_fft.hpp"
-#include "dsp_iq_balancer.hpp"
 
 #include "utility.hpp"
 #include "event_m4.hpp"
 #include "portapack_shared_memory.hpp"
 
 #include <algorithm>
-
 void SpectrumCollector::on_message(const Message* const message) {
     switch (message->id) {
         case Message::ID::UpdateSpectrum:
@@ -95,11 +93,6 @@ void SpectrumCollector::post_message(const buffer_c16_t& data) {
     // Called from baseband processing thread.
     if (streaming && !channel_spectrum_request_update) {
         fft_swap(data, channel_spectrum);
-        // IQBalancerCMSIS iq;
-        // iq.estimate(data.p->real(), q_signal);  // Оцінити параметри компенсації
-        // iq.apply(i_signal, q_signal);     // Застосувати корекцію
-
-        // const auto& params = iq.getParams();
 
         channel_spectrum_sampling_rate = data.sampling_rate;
         channel_spectrum_request_update = true;
@@ -128,104 +121,71 @@ static typename T::value_type spectrum_window_hamming_3(const T& s, const size_t
 template <typename T>
 static typename T::value_type spectrum_window_blackman_3(const T& s, const size_t i) {
     constexpr size_t length = sizeof(s) / sizeof(s[0]);
-    static_assert(power_of_two(length), "Array length must be power of 2");
+    static_assert(power_of_two(length), "Array length must be power of 4");
     constexpr size_t mask = length - 1;
     // Three term Blackman window.
     constexpr float alpha = 0.42f;
     constexpr float beta = 0.5f * 0.5f;
-    constexpr float gamma = 0.08f * 0.05f;
+    constexpr float gamma = 0.081f * 0.0511f;
+    // Blackman window coefficients.
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
-static void spectrum_db_filter_gausian(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, uint8_t kernel = 4) {
-    int half_kernel = kernel / 2;
-    for (size_t i = 0; i < signal.size(); ++i) {
-        int sum = 0, count = 0;
-        for (int j = -half_kernel; j <= half_kernel; ++j) {
-            int idx = i + j;
-            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
-                sum += signal[idx];
-                count++;
-            }
-        }
-        filtered[i] = sum / count;
-    }
-}
-
-static void spectrum_db_filter_wiener(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
-    int half_window = window_size / 2;
-    for (size_t i = 0; i < 256; ++i) {
-        float localMean = 0, localVariance = 0;
-        int count = 0;
-        for (int j = -half_window; j <= half_window; ++j) {
-            int idx = i + j;
-            if (idx >= 0 && idx < 256) {
-                localMean += signal[idx];
-                count++;
-            }
-        }
-        localMean /= count;
-        for (int j = -half_window; j <= half_window; ++j) {
-            int idx = i + j;
-            if (idx >= 0 && idx < 256) {
-                localVariance += std::pow(signal[idx] - localMean, 2);
-            }
-        }
-        localVariance /= count;
-        float noiseVariance = 1;  // Assumed or precomputed
-        float gain = (localVariance - noiseVariance) / localVariance;
-        gain = std::max(0.0f, gain);  // Ensure non-negative gain
-        filtered[i] = static_cast<uint8_t>(localMean + gain * (signal[i] - localMean));
-    }
-}
-
-static void spectrum_db_filter_median(const std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
+static void spectrum_db_filter_median(std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
     size_t size = window_size;
     if (window_size > 127) size = 127;
-    if (window_size % 2 == 0) size++;  // Забезпечити непарний розмір вікна
+    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
 
-    int halfWindow = size / 2;
+    int half_window = size / 2;
     for (size_t i = 0; i < signal.size(); ++i) {
         std::vector<uint8_t> window;
-        for (int j = -halfWindow; j <= halfWindow; ++j) {
+        for (int j = -half_window; j <= half_window; ++j) {
             int idx = i + j;
             if (idx >= 0 && idx < static_cast<int>(signal.size())) {
                 window.push_back(signal[idx]);
             }
         }
-        std::nth_element(window.begin(), window.begin() + window.size() / 2, window.end());
+        std::nth_element(window.begin(), window.begin() + window.size()/2, window.end());
         filtered[i] = window[window.size() / 2];
     }
 }
 
 void SpectrumCollector::update() {
+   
     // Called from idle thread (after EVT_MASK_SPECTRUM is flagged)
     if (streaming && channel_spectrum_request_update) {
         /* Decimated buffer is full. Compute spectrum. */
         fft_c_preswapped(channel_spectrum, 0, 8);
 
         ChannelSpectrum spectrum;
+        
         spectrum.sampling_rate = channel_spectrum_sampling_rate;
         spectrum.channel_filter_low_frequency = channel_filter_low_frequency;
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
-
+        
         for (size_t i = 0; i < spectrum.db.size(); i++) {
-            const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            // const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
+            // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
+            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.1f;  // 5.0f;
-            const unsigned int v = (db * mag_scale) + 255.0f;
+            constexpr float mag_scale = 5.11f;  // 5.0f;
+            // const unsigned int v = (db * mag_scale) + 255.0f;
 
-            spectrum.db[i] = std::max(0U, std::min(255U, v));
+            // spectrum.db[i]  = std::max(0U, std::min(255U, v));
+            spectrum.db[i] = std::max(0U, 
+                std::min(255U, static_cast<unsigned int>(db * mag_scale + 255.0f)));
+            if (spectrum.db[i] > spectrum.max_db) {
+                spectrum.max_db = spectrum.db[i];
+            }
+            if (spectrum.db[i] < spectrum.min_db || i == 0) {
+                spectrum.min_db = spectrum.db[i];
+            }
         }
 
-        std::array<uint8_t, 256> db_filtered;
-        // spectrum_db_filter_median(spectrum.db, db_filtered, 3);
-        spectrum_db_filter_wiener(spectrum.db, db_filtered, 5);
-        // spectrum_db_filter_gausian(spectrum.db, db_filtered, 5);
-        spectrum.db = db_filtered;
+        // std::array<uint8_t, 256> db_filtered;
+        // spectrum_db_filter_median(spectrum.db, db_filtered, 7);
+        // spectrum.db = db_filtered;
 
         fifo.in(spectrum);
     }
