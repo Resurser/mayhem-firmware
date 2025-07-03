@@ -40,6 +40,8 @@ class Gradient {
     bool load_file(const std::filesystem::path& file_path);
 
    private:
+
+    
     int16_t prev_index = 0;
     int16_t prev_r = 0;
     int16_t prev_g = 0;

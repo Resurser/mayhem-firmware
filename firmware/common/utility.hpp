@@ -126,6 +126,7 @@ constexpr size_t log_2(const size_t n, const size_t p = 0) {
 
 std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length = 5);
 float fast_log2(const float val);
+float fast_log10(const float val);
 float fast_pow2(const float val);
 
 float mag2_to_dbv_norm(const float mag2);

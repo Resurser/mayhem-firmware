@@ -80,8 +80,9 @@ MEMORY
     ram_external_app_blackjack  (rwx) : org = 0xADE70000, len = 32k
     ram_external_app_battleship   (rwx) : org = 0xADE80000, len = 32k
 
-    ram_external_app_rtty_rx    (rwx) : org = 0xADE90000, len = 32k
-    ram_external_app_test_rx    (rwx) : org = 0xADEA0000, len = 32k
+    ram_external_app_rtty_rx            (rwx) : org = 0xADE90000, len = 32k
+    ram_external_app_test_rx            (rwx) : org = 0xADEA0000, len = 32k
+    ram_external_app_waterfall_designer (rwx) : org = 0xADEB0000, len = 32k
 }
 
 SECTIONS
@@ -430,11 +431,17 @@ SECTIONS
         *(*ui*external_app*blackjack*);
     } > ram_external_app_blackjack
 
-        .external_app_battleship : ALIGN(4) SUBALIGN(4)
+    .external_app_battleship : ALIGN(4) SUBALIGN(4)
     {
         KEEP(*(.external_app.app_battleship.application_information));
         *(*ui*external_app*battleship*);
     } > ram_external_app_battleship
+    
+    .external_app_waterfall_designer : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_waterfall_designer.application_information));
+        *(*ui*external_app*waterfall_designer*);
+    } > ram_external_app_waterfall_designer
 
 }
 

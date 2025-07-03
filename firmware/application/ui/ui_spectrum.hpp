@@ -125,6 +125,8 @@ class WaterfallWidget : public Widget {
     void on_channel_spectrum(const ChannelSpectrum& spectrum);
 
    private:
+    uint8_t logLUT[256];
+    
     // Function to apply linear normalization with noise floor compensation
     void applySavitzkyGolay(const std::array<unsigned char, 240> spectrum_db_in, std::array<unsigned char, 240>& spectrum_db_out);
 
@@ -142,6 +144,7 @@ class WaterfallView : public View {
     WaterfallView& operator=(const WaterfallView&) = delete;
     WaterfallView& operator=(WaterfallView&&) = delete;
 
+    
     // TODO: remove these, use start/stop directly instead.
     void on_show() override;
     void on_hide() override;
@@ -151,6 +154,7 @@ class WaterfallView : public View {
 
     void set_parent_rect(const Rect new_parent_rect) override;
     void show_audio_spectrum_view(const bool show);
+    void load_gradient();
 
    private:
     void update_widgets_rect();

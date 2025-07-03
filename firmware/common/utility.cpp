@@ -64,6 +64,10 @@ float fast_log2(const float val) {
     return log_2;
 }
 
+float fast_log10(const float val) {
+    return fast_log2(val) * 3.19091796875;  // log10(2.0)
+}
+
 float fast_pow2(const float val) {
     union {
         float f;
@@ -89,7 +93,7 @@ float fast_pow2(const float val) {
  */
 float mag2_to_dbv_norm(const float mag2) {
     constexpr float mag2_log2_max = 0.0f;  // std::log2(1.0f);
-    constexpr float log_mag2_mag_factor = 0.5f;
+    constexpr float log_mag2_mag_factor = 0.53f;
     constexpr float log2_log10_factor = 0.3010299956639812f;  // std::log10(2.0f);
     constexpr float log10_dbv_factor = 20.0f;
     constexpr float mag2_to_db_factor = log_mag2_mag_factor * log2_log10_factor * log10_dbv_factor;

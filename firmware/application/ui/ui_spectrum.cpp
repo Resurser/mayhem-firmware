@@ -37,6 +37,9 @@ namespace pmem = portapack::persistent_memory;
 namespace ui {
 namespace spectrum {
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 /* AudioSpectrumView ******************************************************/
 
 AudioSpectrumView::AudioSpectrumView(
@@ -275,6 +278,10 @@ bool FrequencyScale::on_touch(const TouchEvent touch) {
 
 void WaterfallWidget::on_show() {
     clear();
+    logLUT[0]= 0;
+    for (int i = 1; i < 256; i++) {
+        logLUT[i] = static_cast<uint8_t>(20 * fast_log10(i / 255.0f) * 5.05 + 255);
+    }
 
     const auto screen_r = screen_rect();
     display.scroll_set_area(screen_r.top(), screen_r.bottom());
@@ -288,8 +295,8 @@ void WaterfallWidget::on_hide() {
 }
 
 // Apply Savitzky-Golay filter using fixed-point arithmetic
-void WaterfallWidget::applySavitzkyGolay(const std::array<unsigned char, 240> spectrum_db_in,
-                                         std::array<unsigned char, 240>& spectrum_db_out) {
+void WaterfallWidget::applySavitzkyGolay(const std::array<uint8_t, 240> spectrum_db_in,
+                                         std::array<uint8_t, 240>& spectrum_db_out) {
     static const int SG_N = 5;  // Number of coefficients
     static const int coeffs[SG_N] = {-3, 12, 17, 12, -3};  // Coefficients for Savitzky-Golay filter
     size_t size = spectrum_db_in.size();
@@ -305,14 +312,31 @@ void WaterfallWidget::applySavitzkyGolay(const std::array<unsigned char, 240> sp
                          spectrum_db_in[i + 1] * coeffs[3] +
                          spectrum_db_in[i + 2] * coeffs[4]) >> 5;  // Normalize sum
 
-        if (value > 255)
-            value = 255;
-        else if (value < 0)
-            value = 0;
-
-        spectrum_db_out[i] = (uint8_t)value;
+        // Ensure value is within the range of 0-255
+        spectrum_db_out[i] = (uint8_t)max(0, min(255, value));
     }
 }
+
+inline void spectrum_db_filter_median(const std::array<uint8_t, 240>& signal, std::array<uint8_t, 240>& filtered, 
+    const size_t window_size = 5) {
+    size_t size = window_size;
+    if (window_size > 127) size = 127;
+    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
+
+    int half_window = size / 2;
+    for (size_t i = 0; i < signal.size(); ++i) {
+        std::vector<uint8_t> window;
+        for (int j = -half_window; j <= half_window; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
+                window.push_back(signal[idx]);
+            }
+        }
+        std::nth_element(window.begin(), window.begin() + window.size()/2, window.end());
+        filtered[i] = window[window.size() / 2];
+    }
+}
+
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;
@@ -324,33 +348,28 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     }
 
     if (pmem::spectrum_view_type()) {
-        // std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
-        // uint8_t min = 255;
-        // uint8_t max = 0;
+        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
+        uint8_t min = spectrum.min_db;
+        uint8_t max = spectrum.max_db;
         // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
 
         switch (pmem::spectrum_view_type()) {
-            case 0:
-                // clearNoise(spectrum_db, noise_floor, 15);
-                break;
             case 1:
-                // for (size_t i = 0; i < 240; i++) {
-                // spectrum_db[i] = linearNormalizeWithNoiseFloor(spectrum_db_upd[i], min, max, noise_floor);
-                // }
+                applySavitzkyGolay(spectrum_db_upd, spectrum_db);  // Initialize with the first value
                 break;
             case 2:
-                // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
+                spectrum_db_filter_median(spectrum_db_upd, spectrum_db, 5);
                 // clearNoise(spectrum_db_upd, noise_floor, 15);
                 // spectrum_db = spectrum_db_upd;
                 break;
             case 3:
+                for (size_t i = 0; i < 240; i++) {
+                    spectrum_db[i] = logLUT[spectrum_db_upd[i]];
+                }
                 // clearNoise(spectrum_db, noise_floor, 15);
                 // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
                 break;
-            default:
-                break;
         }
-        // spectrum_db = spectrum_db_upd;
     }
 
     for (size_t i = 0; i < 240; i++) {
@@ -372,7 +391,10 @@ bool WaterfallWidget::on_touch(const TouchEvent event) {
             on_touch_select(event.point.x(), event.point.y());
         }
     }
+    uint8_t c = pmem::spectrum_view_type();
+    c += 1;
 
+    pmem::set_spectrum_view_type(c > 3 ? 0 : c);
     return true;
 }
 
@@ -406,10 +428,16 @@ WaterfallView::WaterfallView(const bool cursor) {
         }
     };
 
+    load_gradient();
+}
+
+
+void WaterfallView::load_gradient() {
     if (!waterfall_widget.gradient.load_file(default_gradient_file)) {
         waterfall_widget.gradient.set_default();
     }
 }
+
 
 void WaterfallView::on_show() {
     start();

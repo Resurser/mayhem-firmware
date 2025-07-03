@@ -240,6 +240,10 @@ set(EXTCPPSRC
 	#battleship
 	external/battleship/main.cpp
 	external/battleship/ui_battleship.cpp		
+
+	#waterfall designer
+	external/waterfall_designer/main.cpp
+	external/waterfall_designer/ui_waterfall_designer.cpp
 )
 
 set(EXTAPPLIST
@@ -301,4 +305,5 @@ set(EXTAPPLIST
 	spaceinv
 	blackjack
 	battleship
+	waterfall_designer
 )

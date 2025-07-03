@@ -26,8 +26,8 @@
 #include "utility.hpp"
 #include "event_m4.hpp"
 #include "portapack_shared_memory.hpp"
-
 #include <algorithm>
+
 void SpectrumCollector::on_message(const Message* const message) {
     switch (message->id) {
         case Message::ID::UpdateSpectrum:
@@ -131,25 +131,6 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
-static void spectrum_db_filter_median(std::array<uint8_t, 256>& signal, std::array<uint8_t, 256>& filtered, const size_t window_size = 5) {
-    size_t size = window_size;
-    if (window_size > 127) size = 127;
-    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
-
-    int half_window = size / 2;
-    for (size_t i = 0; i < signal.size(); ++i) {
-        std::vector<uint8_t> window;
-        for (int j = -half_window; j <= half_window; ++j) {
-            int idx = i + j;
-            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
-                window.push_back(signal[idx]);
-            }
-        }
-        std::nth_element(window.begin(), window.begin() + window.size()/2, window.end());
-        filtered[i] = window[window.size() / 2];
-    }
-}
-
 void SpectrumCollector::update() {
    
     // Called from idle thread (after EVT_MASK_SPECTRUM is flagged)
@@ -163,29 +144,23 @@ void SpectrumCollector::update() {
         spectrum.channel_filter_low_frequency = channel_filter_low_frequency;
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
-        
         for (size_t i = 0; i < spectrum.db.size(); i++) {
             // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
             const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.11f;  // 5.0f;
+            constexpr float mag_scale = 5.01f;  // 5.0f;
             // const unsigned int v = (db * mag_scale) + 255.0f;
 
-            // spectrum.db[i]  = std::max(0U, std::min(255U, v));
-            spectrum.db[i] = std::max(0U, 
-                std::min(255U, static_cast<unsigned int>(db * mag_scale + 255.0f)));
-            if (spectrum.db[i] > spectrum.max_db) {
-                spectrum.max_db = spectrum.db[i];
+            const uint8_t db_bin = std::max(0U, std::min(255U, static_cast<unsigned int>(db * mag_scale + 255.0f)));
+            spectrum.db[i]  = db_bin;
+            if (db_bin > spectrum.max_db) {
+                spectrum.max_db = db_bin;
             }
-            if (spectrum.db[i] < spectrum.min_db || i == 0) {
-                spectrum.min_db = spectrum.db[i];
+            if (db_bin < spectrum.min_db || i == 0) {
+                spectrum.min_db = db_bin;
             }
         }
-
-        // std::array<uint8_t, 256> db_filtered;
-        // spectrum_db_filter_median(spectrum.db, db_filtered, 7);
-        // spectrum.db = db_filtered;
 
         fifo.in(spectrum);
     }
