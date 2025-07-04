@@ -43,7 +43,9 @@ class SpectrumCollector {
         const buffer_c16_t& channel,
         const int32_t filter_low_frequency,
         const int32_t filter_high_frequency,
-        const int32_t filter_transition);
+        const int32_t filter_transition,
+        const uint8_t options = 0
+    );
 
    private:
     BlockDecimator<complex16_t, 256> channel_spectrum_decimator{1};
@@ -57,6 +59,7 @@ class SpectrumCollector {
     int32_t channel_filter_low_frequency{0};
     int32_t channel_filter_high_frequency{0};
     int32_t channel_filter_transition{0};
+    uint8_t channel_filter_options{0};
 
     void post_message(const buffer_c16_t& data);
 

@@ -76,11 +76,13 @@ void SpectrumCollector::feed(
     const buffer_c16_t& channel,
     const int32_t filter_low_frequency,
     const int32_t filter_high_frequency,
-    const int32_t filter_transition) {
+    const int32_t filter_transition,
+    const uint8_t options) {
     // Called from baseband processing thread.
     channel_filter_low_frequency = filter_low_frequency;
     channel_filter_high_frequency = filter_high_frequency;
     channel_filter_transition = filter_transition;
+    channel_filter_options = options;
 
     channel_spectrum_decimator.feed(
         channel,
@@ -125,8 +127,8 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     constexpr size_t mask = length - 1;
     // Three term Blackman window.
     constexpr float alpha = 0.42f;
-    constexpr float beta = 0.5f * 0.5f;
-    constexpr float gamma = 0.081f * 0.0511f;
+    constexpr float beta = 0.496f * 0.496f;
+    constexpr float gamma = 0.0768f * 0.0511f;
     // Blackman window coefficients.
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
@@ -145,14 +147,17 @@ void SpectrumCollector::update() {
         spectrum.channel_filter_high_frequency = channel_filter_high_frequency;
         spectrum.channel_filter_transition = channel_filter_transition;
         for (size_t i = 0; i < spectrum.db.size(); i++) {
-            // const auto corrected_sample = spectrum_window_hamming_3(channel_spectrum, i);
-            const auto corrected_sample = spectrum_window_blackman_3(channel_spectrum, i);
+            const auto corrected_sample = (channel_filter_options == 1)
+                ? spectrum_window_blackman_3(channel_spectrum, i) 
+                : spectrum_window_hamming_3(channel_spectrum, i);
+            
             const auto mag2 = magnitude_squared(corrected_sample * (1.0f / 32768.0f));
             const float db = mag2_to_dbv_norm(mag2);
-            constexpr float mag_scale = 5.01f;  // 5.0f;
-            // const unsigned int v = (db * mag_scale) + 255.0f;
+            
+            constexpr float mag_scale = 5.15f;  // 5.0f;
+            const unsigned int v = (db * mag_scale) + 255.0f;
 
-            const uint8_t db_bin = std::max(0U, std::min(255U, static_cast<unsigned int>(db * mag_scale + 255.0f)));
+            const uint8_t db_bin = std::max(0U, std::min(255U, v));
             spectrum.db[i]  = db_bin;
             if (db_bin > spectrum.max_db) {
                 spectrum.max_db = db_bin;

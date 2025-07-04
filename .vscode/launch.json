@@ -39,12 +39,12 @@
          "program": "${workspaceRoot}/build/firmware/baseband/baseband_sd_over_usb.elf",
          "args": [],
          "cwd": "${workspaceRoot}",
-         // "environment": [
-         //     {
-         //         "name": "PATH",
-         //         "value": "${env:PATH}"
-         //     }
-         // ],
+         "environment": [
+             {
+                 "name": "PATH",
+                 "value": "${env:PATH}"
+             }
+         ],
          "externalConsole": false,
          "MIMode": "gdb",
          "miDebuggerPath": "arm-none-eabi-gdb",
@@ -95,12 +95,12 @@
          "program": "${workspaceRoot}/build/firmware/application/application.elf",
          "args": [],
          "cwd": "${workspaceRoot}",
-         // "environment": [
-         //     {
-         //         "name": "PATH",
-         //         "value": "${env:PATH}"
-         //     }
-         // ],
+         "environment": [
+             {
+                 "name": "PATH",
+                 "value": "${env:PATH}"
+             }
+         ],
          "externalConsole": false,
          "MIMode": "gdb",
          "miDebuggerPath": "arm-none-eabi-gdb",
