@@ -7,23 +7,21 @@
 - Кольорові схеми: Jet, Hot, Gray, Cool, Magma
 - Порогове та адаптивне шумоподавлення
 - Приклад інтеграції в `spectrum.cpp`
-
-##Інтеграція
-
-1. Копіюй `dsp/` в `firmware/dsp/`
-2. Замінити або оновити `apps/spectrum.cpp` за прикладом `spectrum_patch.cpp`
-3. Додай `.c` файли до `Makefile`
-
 */
-#include "dsp_adv.h"
-
+#include "dsp_adv.hpp"
 #include <math.h>
+#include <algorithm>
+
+// namespace dsp {
+
 #define MAX_KERNEL 25
+constexpr int32_t SCALE = 32768;  // Q15-фіксована точка
 static float kernel[MAX_KERNEL];
+static float heatmap[256] = {0.0f};  // Ініціалізація теплової карти
 
 void update_heatmap(float* spectrum, size_t len) {
     for (size_t i = 0; i < len; i++) {
-        heatmap[i] = 0.95f * heatmap[i] + 0.05f * spectrum[i]; // EMA
+        heatmap[i] = 0.95f * heatmap[i] + 0.05f * spectrum[i];  // EMA
     }
 }
 void erode_waterfall(uint8_t* row, size_t len) {
@@ -50,8 +48,8 @@ void iq_correct(float* I, float* Q, size_t len) {
 
     float rmsI = 0.0f, rmsQ = 0.0f;
     for (size_t i = 0; i < len; i++) {
-        rmsI += I[i]*I[i];
-        rmsQ += Q[i]*Q[i];
+        rmsI += I[i] * I[i];
+        rmsQ += Q[i] * Q[i];
     }
     rmsI = sqrtf(rmsI / len);
     rmsQ = sqrtf(rmsQ / len);
@@ -68,15 +66,15 @@ void gaussian_smooth(float* data, size_t len, float sigma) {
     float sum = 0.0f;
     for (int i = -radius; i <= radius; i++) {
         int idx = i + radius;
-        kernel[idx] = expf(-0.5f * (i*i) / (sigma*sigma));
+        kernel[idx] = expf(-0.5f * (i * i) / (sigma * sigma));
         sum += kernel[idx];
     }
-    for (int i = 0; i < ksize; i++) kernel[i] /= sum;
+    for (size_t i = 0; i < ksize; i++) kernel[i] /= sum;
 
     float temp[len];
-    for (int i = 0; i < len; i++) temp[i] = data[i];
+    for (size_t i = 0; i < len; i++) temp[i] = data[i];
 
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         float acc = 0.0f;
         for (int j = -radius; j <= radius; j++) {
             int idx = i + j;
@@ -104,9 +102,9 @@ void suppress_noise(float* spectrum, size_t len, float threshold_db) {
             spectrum[i] = 0.0f;
 }
 void savitzky_golay(float* data, size_t len) {
-    const float coeffs[5] = { -3.0f/35, 12.0f/35, 17.0f/35, 12.0f/35, -3.0f/35 };
+    const float coeffs[5] = {-3.0f / 35, 12.0f / 35, 17.0f / 35, 12.0f / 35, -3.0f / 35};
     float temp[len];
-    for (int i = 2; i < len - 2; i++) {
+    for (size_t i = 2; i < len - 2; i++) {
         float acc = 0.0f;
         for (int j = -2; j <= 2; j++)
             acc += data[i + j] * coeffs[j + 2];
@@ -117,7 +115,7 @@ void savitzky_golay(float* data, size_t len) {
 }
 void median_filter(uint8_t* data, size_t len, size_t window) {
     uint8_t temp[len];
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         int half = window / 2;
         uint8_t buf[15];
         int count = 0;
@@ -127,6 +125,7 @@ void median_filter(uint8_t* data, size_t len, size_t window) {
             if (idx >= len) idx = len - 1;
             buf[count++] = data[idx];
         }
+
         for (int m = 1; m < count; m++) {
             uint8_t key = buf[m];
             int n = m - 1;
@@ -147,34 +146,43 @@ static ColorScheme active_scheme = LUT_JET;
 float scale_power(float raw, ScaleMode mode, float gain) {
     static float avg = 0.0f;
     switch (mode) {
-        case SCALE_LINEAR: return raw * gain;
-        case SCALE_LOG: return 10.0f * log10f(raw + 1e-6f) * gain;
+        case SCALE_LINEAR:
+            return raw * gain;
+        case SCALE_LOG:
+            return 10.0f * log10f(raw + 1e-6f) * gain;
         case SCALE_ADAPTIVE:
             avg = 0.95f * avg + 0.05f * raw;
             return (raw - avg) * gain;
-        default: return raw;
+        default:
+            return raw;
     }
 }
 void generate_lut(ColorScheme scheme) {
     active_scheme = scheme;
-    for (int i = 0; i < 256; i++) {
+    for (uint8_t i = 0; i < 256; i++) {
         float v = i / 255.0f;
         switch (scheme) {
-            case LUT_GRAY: LUT[i] = (ColorRGB){i,i,i}; break;
-            case LUT_COOL: LUT[i] = (ColorRGB){255*(1-v),255*v,255}; break;
-            case LUT_HOT: LUT[i] = (ColorRGB){255*v,128*v,64*v}; break;
+            case LUT_GRAY:
+                LUT[i] = (ColorRGB){i, i, i};
+                break;
+            case LUT_COOL:
+                LUT[i] = (ColorRGB){(unsigned char)(255 * (1 - v)), (unsigned char)(255 * v), 255};
+                break;
+            case LUT_HOT:
+                LUT[i] = (ColorRGB){(unsigned char)(255 * v), (unsigned char)(128 * v), (unsigned char)(64 * v)};
+                break;
             case LUT_JET:
                 LUT[i] = (ColorRGB){
-                    (unsigned char)(255 * fmax(0,fmin(1,4*(v - 0.75f)))),
-                    (unsigned char)(255 * fmax(0,fmin(1,4*fabs(v - 0.5f)))),
-                    (unsigned char)(255 * fmax(0,fmin(1,4*(0.25f - v))))
-                }; break;
+                    (unsigned char)(255 * fmax(0, fmin(1, 4 * (v - 0.75f)))),
+                    (unsigned char)(255 * fmax(0, fmin(1, 4 * fabs(v - 0.5f)))),
+                    (unsigned char)(255 * fmax(0, fmin(1, 4 * (0.25f - v))))};
+                break;
             case LUT_MAGMA:
                 LUT[i] = (ColorRGB){
                     (unsigned char)(255 * powf(v, 1.5f)),
                     (unsigned char)(255 * powf(v, 0.8f)),
-                    (unsigned char)(255 * powf(v, 0.3f))
-                }; break;
+                    (unsigned char)(255 * powf(v, 0.3f))};
+                break;
         }
     }
 }
@@ -184,4 +192,41 @@ ColorRGB get_color(float db) {
     if (i < 0) i = 0;
     if (i > 255) i = 255;
     return LUT[i];
+}
+// Основна корекція дзеркала
+void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed) {
+    for (size_t i = 0; i < length; ++i) {
+        int32_t ci = (i_data[i] * gain_fixed) >> 15;  // Q15 множення
+        int32_t cq = q_data[i] - ((ci * phase_fixed) >> 15);
+
+        i_data[i] = ci < -32768 ? -32768 : (ci > 32767 ? 32767 : ci);
+        q_data[i] = cq < -32768 ? -32768 : (cq > 32767 ? 32767 : cq);  // Обмеження значень
+    }
+}
+
+// Вимір потужності дзеркального сигналу
+static int32_t measureImagePower(const int16_t* i_data, const int16_t* q_data, size_t len) {
+    int64_t power = 0;
+    for (size_t i = 0; i < len; ++i)
+        power += std::abs(static_cast<int32_t>(i_data[i]) * q_data[i]);
+    return static_cast<int32_t>(power / len);
+}
+
+// Автоматичне пригнічення дзеркальних сигналів
+void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length, size_t max_iterations) {
+    int32_t gain_fixed = SCALE;
+    int32_t phase_fixed = 0;
+
+    const int32_t gain_step = SCALE / 256;
+    const int32_t phase_step = SCALE / 512;
+
+    for (size_t it = 0; it < max_iterations; ++it) {
+        int32_t img_power = measureImagePower(i_data, q_data, length);
+
+        // Модифікація коефіцієнтів на основі зворотного зв’язку
+        gain_fixed -= (gain_step * img_power) >> 15;
+        phase_fixed -= (phase_step * img_power) >> 15;
+
+        mirror_signals_clear(i_data, q_data, length, gain_fixed, phase_fixed);
+    }
 }

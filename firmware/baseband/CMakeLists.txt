@@ -136,6 +136,7 @@ set(CPPSRC
 	${COMMON}/dsp_sos.cpp
 	${COMMON}/dsp_ddc.cpp
 	${COMMON}/cordic.cpp
+	${COMMON}/dsp_adv.cpp
 	fxpt_atan2.cpp
 	rssi.cpp
 	rssi_dma.cpp
@@ -152,6 +153,7 @@ set(CPPSRC
 	${COMMON}/performance_counter.cpp
 	${COMMON}/random.cpp
 	tone_gen.cpp
+	
 )
 
 # C sources to be compiled in ARM mode regardless of the global setting.
