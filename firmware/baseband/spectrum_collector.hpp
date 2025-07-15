@@ -25,13 +25,13 @@
 #define ARRAY_ELEMENTS(x) (sizeof(x) / sizeof(x[0]))
 /* sizeof() compile-time operator that returns #bytes of (data type). We used it to get #elements_array */
 
-#include "dsp_types.hpp"
 #include "complex.hpp"
+#include "dsp_types.hpp"
 
 #include "block_decimator.hpp"
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 #include "message.hpp"
 
@@ -44,8 +44,7 @@ class SpectrumCollector {
         const int32_t filter_low_frequency,
         const int32_t filter_high_frequency,
         const int32_t filter_transition,
-        const uint8_t options = 0
-    );
+        const uint8_t options = 1);
 
    private:
     BlockDecimator<complex16_t, 256> channel_spectrum_decimator{1};

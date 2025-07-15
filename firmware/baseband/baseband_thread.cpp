@@ -24,15 +24,16 @@
 #include "dsp_types.hpp"
 
 #include "baseband.hpp"
-#include "baseband_sgpio.hpp"
 #include "baseband_dma.hpp"
+#include "baseband_sgpio.hpp"
 
-#include "rssi.hpp"
 #include "i2s.hpp"
+#include "rssi.hpp"
 using namespace lpc43xx;
 
 #include "portapack_shared_memory.hpp"
 
+#include "dsp_adv.hpp"
 #include "utility.hpp"
 
 #include <array>

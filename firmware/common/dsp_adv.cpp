@@ -11,6 +11,8 @@
 #include "dsp_adv.hpp"
 #include <math.h>
 #include <algorithm>
+#include "dsp_types.hpp"
+#include "utility.hpp"
 
 namespace dsp_utils {
 
@@ -85,8 +87,11 @@ void gaussian_smooth(float* data, size_t len, float sigma) {
         data[i] = acc;
     }
 }
-float estimate_noise_threshold(float* spectrum, size_t len) {
-    float sum = 0.0f, var = 0.0f;
+
+float estimate_noise_threshold(uint8_t* spectrum, size_t len) {
+    uint32_t sum = 0;
+    float var = 0.0f;
+
     for (size_t i = 0; i < len; i++)
         sum += spectrum[i];
     float mean = sum / len;
@@ -96,12 +101,14 @@ float estimate_noise_threshold(float* spectrum, size_t len) {
     float Q = var / (mean * mean + 1e-6f);
     return (Q < 2.0f) ? mean + 3.0f : mean + 6.0f;
 }
-void suppress_noise(float* spectrum, size_t len, float threshold_db) {
+
+void suppress_noise(uint8_t* spectrum, size_t len, float threshold_db) {
     for (size_t i = 0; i < len; i++)
         if (spectrum[i] < threshold_db)
             spectrum[i] = 0.0f;
 }
-void savitzky_golay(float* data, size_t len) {
+
+void savitzky_golay(uint8_t* data, size_t len) {
     const float coeffs[5] = {-3.0f / 35, 12.0f / 35, 17.0f / 35, 12.0f / 35, -3.0f / 35};
     float temp[len];
     for (size_t i = 2; i < len - 2; i++) {
@@ -113,6 +120,7 @@ void savitzky_golay(float* data, size_t len) {
     for (size_t i = 2; i < len - 2; i++)
         data[i] = temp[i];
 }
+
 void median_filter(uint8_t* data, size_t len, size_t window) {
     uint8_t temp[len];
     for (size_t i = 0; i < len; i++) {
@@ -149,7 +157,7 @@ float scale_power(float raw, ScaleMode mode, float gain) {
         case SCALE_LINEAR:
             return raw * gain;
         case SCALE_LOG:
-            return 10.0f * log10f(raw + 1e-6f) * gain;
+            return 10.0f * fast_log10(raw) * gain;
         case SCALE_ADAPTIVE:
             avg = 0.95f * avg + 0.05f * raw;
             return (raw - avg) * gain;

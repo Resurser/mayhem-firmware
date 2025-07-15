@@ -7,72 +7,37 @@
 #include <cstdint>
 
 /**
- * @namespace dsp_adv
- * @brief Advanced digital signal processing utilities.
+ * @namespace dsp_utils
+ * @brief Utility functions and types for advanced digital signal processing.
  *
- * This namespace provides a collection of functions and types for advanced DSP tasks,
- * including IQ correction, smoothing, filtering, scaling, color mapping, noise suppression,
- * and signal mirroring. It is designed for use in firmware applications requiring real-time
- * signal analysis and visualization.
+ * This namespace provides a collection of DSP algorithms and helpers for signal correction,
+ * smoothing, filtering, scaling, color mapping, and noise suppression, commonly used in
+ * spectrum analysis and visualization applications.
  *
- * @enum ScaleMode
- *   - SCALE_LINEAR: Linear scaling mode.
- *   - SCALE_LOG: Logarithmic scaling mode.
- *   - SCALE_ADAPTIVE: Adaptive scaling mode.
+ * Enumerations:
+ * - ScaleMode: Modes for scaling power values (linear, logarithmic, adaptive).
+ * - ColorScheme: Predefined color lookup tables for visualization.
  *
- * @enum ColorScheme
- *   - LUT_JET: Jet color map.
- *   - LUT_HOT: Hot color map.
- *   - LUT_GRAY: Grayscale color map.
- *   - LUT_COOL: Cool color map.
- *   - LUT_MAGMA: Magma color map.
+ * Structures:
+ * - ColorRGB: Represents an RGB color.
  *
- * @struct ColorRGB
- *   - r: Red channel (0-255).
- *   - g: Green channel (0-255).
- *   - b: Blue channel (0-255).
+ * Global Variables:
+ * - LUT: Color lookup table with 256 entries.
  *
- * @var LUT
- *   - Lookup table of 256 RGB colors for visualization.
- *
- * @fn void iq_correct(float* I, float* Q, size_t len)
- *   - Corrects IQ imbalance in the provided I/Q data arrays.
- *
- * @fn void gaussian_smooth(float* data, size_t len, float sigma)
- *   - Applies Gaussian smoothing to the data array.
- *
- * @fn void savitzky_golay(float* data, size_t len)
- *   - Applies Savitzky-Golay smoothing filter to the data array.
- *
- * @fn void median_filter(uint8_t* data, size_t len, size_t window)
- *   - Applies a median filter with the specified window size to the data array.
- *
- * @fn float scale_power(float raw, ScaleMode mode, float gain)
- *   - Scales the raw power value according to the selected mode and gain.
- *
- * @fn void generate_lut(ColorScheme scheme)
- *   - Generates a color lookup table based on the selected color scheme.
- *
- * @fn ColorRGB get_color(float db)
- *   - Maps a dB value to an RGB color using the current LUT.
- *
- * @fn void suppress_noise(float* spectrum, size_t len, float threshold_db)
- *   - Suppresses noise in the spectrum below the specified dB threshold.
- *
- * @fn float estimate_noise_threshold(float* spectrum, int size_t)
- *   - Estimates the noise threshold from the spectrum data.
- *
- * @fn void update_heatmap(float* spectrum, size_t len)
- *   - Updates the heatmap visualization with the current spectrum data.
- *
- * @fn void erode_waterfall(uint8_t* row, size_t len)
- *   - Applies erosion to a waterfall display row for visualization effects.
- *
- * @fn void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed)
- *   - Clears mirror signals using fixed gain and phase correction.
- *
- * @fn void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length, size_t max_iterations = 8)
- *   - Cancels mirror signals using iterative optimization.
+ * Functions:
+ * - iq_correct: Corrects I/Q signal imbalance.
+ * - gaussian_smooth: Applies Gaussian smoothing to data.
+ * - savitzky_golay: Applies Savitzky-Golay smoothing filter.
+ * - median_filter: Applies median filtering with a specified window size.
+ * - scale_power: Scales raw power values according to the selected mode and gain.
+ * - generate_lut: Generates a color lookup table for the specified scheme.
+ * - get_color: Maps a dB value to an RGB color using the current LUT.
+ * - suppress_noise: Suppresses noise in a spectrum based on a threshold in dB.
+ * - estimate_noise_threshold: Estimates the noise threshold from a spectrum.
+ * - update_heatmap: Updates a heatmap visualization from spectrum data.
+ * - erode_waterfall: Applies erosion to a waterfall row for visualization.
+ * - mirror_signals_clear: Clears mirror signals using fixed gain and phase correction.
+ * - mirror_signals_cancellation: Iteratively cancels mirror signals in I/Q data.
  */
 namespace dsp_utils {
 
@@ -95,20 +60,20 @@ struct ColorRGB {
 };
 extern ColorRGB LUT[256];
 
-void iq_correct(float* I, float* Q, size_t len);
+void iq_correct(int16_t* I, int16_t* Q, size_t len);
 
-void gaussian_smooth(float* data, size_t len, float sigma);
-void savitzky_golay(float* data, size_t len);
+void gaussian_smooth(uint8_t* data, size_t len, float sigma);
+void savitzky_golay(uint8_t* data, size_t len);
 void median_filter(uint8_t* data, size_t len, size_t window);
 
-float scale_power(float raw, ScaleMode mode, float gain);
+float scale_power(uint8_t raw, ScaleMode mode, float gain);
 
 void generate_lut(ColorScheme scheme);
 ColorRGB get_color(float db);
 
-void suppress_noise(float* spectrum, size_t len, float threshold_db);
-float estimate_noise_threshold(float* spectrum, int size_t);
-void update_heatmap(float* spectrum, size_t len);
+void suppress_noise(uint8_t* spectrum, size_t len, float threshold_db);
+float estimate_noise_threshold(uint8_t* spectrum, int size_t);
+void update_heatmap(uint8_t* spectrum, size_t len);
 void erode_waterfall(uint8_t* row, size_t len);
 
 void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed);

@@ -22,6 +22,7 @@
 
 #include "ui_spectrum.hpp"
 
+#include "dsp_adv.hpp"
 #include "portapack.hpp"
 using namespace portapack;
 
@@ -29,8 +30,8 @@ using namespace portapack;
 #include "string_format.hpp"
 #include "utility.hpp"
 
-#include <cmath>
 #include <array>
+#include <cmath>
 
 namespace pmem = portapack::persistent_memory;
 
@@ -187,6 +188,8 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
                                                           : "";
 
         const std::string label = to_string_dec_uint(tick_offset) + zero_pad + unit;
+        const std::string sufix = pmem::spectrum_view_type() == 0 ? " " : (pmem::spectrum_view_type() == 1 ? " [log]" : pmem::spectrum_view_type() == 2 ? " [smooth]"
+                                                                                                                                                        : " [erode]");
         const auto label_width = style().font.size_of(label).width();
 
         const Coord offset_low = r.left() + x_center - pixel_offset;
@@ -197,7 +200,9 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const Coord offset_high = r.left() + x_center + pixel_offset;
         const Rect tick_high{offset_high, r.top(), 1, r.height()};
         painter.fill_rectangle(tick_high, Theme::getInstance()->bg_darkest->foreground);
-        painter.draw_string({offset_high - 2 - label_width, r.top()}, style(), label);
+        painter.draw_string({offset_high - 2 - label_width, r.top()}, style(), label + sufix);
+
+        // painter.draw_string({offset_high - 2 - label_width, r.bottom()}, style(), to_string_dec_uint(pmem::spectrum_view_type()));
 
         tick_offset += tick_interval;
     }
@@ -278,10 +283,12 @@ bool FrequencyScale::on_touch(const TouchEvent touch) {
 
 void WaterfallWidget::on_show() {
     clear();
-    logLUT[0]= 0;
-    for (int i = 1; i < 256; i++) {
-        logLUT[i] = static_cast<uint8_t>(20 * fast_log10(i / 255.0f) * 5.05 + 255);
-    }
+    // if (logLUT[0] == 0) {
+    //     // Initialize logLUT only once
+    //     for (int i = 0; i < 256; i++) {
+    //         logLUT[i] = static_cast<uint8_t>(20 * fast_log10((i + 1) / 256.0f) * 5.05 + 255);
+    //     }
+    // }
 
     const auto screen_r = screen_rect();
     display.scroll_set_area(screen_r.top(), screen_r.bottom());
@@ -293,50 +300,32 @@ void WaterfallWidget::on_hide() {
      */
     display.scroll_disable();
 }
+const int16_t SG_COEFFS[5] = {-3, 12, 17, 12, -3};  // Window size = 5, poly order = 2
+const int16_t SCALE_FACTOR = 35;                    // Scaling factor for fixed-point arithmetic
 
 // Apply Savitzky-Golay filter using fixed-point arithmetic
-void WaterfallWidget::applySavitzkyGolay(const std::array<uint8_t, 240> spectrum_db_in,
+void WaterfallWidget::applySavitzkyGolay(std::array<uint8_t, 240> spectrum_db_in,
                                          std::array<uint8_t, 240>& spectrum_db_out) {
-    static const int SG_N = 5;  // Number of coefficients
-    static const int coeffs[SG_N] = {-3, 12, 17, 12, -3};  // Coefficients for Savitzky-Golay filter
-    size_t size = spectrum_db_in.size();
-    spectrum_db_out[0] = spectrum_db_in[0];
-    spectrum_db_out[1] = spectrum_db_in[1];
-    spectrum_db_out[size - 2] = spectrum_db_in[size - 2];
-    spectrum_db_out[size - 1] = spectrum_db_in[size - 1];
+    spectrum_db_out = spectrum_db_in;  // Copy input to output
+    // dsp_utils::savitzky_golay(spectrum_db_in.data(), spectrum_db_in.size());
+    int size = 240;
+    int halfWin = 2;  // Window Size = 5 (Centered on Index)
 
-    for (size_t i = 2; i < size - 2; i++) {
-        int32_t value = (spectrum_db_in[i - 2] * coeffs[0] +
-                         spectrum_db_in[i - 1] * coeffs[1] +
-                         spectrum_db_in[i] * coeffs[2] +
-                         spectrum_db_in[i + 1] * coeffs[3] +
-                         spectrum_db_in[i + 2] * coeffs[4]) >> 5;  // Normalize sum
+    for (int i = halfWin; i < size - halfWin; i++) {
+        int32_t sum = 0;  // Use 32-bit int to prevent overflow
 
-        // Ensure value is within the range of 0-255
-        spectrum_db_out[i] = (uint8_t)max(0, min(255, value));
-    }
-}
-
-inline void spectrum_db_filter_median(const std::array<uint8_t, 240>& signal, std::array<uint8_t, 240>& filtered, 
-    const size_t window_size = 5) {
-    size_t size = window_size;
-    if (window_size > 127) size = 127;
-    if (window_size % 2 == 0) size++; // Забезпечити непарний розмір вікна
-
-    int half_window = size / 2;
-    for (size_t i = 0; i < signal.size(); ++i) {
-        std::vector<uint8_t> window;
-        for (int j = -half_window; j <= half_window; ++j) {
-            int idx = i + j;
-            if (idx >= 0 && idx < static_cast<int>(signal.size())) {
-                window.push_back(signal[idx]);
-            }
+        for (int j = -halfWin; j <= halfWin; j++) {
+            sum += (int32_t)SG_COEFFS[j + halfWin] * spectrum_db_in[i + j];
         }
-        std::nth_element(window.begin(), window.begin() + window.size()/2, window.end());
-        filtered[i] = window[window.size() / 2];
+
+        spectrum_db_out[i] = (uint8_t)(sum >> 5);  // SCALE_FACTOR);  // Normalize back to fixed-point range
     }
 }
 
+inline void spectrum_db_filter_median(const std::array<uint8_t, 240>& signal, std::array<uint8_t, 240>& filtered, const size_t window_size = 5) {
+    filtered = signal;  // Copy filtered data back to output
+    dsp_utils::median_filter(filtered.data(), filtered.size(), window_size);
+}
 
 void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;
@@ -350,26 +339,26 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     if (pmem::spectrum_view_type()) {
         std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
         uint8_t min = spectrum.min_db;
-        uint8_t max = spectrum.max_db;
         // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-
+        dsp_utils::suppress_noise(spectrum_db_upd.data(), spectrum_db_upd.size(), min + 10);
         switch (pmem::spectrum_view_type()) {
             case 1:
-                applySavitzkyGolay(spectrum_db_upd, spectrum_db);  // Initialize with the first value
+                for (size_t i = 0; i < 240; i++) {
+                    spectrum_db[i] = logLUT[spectrum_db_upd[i]];
+                }
                 break;
             case 2:
-                spectrum_db_filter_median(spectrum_db_upd, spectrum_db, 5);
+                spectrum_db_filter_median(spectrum_db_upd, spectrum_db);
                 // clearNoise(spectrum_db_upd, noise_floor, 15);
                 // spectrum_db = spectrum_db_upd;
                 break;
             case 3:
-                for (size_t i = 0; i < 240; i++) {
-                    spectrum_db[i] = logLUT[spectrum_db_upd[i]];
-                }
+                dsp_utils::erode_waterfall(spectrum_db_upd.data(), spectrum_db_upd.size());
                 // clearNoise(spectrum_db, noise_floor, 15);
                 // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
                 break;
         }
+        spectrum_db = spectrum_db_upd;
     }
 
     for (size_t i = 0; i < 240; i++) {
@@ -383,6 +372,11 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     display.draw_pixels(
         {{0, draw_y}, {pixel_row.size(), 1}},
         pixel_row);
+
+    // Painter ^ ^draw_string({x, y}, *Theme::getInstance()->bg_darkest_small, to_string_dec_uint(stack_space_left));
+    // Painter::draw_string(
+    //     {{0, draw_y}, {pixel_row.size(), screen_height - 1}},
+    //     *Theme::getInstance()->fg_cyan, "Test string");
 }
 
 bool WaterfallWidget::on_touch(const TouchEvent event) {
