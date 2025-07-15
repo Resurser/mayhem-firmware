@@ -74,7 +74,7 @@
  * @fn void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length, size_t max_iterations = 8)
  *   - Cancels mirror signals using iterative optimization.
  */
-namespace dsp_adv {
+namespace dsp_utils {
 
 enum ScaleMode {
     SCALE_LINEAR = 0,
@@ -93,7 +93,7 @@ enum ColorScheme {
 struct ColorRGB {
     uint8_t r, g, b;
 };
-abs extern ColorRGB LUT[256];
+extern ColorRGB LUT[256];
 
 void iq_correct(float* I, float* Q, size_t len);
 
@@ -114,5 +114,5 @@ void erode_waterfall(uint8_t* row, size_t len);
 void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed);
 void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length, size_t max_iterations = 8);
 
-}  // namespace dsp_adv
+}  // namespace dsp_utils
 #endif  // __DSP_ADV_H__

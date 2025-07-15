@@ -12,7 +12,7 @@
 #include <math.h>
 #include <algorithm>
 
-// namespace dsp {
+namespace dsp_utils {
 
 #define MAX_KERNEL 25
 constexpr int32_t SCALE = 32768;  // Q15-фіксована точка
@@ -230,3 +230,5 @@ void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length
         mirror_signals_clear(i_data, q_data, length, gain_fixed, phase_fixed);
     }
 }
+
+}  // namespace dsp_utils
