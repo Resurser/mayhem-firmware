@@ -75,6 +75,7 @@ void suppress_noise(uint8_t* spectrum, size_t len, float threshold_db);
 float estimate_noise_threshold(uint8_t* spectrum, int size_t);
 void update_heatmap(uint8_t* spectrum, size_t len);
 void erode_waterfall(uint8_t* row, size_t len);
+void dival_waterfall(uint8_t* row, size_t len);
 
 void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed);
 void mirror_signals_cancellation(int16_t* i_data, int16_t* q_data, size_t length, size_t max_iterations = 8);

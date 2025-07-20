@@ -185,6 +185,7 @@ set(CPPSRC
 	${COMMON}/performance_counter.cpp
 	${COMMON}/bmpfile.cpp
 	${COMMON}/dsp_adv.cpp
+	${COMMON}/rtty_decoder.cpp
 	app_settings.cpp
 	audio.cpp
 	baseband_api.cpp

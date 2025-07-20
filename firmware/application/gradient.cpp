@@ -35,6 +35,7 @@ Gradient::Gradient() {
 }
 
 void Gradient::set_default() {
+    step(1, 0, 0, 1);
     step(86, 0, 0, 255);
     step(171, 0, 255, 0);
     step(255, 255, 0, 0);

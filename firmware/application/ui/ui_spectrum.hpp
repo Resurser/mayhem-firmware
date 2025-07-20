@@ -384,7 +384,7 @@ class WaterfallWidget : public Widget {
         255};
 
     // Function to apply linear normalization with noise floor compensation
-    void applySavitzkyGolay(std::array<unsigned char, 240> spectrum_db_in, std::array<unsigned char, 240>& spectrum_db_out);
+    void applySavitzkyGolay(std::array<unsigned char, 240>& spectrum_db_in);
 
     void clear();
 };

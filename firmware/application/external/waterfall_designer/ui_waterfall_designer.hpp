@@ -130,6 +130,7 @@ class WaterfallDesignerView : public View {
     uint32_t capture_rate{500000};
     uint32_t file_format{0};
     uint32_t highlighted_index_{0};
+    bool editing_color{false};
     bool trim{false};
     std::filesystem::path current_profile_path = "";
     NavigationView& nav_;
@@ -183,6 +184,14 @@ class WaterfallDesignerView : public View {
         &bitmap_icon_load,
         Theme::getInstance()->fg_blue->foreground};
 
+    /**
+     * @brief Constructs a NewButton instance for the UI.
+     *
+     * @param rect The button's position and size, specified as a rectangle (x, y, width, height).
+     * @param extra_params Additional parameters for button configuration (currently unused or empty).
+     * @param icon Pointer to the bitmap icon to be displayed on the button.
+     * @param color The foreground color of the button, typically retrieved from the theme.
+     */
     NewButton button_save{
         {8 * 8, 8 * 16, 4 * 8, 32},
         {},

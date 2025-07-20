@@ -19,13 +19,17 @@ namespace dsp_utils {
 #define MAX_KERNEL 25
 constexpr int32_t SCALE = 32768;  // Q15-фіксована точка
 static float kernel[MAX_KERNEL];
-static float heatmap[256] = {0.0f};  // Ініціалізація теплової карти
+static uint8_t heatmap[256] = {0.0f};  // Ініціалізація теплової карти
 
-void update_heatmap(float* spectrum, size_t len) {
+void update_heatmap(uint8_t* spectrum, size_t len) {
     for (size_t i = 0; i < len; i++) {
         heatmap[i] = 0.95f * heatmap[i] + 0.05f * spectrum[i];  // EMA
     }
+    for (size_t i = 0; i < len; i++) {
+        spectrum[i] = heatmap[i];
+    }
 }
+
 void erode_waterfall(uint8_t* row, size_t len) {
     for (size_t i = 1; i < len - 1; i++) {
         uint8_t min_val = row[i];
@@ -34,6 +38,16 @@ void erode_waterfall(uint8_t* row, size_t len) {
         row[i] = min_val;
     }
 }
+
+void dival_waterfall(uint8_t* row, size_t len) {
+    for (size_t i = 1; i < len - 1; i++) {
+        uint8_t max_val = row[i];
+        if (row[i - 1] > max_val) max_val = row[i - 1];
+        if (row[i + 1] > max_val) max_val = row[i + 1];
+        row[i] = max_val;
+    }
+}
+
 void iq_correct(float* I, float* Q, size_t len) {
     float sumI = 0.0f, sumQ = 0.0f;
     for (size_t i = 0; i < len; i++) {
@@ -71,12 +85,12 @@ void gaussian_smooth(float* data, size_t len, float sigma) {
         kernel[idx] = expf(-0.5f * (i * i) / (sigma * sigma));
         sum += kernel[idx];
     }
-    for (size_t i = 0; i < ksize; i++) kernel[i] /= sum;
+    for (int i = 0; i < ksize; i++) kernel[i] /= sum;
 
     float temp[len];
-    for (size_t i = 0; i < len; i++) temp[i] = data[i];
+    for (int i = 0; i < len; i++) temp[i] = data[i];
 
-    for (size_t i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         float acc = 0.0f;
         for (int j = -radius; j <= radius; j++) {
             int idx = i + j;
@@ -109,13 +123,13 @@ void suppress_noise(uint8_t* spectrum, size_t len, float threshold_db) {
 }
 
 void savitzky_golay(uint8_t* data, size_t len) {
-    const float coeffs[5] = {-3.0f / 35, 12.0f / 35, 17.0f / 35, 12.0f / 35, -3.0f / 35};
-    float temp[len];
+    const int16_t coeffs[5] = {-3, 12, 17, 12, -3};
+    uint8_t temp[len];
     for (size_t i = 2; i < len - 2; i++) {
-        float acc = 0.0f;
+        int32_t acc = 0;
         for (int j = -2; j <= 2; j++)
             acc += data[i + j] * coeffs[j + 2];
-        temp[i] = acc;
+        temp[i] = acc >> 5;
     }
     for (size_t i = 2; i < len - 2; i++)
         data[i] = temp[i];
@@ -167,7 +181,7 @@ float scale_power(float raw, ScaleMode mode, float gain) {
 }
 void generate_lut(ColorScheme scheme) {
     active_scheme = scheme;
-    for (uint8_t i = 0; i < 256; i++) {
+    for (size_t i = 0; i < 256; i++) {
         float v = i / 255.0f;
         switch (scheme) {
             case LUT_GRAY:

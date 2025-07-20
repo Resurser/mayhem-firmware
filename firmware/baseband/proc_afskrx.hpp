@@ -34,7 +34,7 @@
 
 #include "fifo.hpp"
 #include "message.hpp"
-#include "rtty_afsk_decoder.hpp"
+#include "rtty_decoder.hpp"
 
 class AFSKRxProcessor : public BasebandProcessor {
    public:

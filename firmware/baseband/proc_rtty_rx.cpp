@@ -46,27 +46,26 @@ uint8_t RTTYRxProcessor::reverseBitsFunction(uint8_t val) {
 }
 
 RTTYRxProcessor::RTTYRxProcessor() {
-    // decim_0.configure(taps_200k_decim_0.taps);
-    // decim_1.configure(taps_16k0_decim_1.taps);
-    // channel_filter.configure(taps_11k0_channel.taps, 2);
-    // audio_output.configure(audio_24k_hpf_300hz_config);
+    decim_0.configure(taps_200k_decim_0.taps);
+    decim_1.configure(taps_16k0_decim_1.taps);
+    channel_filter.configure(taps_11k0_channel.taps, 2);
+    audio_output.configure(audio_12k_hpf_300hz_config);
 
     // samples_per_bit = audio_fs / BAUD_RATE;
 
-    // phase_inc  = (0x10000 * BAUD_RATE) / audio_fs;
-    // phase      = 0;
-    // freq_mark  = MARK_FREQ;
+    // phase_inc = (0x10000 * BAUD_RATE) / audio_fs;
+    // phase = 0;
+    // freq_mark = MARK_FREQ;
     // freq_space = SPACE_FREQ;
 
-    // trigger_word  = 0;
-    // word_length   = 5;
+    // trigger_word = 0;
+    // word_length = 5;
     // trigger_value = 0;
-    // word_mask     = (1 << word_length) - 1;
+    // word_mask = (1 << word_length) - 1;
 
     // // Delay line
     // delay_line_index = 0;
-    // triggered        = false;
-    // state            = WAIT_START;
+    // triggered = false;
 
     // configured = false;
 }
@@ -188,10 +187,10 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
 
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
-        const int32_t sample_int = audio.p[c] * SCALE;
+        const int32_t sample_int = audio.p[c] * 32768.0f;
 
         int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format
-        decodeRTTYBit(sample_int);
+        // decodeRTTYBit(sample_int);
     }
 }
 

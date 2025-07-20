@@ -93,9 +93,14 @@ WaterfallDesignerView::WaterfallDesignerView(NavigationView& nav)
         waterfall.start();
     };
 
-    button_new.on_select = [this]() {
+    button_new.on_select = [this, &nav]() {
         on_create_new_profile();
+        nav.pop();
     };
+
+    // on_select = [this, &nav]() {
+    //    on_create_new_profile();
+    // };
 
     button_open.on_select = [this]() {
         on_open_profile();
@@ -120,7 +125,7 @@ WaterfallDesignerView::WaterfallDesignerView(NavigationView& nav)
     button_apply_setting.on_select = [this]() {
         if_apply_setting = true;
         on_apply_current_to_wtf();
-        // nav_.pop();
+        nav_.pop();
     };
 
     menu_view.on_highlight = [this]() {
@@ -130,8 +135,8 @@ WaterfallDesignerView::WaterfallDesignerView(NavigationView& nav)
     receiver_model.enable();
     option_bandwidth.set_by_value(capture_rate);
 
-    record_view.on_error = [&nav](std::string message) {
-        nav.display_modal("Error", message);
+    record_view.on_error = [this](std::string message) {
+        nav_.display_modal("Error", message);
     };
 
     button_save.hidden(true);
@@ -139,6 +144,7 @@ WaterfallDesignerView::WaterfallDesignerView(NavigationView& nav)
     button_remove_level.hidden(true);
     button_edit_color.hidden(true);
     button_apply_setting.hidden(true);
+    // nav_ = nav;
 
     refresh_menu_view();
 }
@@ -176,7 +182,8 @@ void WaterfallDesignerView::on_open_profile() {
     auto open_view = nav_.push<FileLoadView>(".txt");
     open_view->push_dir(waterfalls_dir);
     open_view->on_changed = [this](std::filesystem::path new_file_path) {
-        on_profile_changed(new_file_path);
+        // on_profile_changed(new_file_path);
+        nav_.display_modal("Info", "Opened profile\n" + new_file_path.string());
     };
 }
 
@@ -190,36 +197,45 @@ void WaterfallDesignerView::on_profile_changed(std::filesystem::path new_profile
     if (error) return;
 
     menu_view.clear();
-    auto reader = FileLineReader(playlist_file);
+    if (playlist_file.size() != 0) {
+        auto reader = FileLineReader(playlist_file);
 
-    for (const auto& line : reader) {
-        profile_levels.push_back(line);
-    }
-
-    for (auto& line : profile_levels) {
-        // remove empty lines
-        if (line == "\n" || line == "\r\n" || line == "\r") {
-            profile_levels.erase(std::remove(profile_levels.begin(), profile_levels.end(), line), profile_levels.end());
+        for (const auto& line : reader) {
+            profile_levels.push_back(line);
         }
 
-        // remove line end \n etc
-        if (line.length() > 0 && (line[line.length() - 1] == '\n' || line[line.length() - 1] == '\r')) {
-            line = line.substr(0, line.length() - 1);
-        }
-    }
+        for (auto& line : profile_levels) {
+            // remove empty lines
+            if (line == "\n" || line == "\r\n" || line == "\r") {
+                profile_levels.erase(std::remove(profile_levels.begin(), profile_levels.end(), line), profile_levels.end());
+            }
 
+            // remove line end \n etc
+            if (line.length() > 0 && (line[line.length() - 1] == '\n' || line[line.length() - 1] == '\r')) {
+                line = line.substr(0, line.length() - 1);
+            }
+        }
+    } else {
+        // if empty, add a comment line
+        profile_levels.push_back("1,0,0,2");
+    }
     button_save.hidden(false);
     button_add_level.hidden(false);
     button_remove_level.hidden(false);
     button_edit_color.hidden(false);
     button_apply_setting.hidden(false);
 
-    refresh_menu_view();
-    on_apply_current_to_wtf();
+    // refresh_menu_view();
+    // on_apply_current_to_wtf();
 }
 
 void WaterfallDesignerView::refresh_menu_view() {
     menu_view.clear();
+    if (editing_color) {
+        // If editing color, do not refresh the menu view
+        return;
+    }
+    editing_color = true;
 
     for (const auto& line : profile_levels) {
         if (line.length() == 0 || line[0] == '#') {
@@ -262,6 +278,8 @@ void WaterfallDesignerView::refresh_menu_view() {
                                     button_remove_level.focus();
                                 }});
         }
+
+        editing_color = false;
     }
     set_dirty();
 }
@@ -312,7 +330,7 @@ void WaterfallDesignerView::on_add_level() {
     size_t insert_pos = highlighted_index_;
     std::string new_entry = "0,128,128,128";
     profile_levels.insert(profile_levels.begin() + insert_pos, new_entry);
-    refresh_menu_view();
+
     on_edit_color();
 }
 
@@ -326,6 +344,8 @@ void WaterfallDesignerView::on_remove_level() {
 }
 
 void WaterfallDesignerView::on_edit_color() {
+    if (editing_color) return;  // Prevent re-entrance
+    editing_color = true;
     if (highlighted_index_ >= profile_levels.size()) return;
     if (profile_levels[highlighted_index_].empty()) return;
     if (profile_levels[highlighted_index_][0] == '#') return;
@@ -336,6 +356,7 @@ void WaterfallDesignerView::on_edit_color() {
         profile_levels[highlighted_index_] = new_color;
         refresh_menu_view();
         on_apply_current_to_wtf();
+        editing_color = false;
     };
 }
 
