@@ -25,6 +25,7 @@
 #include "dsp_adv.hpp"
 #include "portapack.hpp"
 using namespace portapack;
+using namespace dsp_utils;
 
 #include "baseband_api.hpp"
 #include "string_format.hpp"
@@ -191,8 +192,6 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const std::string sufix = pmem::spectrum_view_type() == 0 ? "Normal"
                                                                   : (pmem::spectrum_view_type() == 1 ? " [gausian]"
                                                                                                      : (pmem::spectrum_view_type() == 2 ? " [erod]" : " [dival]"));
-        const auto label_width = style().font.size_of(label).width();
-
         const Coord offset_low = r.left() + x_center - pixel_offset;
         const Rect tick_low{offset_low, r.top(), 1, r.height()};
         painter.fill_rectangle(tick_low, Theme::getInstance()->bg_darkest->foreground);
@@ -301,28 +300,10 @@ void WaterfallWidget::on_hide() {
      */
     display.scroll_disable();
 }
-const int16_t SG_COEFFS[5] = {-3, 12, 17, 12, -3};  // Window size = 5, poly order = 2
-const int16_t SCALE_FACTOR = 35;                    // Scaling factor for fixed-point arithmetic
-
-// Apply Savitzky-Golay filter using fixed-point arithmetic
-void WaterfallWidget::applySavitzkyGolay(std::array<uint8_t, 240>& spectrum_db_in) {
-    static const int coeffs[5] = {-3, 11, 17, 11, -3};
-    static uint8_t halfWin = 2;
-    static uint8_t len = 240;
-
-    uint8_t temp[240];
-    for (size_t i = halfWin; i < len - halfWin; i++) {
-        int32_t acc = 0;
-        for (int j = -halfWin; j <= halfWin; j++)
-            acc += spectrum_db_in[i + j] * coeffs[j + halfWin];
-        acc = (acc + SCALE_FACTOR / 2) / SCALE_FACTOR;  // Round to nearest
-        temp[i] = acc > 255 ? 255 : acc < 0 ? 0
-                                            : acc;  // Clamp to [0, 255]
-    }
-
-    // Copy the filtered data back to the input array
-    for (size_t i = halfWin; i < len - halfWin; i++)
-        spectrum_db_in[i] = temp[i];
+inline uint8_t intensityToLUTIndex(uint8_t intensity, uint8_t minDb, uint8_t maxDb) {
+    float normIntensity = (intensity - minDb) / (maxDb - minDb);          // Normalize to [0, 1]
+    normIntensity = normIntensity > max(0.0f, min(1.0f, normIntensity));  // Clamp
+    return (normIntensity * 255);                                         // Scale to LUT range
 }
 
 inline void spectrum_db_filter_median(const std::array<uint8_t, 240>& signal, std::array<uint8_t, 240>& filtered, const size_t window_size = 5) {
@@ -335,7 +316,7 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<uint8_t, 240> spectrum_db;
 
     for (size_t i = 0; i < 120; i++) {
-        spectrum_db[i] = spectrum.db[256 - 120 + i];
+        spectrum_db[i] = spectrum.db[255 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
 
@@ -348,7 +329,7 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
         dsp_utils::suppress_noise(spectrum_db_upd.data(), spectrum_db_upd.size(), noise_floor);
         switch (pmem::spectrum_view_type()) {
             case 1:
-                applySavitzkyGolay(spectrum_db_upd);
+                savitzky_golay(spectrum_db_upd.data(), spectrum_db_upd.size());
                 // clearNoise(spectrum_db_upd, noise_floor, 15);
                 // spectrum_db = spectrum_db_upd;
                 break;

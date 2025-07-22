@@ -181,7 +181,7 @@ float scale_power(float raw, ScaleMode mode, float gain) {
 }
 void generate_lut(ColorScheme scheme) {
     active_scheme = scheme;
-    for (size_t i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         float v = i / 255.0f;
         switch (scheme) {
             case LUT_GRAY:

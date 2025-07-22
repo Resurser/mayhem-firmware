@@ -65,7 +65,6 @@ void iq_correct(int16_t* I, int16_t* Q, size_t len);
 void gaussian_smooth(uint8_t* data, size_t len, float sigma);
 void savitzky_golay(uint8_t* data, size_t len);
 void median_filter(uint8_t* data, size_t len, size_t window);
-
 float scale_power(uint8_t raw, ScaleMode mode, float gain);
 
 void generate_lut(ColorScheme scheme);

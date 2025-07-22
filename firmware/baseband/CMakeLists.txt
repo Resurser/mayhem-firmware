@@ -668,13 +668,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PRTY rttyrx)
 
-### Test
-
-set(MODE_CPPSRC
-	proc_test_rx.cpp
-)
-DeclareTargets(PTST testrx)
-
 
 ### WeFax Rx
 

@@ -165,10 +165,6 @@ set(EXTCPPSRC
 	external/rtty_rx/main.cpp
 	external/rtty_rx/ui_rtty_rx.cpp
 
-	#test_rx
-	external/test_rx/main.cpp
-	external/test_rx/ui_test_rx.cpp
-
 	#hopper
 	external/hopper/main.cpp
 	external/hopper/ui_hopper.cpp
@@ -287,7 +283,6 @@ set(EXTAPPLIST
 	app_manager
 	hopper
 	rtty_rx
-	test_rx
 	antenna_length
 	view_wav
 	sd_wipe
