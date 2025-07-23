@@ -115,8 +115,6 @@ set(EXTCPPSRC
 	external/noaaapt_rx/main.cpp
 	external/noaaapt_rx/ui_noaaapt_rx.cpp
 		
-	
-
 	#shoppingcart_lock
 	external/shoppingcart_lock/main.cpp
 	external/shoppingcart_lock/shoppingcart_lock.cpp
@@ -161,14 +159,10 @@ set(EXTCPPSRC
 	external/app_manager/main.cpp
 	external/app_manager/ui_app_manager.cpp
 
-	#rtty_rx
-	external/rtty_rx/main.cpp
-	external/rtty_rx/ui_rtty_rx.cpp
-
 	#hopper
 	external/hopper/main.cpp
 	external/hopper/ui_hopper.cpp
-
+	
 	# whip calculator
 	external/antenna_length/main.cpp
 	external/antenna_length/ui_whipcalc.cpp
@@ -237,6 +231,10 @@ set(EXTCPPSRC
 	external/battleship/main.cpp
 	external/battleship/ui_battleship.cpp		
 
+	#rtty_rx
+	external/rtty_rx/main.cpp
+	external/rtty_rx/ui_rtty_rx.cpp
+
 	#waterfall designer
 	external/waterfall_designer/main.cpp
 	external/waterfall_designer/ui_waterfall_designer.cpp
@@ -282,7 +280,6 @@ set(EXTAPPLIST
 	metronome
 	app_manager
 	hopper
-	rtty_rx
 	antenna_length
 	view_wav
 	sd_wipe
@@ -300,5 +297,6 @@ set(EXTAPPLIST
 	spaceinv
 	blackjack
 	battleship
+	rtty_rx
 	waterfall_designer
 )

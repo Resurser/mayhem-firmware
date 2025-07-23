@@ -169,7 +169,6 @@ set(CPPSRC
 	${COMMON}/portapack_persistent_memory.cpp
 	${COMMON}/portapack_shared_memory.cpp
 	${COMMON}/sonde_packet.cpp
-	${COMMON}/test_packet.cpp
 	${COMMON}/tpms_packet.cpp
 	${COMMON}/ui.cpp
 	${COMMON}/ui_focus.cpp
@@ -178,14 +177,14 @@ set(CPPSRC
 	${COMMON}/ui_widget.cpp
 	${COMMON}/ui_language.cpp
 	${COMMON}/utility.cpp
+	${COMMON}/dsp_adv.cpp
+	${COMMON}/rtty_decoder.cpp
 	${COMMON}/wm8731.cpp
 	${COMMON}/i2cdevmanager.cpp
 	${I2CDEV_SOURCES}
 	${COMMON}/battery.cpp
 	${COMMON}/performance_counter.cpp
 	${COMMON}/bmpfile.cpp
-	${COMMON}/dsp_adv.cpp
-	${COMMON}/rtty_decoder.cpp
 	app_settings.cpp
 	audio.cpp
 	baseband_api.cpp
