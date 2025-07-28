@@ -181,29 +181,29 @@ float scale_power(float raw, ScaleMode mode, float gain) {
 }
 void generate_lut(ColorScheme scheme) {
     active_scheme = scheme;
-    for (int i = 0; i < 256; i++) {
+    for (uint8_t i = 0; i < 256; i++) {
         float v = i / 255.0f;
         switch (scheme) {
             case LUT_GRAY:
                 LUT[i] = (ColorRGB){i, i, i};
                 break;
             case LUT_COOL:
-                LUT[i] = (ColorRGB){(unsigned char)(255 * (1 - v)), (unsigned char)(255 * v), 255};
+                LUT[i] = (ColorRGB){(uint8_t)(255 * (1 - v)), (uint8_t)(255 * v), 255};
                 break;
             case LUT_HOT:
-                LUT[i] = (ColorRGB){(unsigned char)(255 * v), (unsigned char)(128 * v), (unsigned char)(64 * v)};
+                LUT[i] = (ColorRGB){(uint8_t)(255 * v), (uint8_t)(128 * v), (uint8_t)(64 * v)};
                 break;
             case LUT_JET:
                 LUT[i] = (ColorRGB){
-                    (unsigned char)(255 * fmax(0, fmin(1, 4 * (v - 0.75f)))),
-                    (unsigned char)(255 * fmax(0, fmin(1, 4 * fabs(v - 0.5f)))),
-                    (unsigned char)(255 * fmax(0, fmin(1, 4 * (0.25f - v))))};
+                    (uint8_t)(255 * fmax(0, fmin(1, 4 * (v - 0.75f)))),
+                    (uint8_t)(255 * fmax(0, fmin(1, 4 * fabs(v - 0.5f)))),
+                    (uint8_t)(255 * fmax(0, fmin(1, 4 * (0.25f - v))))};
                 break;
             case LUT_MAGMA:
                 LUT[i] = (ColorRGB){
-                    (unsigned char)(255 * powf(v, 1.5f)),
-                    (unsigned char)(255 * powf(v, 0.8f)),
-                    (unsigned char)(255 * powf(v, 0.3f))};
+                    (uint8_t)(255 * powf(v, 1.5f)),
+                    (uint8_t)(255 * powf(v, 0.8f)),
+                    (uint8_t)(255 * powf(v, 0.3f))};
                 break;
         }
     }
