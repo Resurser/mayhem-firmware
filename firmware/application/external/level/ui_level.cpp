@@ -300,7 +300,16 @@ size_t LevelView::change_mode(freqman_index_t new_mod) {
                 receiver_model.set_baseband_bandwidth(filter_bandwidth_for_sampling_rate(actual_sampling_rate));
             };
             field_bw.set_by_value(0);
+            break;
         default:
+            audio_sampling_rate = audio::Rate::Hz_48000;
+            freqman_set_bandwidth_option(new_mod, field_bw);
+            baseband::run_image(portapack::spi_flash::image_tag_wfm_audio);
+            receiver_model.set_modulation(ReceiverModel::Mode::WidebandFMAudio);
+            receiver_model.set_wfm_configuration(field_bw.selected_index_value());
+            // bw 200k (0) default
+            field_bw.set_by_value(0);
+            field_bw.on_change = [this](size_t index, OptionsField::value_t n) { radio_bw = index ; receiver_model.set_wfm_configuration(n); };
             break;
     }
     if (new_mod != SPEC_MODULATION) {

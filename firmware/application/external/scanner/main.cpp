@@ -41,7 +41,7 @@ __attribute__((section(".external_app.app_scanner.application_information"), use
     /*.app_name = */ "Scanner",
     /*.bitmap_data = */ {0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x03, 0x01, 0x80, 0x01, 0xC3, 0x00, 0xE0, 0xFF, 0xEF, 0xFF, 0xC0, 0x00, 0x83, 0x01, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00},
     /*.icon_color = */ ui::Color::green().v,
-    /*.menu_location = */ app_location_t::RX,
+    /*.menu_location = */ app_location_t::HOME,
     /*.desired_menu_position = */ -1,
 
     // this has to be the biggest baseband used by the app. Scanner is using AM,WFM,NFM and WFM is the biggest
