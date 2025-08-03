@@ -122,6 +122,8 @@ void capture_stop();
 void replay_start(ReplayConfig* const config);
 void replay_stop();
 
+
+void set_rtty(const uint16_t baudrate = 50, const uint32_t freq_mark = 800, const uint32_t freq_space = 1250, const bool reverse_bits = false, const bool reverse_freq = false);
 } /* namespace baseband */
 
 #endif /*__BASEBAND_API_H__*/

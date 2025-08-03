@@ -461,8 +461,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(PSIG siggen)
 
-
-
 ### Tones
 
 set(MODE_CPPSRC
@@ -665,8 +663,6 @@ set(MODE_CPPSRC
 )
 DeclareTargets(POSK ookstream)
 
-
-
 ### WeFax Rx
 
 set(MODE_CPPSRC
@@ -681,6 +677,13 @@ set(MODE_CPPSRC
 	proc_noaaapt_rx.cpp
 )
 DeclareTargets(PNOA noaaapt_rx)
+
+### RtTY RX
+
+set(MODE_CPPSRC
+	proc_rtty_rx.cpp
+)
+DeclareTargets(PRTT rtty_rx)
 
 
 ### HackRF "factory" firmware

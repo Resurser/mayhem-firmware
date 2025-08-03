@@ -22,42 +22,33 @@
 #include "utility.hpp"
 
 #include <cstdint>
-
-#if 0
-uint32_t gcd(const uint32_t u, const uint32_t v) {
-	/* From http://en.wikipedia.org/wiki/Binary_GCD_algorithm */
-
-	if( u == v ) {
-		return u;
-	}
-
-	if( u == 0 ) {
-		return v;
-	}
-
-	if( v == 0 ) {
-		return u;
-	}
-
-	if( ~u & 1 ) {
-		if( v & 1 ) {
-			return gcd(u >> 1, v);
-		} else {
-			return gcd(u >> 1, v >> 1) << 1;
-		}
-	}
-
-	if( ~v & 1 ) {
-		return gcd(u, v >> 1);
-	}
-
-	if( u > v ) {
-		return gcd((u - v) >> 1, v);
-	}
-
-	return gcd((v - u) >> 1, u);
-}
+#define M_PI 3.14159265358979323846
+#ifndef I
+#define I _Complex_I
 #endif
+
+template <typename T>
+constexpr T clamp(const T& value, const T& min, const T& max) {
+    return (value < min) ? min : (value > max) ? max
+                                               : value;
+}
+
+std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length) {
+    std::string text;
+    for (size_t i = 0; i < bits.size(); i += word_length) {
+        int value = 0;
+        for (int j = 0; j < word_length; ++j) {
+            value |= (bits[i + j] << ((word_length - 1) - j));
+        }
+
+        auto corrector = 0;
+        if (word_length < 7) {
+            corrector = 0x20;
+        }
+        text.push_back(static_cast<char>(value + corrector));  // Додаємо 0x20 для перетворення в читабельний текст
+    }
+    return text;
+}
 
 float fast_log2(const float val) {
     // Thank you Stack Overflow!
@@ -73,6 +64,10 @@ float fast_log2(const float val) {
     return log_2;
 }
 
+float fast_log10(const float val) {
+    return fast_log2(val) * 3.19091796875;  // log10(2.0)
+}
+
 float fast_pow2(const float val) {
     union {
         float f;
@@ -82,9 +77,23 @@ float fast_pow2(const float val) {
     return u.f;
 }
 
+/**
+ * @brief Converts a squared magnitude value (mag²) to decibels relative to 1 Volt (dBV).
+ *
+ * This function computes the dBV value of a given squared magnitude (mag²) using
+ * a logarithmic transformation. It is optimized for performance by using a fast
+ * logarithm base-2 function.
+ *
+ * @param mag2 The squared magnitude value to be converted. It should be a positive
+ *             floating-point value.
+ * @return The corresponding value in decibels relative to 1 Volt (dBV).
+ *
+ * @note The function assumes that the input value is valid and greater than zero.
+ *       Undefined behavior may occur for non-positive inputs.
+ */
 float mag2_to_dbv_norm(const float mag2) {
     constexpr float mag2_log2_max = 0.0f;  // std::log2(1.0f);
-    constexpr float log_mag2_mag_factor = 0.5f;
+    constexpr float log_mag2_mag_factor = 0.53f;
     constexpr float log2_log10_factor = 0.3010299956639812f;  // std::log10(2.0f);
     constexpr float log10_dbv_factor = 20.0f;
     constexpr float mag2_to_db_factor = log_mag2_mag_factor * log2_log10_factor * log10_dbv_factor;
@@ -105,8 +114,7 @@ float mag2_to_dbm_8bit_normalized(int8_t real, int8_t imag, float v_ref, float R
     float power_watts = voltage_squared / R;
 
     // Step 4: Convert the power to dBm (multiply by 1000 to convert watts to milliwatts)
-    float power_milliwatts = power_watts * 1000.0f;
-    float dbm_measured = 10.0f * log10f(power_milliwatts);
+    float dbm_measured = 10.0f * fast_log10(power_watts * 1000.0f);
 
     return dbm_measured;
 }

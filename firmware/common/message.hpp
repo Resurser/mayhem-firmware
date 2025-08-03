@@ -135,6 +135,9 @@ class Message {
         NoaaAptRxStatusData = 78,
         NoaaAptRxImageData = 79,
         FSKPacket = 80,
+        RttyRxConfigure = 81,
+        RttyRxData = 82,
+        RttyRxLogData = 83,
         MAX
     };
 
@@ -1554,6 +1557,52 @@ class NoaaAptRxImageDataMessage : public Message {
         : Message{ID::NoaaAptRxImageData} {}
     uint8_t image[400]{0};
     uint32_t cnt = 0;
+};
+
+class RttyRxConfigureMessage : public Message {
+   public:
+    constexpr RttyRxConfigureMessage(
+        const uint16_t baudrate,
+        const uint32_t freq_mark,
+        const uint32_t freq_space,
+        const bool reverse_bits,
+        const bool reverse_freq)
+        : Message{ID::RttyRxConfigure},
+          baudrate(baudrate),
+          word_length(5),
+          freq_mark(freq_mark),
+          freq_space(freq_space),
+          reverse_bits(reverse_bits),
+          reverse_freq(reverse_freq) {
+    }
+
+    uint16_t baudrate{50};
+    uint32_t word_length{5};
+    uint32_t freq_mark{800};
+    uint32_t freq_space{1250};
+    bool reverse_bits{false};
+    bool reverse_freq{false};
+};
+
+class RttyRxDataMessage : public Message {
+   public:
+    constexpr RttyRxDataMessage(const bool is_data = false, const uint8_t value = 0)
+        : Message{ID::RttyRxData},
+          is_data{is_data},
+          value{value} {
+    }
+
+    bool is_data = false;
+    uint8_t value = 0;
+};
+
+class RttyRxLogMessage : public Message {
+   public:
+    constexpr RttyRxLogMessage()
+        : Message{ID::RttyRxLogData} {}
+
+    uint8_t samples[8]{0};
+    uint8_t cnt = 0;
 };
 
 #endif /*__MESSAGE_H__*/

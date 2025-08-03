@@ -231,7 +231,11 @@ set(EXTCPPSRC
 
 	#battleship
 	external/battleship/main.cpp
-	external/battleship/ui_battleship.cpp		
+	external/battleship/ui_battleship.cpp
+
+	#rtty_rx
+	external/rtty_rx/main.cpp
+	external/rtty_rx/ui_rtty_rx.cpp
 )
 
 set(EXTAPPLIST
@@ -291,4 +295,5 @@ set(EXTAPPLIST
 	spaceinv
 	blackjack
 	battleship
+	rtty_rx
 )

@@ -474,4 +474,18 @@ void request_audio_beep(uint32_t freq, uint32_t sample_rate, uint32_t duration_m
     send_message(&message);
 }
 
+
+
+void set_rtty(const uint16_t baudrate, const uint32_t freq_mark, const uint32_t freq_space, const bool reverse_bits, const bool reverse_freq) {
+    const RttyRxConfigureMessage message{
+        baudrate,
+        freq_mark,
+        freq_space,
+        reverse_bits,
+        reverse_freq
+    };
+    
+    send_message(&message);
+}
+
 } /* namespace baseband */

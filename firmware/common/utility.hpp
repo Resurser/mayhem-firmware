@@ -32,6 +32,7 @@
 #include <string_view>
 #include <type_traits>
 
+
 #define LOCATE_IN_RAM __attribute__((section(".ramtext")))
 
 inline uint16_t fb_to_uint16(const std::string& fb) {
@@ -86,7 +87,9 @@ constexpr size_t log_2(const size_t n, const size_t p = 0) {
     return (n <= 1) ? p : log_2(n / 2, p + 1);
 }
 
+std::string bitsToText(const std::vector<int>& bits, const uint16_t word_length = 5);
 float fast_log2(const float val);
+float fast_log10(const float val);
 float fast_pow2(const float val);
 
 float mag2_to_dbv_norm(const float mag2);
@@ -127,9 +130,11 @@ struct is_flags_type {
 template <typename TEnum>
 constexpr bool is_flags_type_v = is_flags_type<TEnum>::value;
 
-#define ENABLE_FLAGS_OPERATORS(type) \
-    template <>                      \
-    struct is_flags_type<type> { static constexpr bool value = true; };
+#define ENABLE_FLAGS_OPERATORS(type)        \
+    template <>                             \
+    struct is_flags_type<type> {            \
+        static constexpr bool value = true; \
+    };
 
 template <typename TEnum>
 constexpr std::enable_if_t<is_flags_type_v<TEnum>, TEnum> operator|(TEnum a, TEnum b) {
