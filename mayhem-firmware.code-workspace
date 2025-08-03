@@ -132,7 +132,8 @@
 			"**/Thumbs.db": true,
 			"**/.docs": true,
 			"**/docs": true,
-			"**/flashing": true
+			"**/flashing": true,
+			".github": true
 		},
 		"explorerExclude.backup": {}
 	}
