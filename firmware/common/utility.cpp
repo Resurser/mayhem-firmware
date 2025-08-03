@@ -114,8 +114,7 @@ float mag2_to_dbm_8bit_normalized(int8_t real, int8_t imag, float v_ref, float R
     float power_watts = voltage_squared / R;
 
     // Step 4: Convert the power to dBm (multiply by 1000 to convert watts to milliwatts)
-    float power_milliwatts = power_watts * 1000.0f;
-    float dbm_measured = 10.0f * log10f(power_milliwatts);
+    float dbm_measured = 10.0f * fast_log10(power_watts * 1000.0f);
 
     return dbm_measured;
 }

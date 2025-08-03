@@ -100,3 +100,6 @@ message(STATUS "-------^ ccache info--------")
 
 enable_testing()
 add_subdirectory(firmware)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -flto")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -flto")

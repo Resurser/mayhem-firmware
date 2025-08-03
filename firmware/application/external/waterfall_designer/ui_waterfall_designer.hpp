@@ -130,7 +130,7 @@ class WaterfallDesignerView : public View {
     uint32_t capture_rate{500000};
     uint32_t file_format{0};
     uint32_t highlighted_index_{0};
-    bool editing_color{false};
+    bool in_processing{false};
     bool trim{false};
     std::filesystem::path current_profile_path = "";
     NavigationView& nav_;

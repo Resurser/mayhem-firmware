@@ -23,8 +23,8 @@
 #ifndef __SPI_IMAGE_H__
 #define __SPI_IMAGE_H__
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 #include "memory_map.hpp"
 
@@ -122,7 +122,6 @@ constexpr image_tag_t image_tag_wefaxrx{'P', 'W', 'F', 'X'};
 constexpr image_tag_t image_tag_noaaapt_rx{'P', 'N', 'O', 'A'};
 
 constexpr image_tag_t image_tag_noop{'P', 'N', 'O', 'P'};
-
 constexpr image_tag_t image_tag_hackrf{'H', 'R', 'F', '1'};
 
 struct chunk_t {

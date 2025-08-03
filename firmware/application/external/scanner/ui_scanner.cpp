@@ -721,12 +721,13 @@ void ScannerView::change_mode(freqman_index_t new_mod) {
             field_bw.on_change = [this](size_t, OptionsField::value_t n) { receiver_model.set_nbfm_configuration(n); };
             break;
         case WFM_MODULATION:
-        default:
             freqman_set_bandwidth_option(new_mod, field_bw);
             baseband::run_image(portapack::spi_flash::image_tag_wfm_audio);
             receiver_model.set_modulation(ReceiverModel::Mode::WidebandFMAudio);
             field_bw.set_by_value(receiver_model.wfm_configuration());
             field_bw.on_change = [this](size_t, OptionsField::value_t n) { receiver_model.set_wfm_configuration(n); };
+        default:
+            
             break;
     }
 }

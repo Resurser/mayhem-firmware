@@ -19,7 +19,7 @@ namespace dsp_utils {
 #define MAX_KERNEL 25
 constexpr int32_t SCALE = 32768;  // Q15-фіксована точка
 static float kernel[MAX_KERNEL];
-static uint8_t heatmap[256] = {0.0f};  // Ініціалізація теплової карти
+static float heatmap[256] = {0};  // Ініціалізація теплової карти
 
 void update_heatmap(uint8_t* spectrum, size_t len) {
     for (size_t i = 0; i < len; i++) {
@@ -31,20 +31,32 @@ void update_heatmap(uint8_t* spectrum, size_t len) {
 }
 
 void erode_waterfall(uint8_t* row, size_t len) {
+    uint8_t tmp[len];
+    tmp[0] = row[0];
+    tmp[len - 1] = row[len - 1];
     for (size_t i = 1; i < len - 1; i++) {
         uint8_t min_val = row[i];
         if (row[i - 1] < min_val) min_val = row[i - 1];
         if (row[i + 1] < min_val) min_val = row[i + 1];
-        row[i] = min_val;
+        tmp[i] = min_val;
+    }
+    for (size_t i = 1; i < len-1; i++) {
+        row[i] = tmp[i];
     }
 }
 
 void dival_waterfall(uint8_t* row, size_t len) {
+    uint8_t tmp[len];
+    tmp[0] = row[0];
+    tmp[len - 1] = row[len - 1];
     for (size_t i = 1; i < len - 1; i++) {
         uint8_t max_val = row[i];
         if (row[i - 1] > max_val) max_val = row[i - 1];
         if (row[i + 1] > max_val) max_val = row[i + 1];
-        row[i] = max_val;
+        tmp[i] = max_val;
+    }
+    for (size_t i = 0; i < len; i++) {
+        row[i] = tmp[i];
     }
 }
 
@@ -116,20 +128,20 @@ float estimate_noise_threshold(uint8_t* spectrum, size_t len) {
     return (Q < 2.0f) ? mean + 3.0f : mean + 6.0f;
 }
 
-void suppress_noise(uint8_t* spectrum, size_t len, float threshold_db) {
+void suppress_noise(uint8_t* spectrum, size_t len, uint8_t threshold_db) {
     for (size_t i = 0; i < len; i++)
         if (spectrum[i] < threshold_db)
-            spectrum[i] = 0.0f;
+            spectrum[i] = 0;
 }
 
 void savitzky_golay(uint8_t* data, size_t len) {
-    const int16_t coeffs[5] = {-3, 12, 17, 12, -3};
+    const int8_t coeffs[5] = {-3, 12, 17, 12, -3};
     uint8_t temp[len];
     for (size_t i = 2; i < len - 2; i++) {
         int32_t acc = 0;
         for (int j = -2; j <= 2; j++)
             acc += data[i + j] * coeffs[j + 2];
-        temp[i] = acc >> 5;
+        temp[i] = acc / 35;
     }
     for (size_t i = 2; i < len - 2; i++)
         data[i] = temp[i];

@@ -189,9 +189,8 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
                                                           : "";
 
         const std::string label = to_string_dec_uint(tick_offset) + zero_pad + unit;
-        const std::string sufix = pmem::spectrum_view_type() == 0 ? "Normal"
-                                                                  : (pmem::spectrum_view_type() == 1 ? " [gausian]"
-                                                                                                     : (pmem::spectrum_view_type() == 2 ? " [erod]" : " [dival]"));
+        const auto label_width = style().font.size_of(label).width();
+
         const Coord offset_low = r.left() + x_center - pixel_offset;
         const Rect tick_low{offset_low, r.top(), 1, r.height()};
         painter.fill_rectangle(tick_low, Theme::getInstance()->bg_darkest->foreground);
@@ -200,9 +199,23 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const Coord offset_high = r.left() + x_center + pixel_offset;
         const Rect tick_high{offset_high, r.top(), 1, r.height()};
         painter.fill_rectangle(tick_high, Theme::getInstance()->bg_darkest->foreground);
-        painter.draw_string({r.top(), r.bottom()}, style(), sufix);
-
-        // painter.draw_string({offset_high - 2 - label_width, 20}, style(), to_string_dec_uint(pmem::spectrum_view_type()));
+        painter.draw_string({offset_high - 2 - label_width, r.top()}, style(), label);
+        std::string mode = "log";
+        switch (pmem::spectrum_view_type()) {
+            case 1:
+                mode = "savgol";
+                break;
+            case 2:
+                mode = "log";
+                break;
+            case 3:
+                mode = "norml";
+                break;
+            default:
+                mode = "none";
+                break;
+        }
+        painter.draw_string({4, screen_height - 16}, style(), mode);
 
         tick_offset += tick_interval;
     }
@@ -300,9 +313,10 @@ void WaterfallWidget::on_hide() {
      */
     display.scroll_disable();
 }
+
 inline uint8_t intensityToLUTIndex(uint8_t intensity, uint8_t minDb, uint8_t maxDb) {
-    float normIntensity = (intensity - minDb) / (maxDb - minDb);          // Normalize to [0, 1]
-    normIntensity = normIntensity > max(0.0f, min(1.0f, normIntensity));  // Clamp
+    static float normIntensity = (intensity - minDb) / (maxDb - minDb);                // Normalize to [0, 1]
+    normIntensity = max(0.0f, min(1.0f, normIntensity));  // Clamp
     return (normIntensity * 255);                                         // Scale to LUT range
 }
 
@@ -319,34 +333,45 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
         spectrum_db[i] = spectrum.db[255 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
+    // uint8_t min = spectrum.min_db;
+    // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
+    uint8_t noise_floor = spectrum.min_db + (spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
+    // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
+    dsp_utils::suppress_noise(spectrum_db.data(), spectrum_db.size(), noise_floor);
+    //update_heatmap(spectrum_db.data(), spectrum_db.size());
+    // if (pmem::spectrum_view_type()) {
+    switch (pmem::spectrum_view_type()) {
+        case 1:
+            savitzky_golay(spectrum_db.data(), spectrum_db.size());
+            break;
+        case 2:
+            for (size_t i = 0; i < 240; i++) {
+                spectrum_db[i] = LutLogIdx[spectrum_db[i]];  //, spectrum.min_db, spectrum.max_db)];
+                // gradient.lut[spectrum_db[240 - 120 + i]];
+                // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
+            }
+            break;
 
-    if (pmem::spectrum_view_type()) {
-        std::array<uint8_t, 240> spectrum_db_upd = spectrum_db;
-        uint8_t min = spectrum.min_db;
-        // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-        uint8_t noise_floor = min + (10 * pmem::spectrum_view_type());  // Use a fixed offset for noise floor, can be adjusted
-        // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
-        dsp_utils::suppress_noise(spectrum_db_upd.data(), spectrum_db_upd.size(), noise_floor);
-        switch (pmem::spectrum_view_type()) {
-            case 1:
-                savitzky_golay(spectrum_db_upd.data(), spectrum_db_upd.size());
-                // clearNoise(spectrum_db_upd, noise_floor, 15);
-                // spectrum_db = spectrum_db_upd;
-                break;
-            case 2:
-                // spectrum_db_upd.data(), spectrum_db_upd.size());
-                break;
-            case 3:
-                // dsp_utils::dival_waterfall(spectrum_db_upd.data(), spectrum_db_upd.size());
-                // clearNoise(spectrum_db, noise_floor, 15);
-                // applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
-                break;
-        }
-        spectrum_db = spectrum_db_upd;
+            // spectrum_db_upd.data(), spectrum_db_upd.size());
+        case 3:
+            for (size_t i = 0; i < 240; i++) {
+                spectrum_db[i] = (spectrum_db[i] - noise_floor) * 255 / (spectrum.max_db - noise_floor);
+                // gradient.lut[spectrum_db[240 - 120 + i]];
+                // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
+            }
+            dival_waterfall(spectrum_db.data(), spectrum_db.size());
+            // 11 dsp_utils::dival_waterfall(spectrum_db_upd.data(), spectrum_db_upd.size());
+            //  clearNoise(spectrum_db, noise_floor, 15);
+            //  applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
+
+            break;
+        default:
+            break;
     }
+    // }
 
     for (size_t i = 0; i < 240; i++) {
-        pixel_row[i] = gradient.lut[spectrum_db[i]];
+        pixel_row[i] = gradient.lut[spectrum_db[i]];  // Use the gradient LUT to get the color
         // gradient.lut[spectrum_db[240 - 120 + i]];
         // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
     }
@@ -359,20 +384,20 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
 }
 
 bool WaterfallWidget::on_touch(const TouchEvent event) {
+    uint8_t curr_view_type = pmem::spectrum_view_type();
+    curr_view_type++;
+
+    if (curr_view_type > 3) {  // Reset spectrum view type if out of bounds
+        curr_view_type = 0;
+    }
+    pmem::set_spectrum_view_type(curr_view_type);  // Reset spectrum view type on touch
+    
     if (event.type == TouchEvent::Type::Start) {
         if (on_touch_select) {
             on_touch_select(event.point.x(), event.point.y());
         }
     }
-    uint8_t curr_view_type = pmem::spectrum_view_type();
-
-    if (curr_view_type >= 3) {  // Reset spectrum view type if out of bounds
-        curr_view_type = 0;
-    } else {
-        curr_view_type++;
-    }
-    pmem::set_spectrum_view_type(curr_view_type);  // Reset spectrum view type on touch
-
+    
     return true;
 }
 

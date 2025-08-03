@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "audio.hpp"
 #include "analog_audio_app.hpp"
+#include "audio.hpp"
 #include "baseband_api.hpp"
 #include "file.hpp"
 #include "freqman.hpp"

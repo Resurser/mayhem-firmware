@@ -488,7 +488,7 @@ void AnalogAudioView::on_show_options_modulation() {
             widget = std::make_unique<NBFMOptionsView>(nbfm_view_rect, Theme::getInstance()->option_active);
             waterfall.show_audio_spectrum_view(false);
             text_ctcss.hidden(false);
-            ddc_enable = persistent_memory::ddc_enabled();
+            ddc_enable = false;  // NBFM does not use DDC
             break;
 
         case ReceiverModel::Mode::WidebandFMAudio:

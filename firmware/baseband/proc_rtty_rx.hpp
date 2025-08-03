@@ -33,7 +33,7 @@
 #include "audio_output.hpp"
 
 #include "fifo.hpp"
-#include "sine_table_int8.hpp"
+#include "sine_table_int16.hpp"
 #include "message.hpp"
 
 // -------------------- Configuration Constants --------------------
