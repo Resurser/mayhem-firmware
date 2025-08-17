@@ -21,7 +21,6 @@
  */
 
 #include "ui_rtty_rx.hpp"
-#include "ui_modemsetup.hpp"
 #include <unordered_map>
 
 #include "modems.hpp"
@@ -121,11 +120,10 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     options_mark.set_selected_index(mark_index, false);
     options_shift.set_selected_index(shift_index, true);
     // Auto-configure modem for LCR RX (will be removed later)
-    // baseband::set_rtty(50, 5, receiver_modem->mark_freq, receiver_modem->space_freq, false, false);
-    // baseband::set_afsk(persistent_memory::modem_baudrate(), 5, 0, false);
-
+    baseband::set_rtty(50, 5, options_mark.selected_index_value(), options_shift.selected_index_value(), reverse_bits, false);
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
+    receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
     receiver_model.enable();
     // console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
 }
@@ -151,7 +149,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 // receiver_model.enable();
 
 // }
-char RTTYRxView::BaudottoChar(const uint32_t data) {
+char RTTYRxView::BaudottoChar(const uint8_t data) {
     int out = 0;
     const char letters[32] = {
         '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U',
@@ -192,7 +190,7 @@ void RTTYRxView::on_log(RTTYRxLogMessage msg) {
     std::string str_log = "";
 
     for (uint16_t i = 0; i < msg.cnt; i++) {
-        str_log += to_string_dec_int(msg.samples[i]) + ", ";
+        str_log += BaudottoChar(msg.samples[i]) + ", ";
     }
     text_debug.set(str_log);
 }

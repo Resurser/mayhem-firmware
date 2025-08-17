@@ -222,13 +222,21 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
 
     auto audio = demod.execute(channel_out, audio_buffer);
     audio_output.write(audio);
-
+    // for (size_t i = 0; i < 128; i++) {
+    //     re = buffer.p[i].real();
+    //     // im = buffer.p[i].imag();
+    //     // mag = __builtin_sqrtf((re * re) + (im * im)) ;
+    //     const unsigned int v = re + 127.0f;  // timescope
+    //     audio_spectrum.db[i] = std::max(0U, std::min(255U, v));
+    // }
+    // AudioSpectrumMessage message{&audio_spectrum};
+    // shared_memory.application_queue.push(message);
     for (size_t c = 0; c < audio.count; c++) {
         // Scale and saturate the sample
         const int32_t sample_int = audio.p[c] * 32768.0f;
 
         int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format
-        // decodeRTTYBit(sample_int);
+        decodeRTTYBit(sample_int);
     }
 }
 

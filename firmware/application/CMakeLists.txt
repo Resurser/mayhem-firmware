@@ -178,7 +178,6 @@ set(CPPSRC
 	${COMMON}/ui_language.cpp
 	${COMMON}/utility.cpp
 	${COMMON}/dsp_adv.cpp
-	${COMMON}/rtty_decoder.cpp
 	${COMMON}/wm8731.cpp
 	${COMMON}/i2cdevmanager.cpp
 	${I2CDEV_SOURCES}

@@ -98,10 +98,11 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     bool configured{false};
     bool bit_value{};
-
+    
+    std::array<complex16_t, 256> spectrum{};
     RTTYRxDataMessage data_message{false, 0};
     RTTYRxLogMessage log_message{};
-    RSSIThread rssi_thread{};
+    
     uint32_t calculatePhaseIncrement(uint32_t frequency);
     int32_t fastSin(uint32_t phase);
     void resetAccumulators();

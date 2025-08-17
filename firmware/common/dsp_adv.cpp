@@ -86,7 +86,7 @@ void iq_correct(float* I, float* Q, size_t len) {
         Q[i] *= gain;
 }
 
-void gaussian_smooth(float* data, size_t len, float sigma) {
+void gaussian_smooth(float* data, int len, float sigma) {
     int radius = (int)(3.0f * sigma);
     int ksize = 2 * radius + 1;
     if (ksize > MAX_KERNEL) ksize = MAX_KERNEL;
@@ -147,7 +147,7 @@ void savitzky_golay(uint8_t* data, size_t len) {
         data[i] = temp[i];
 }
 
-void median_filter(uint8_t* data, size_t len, size_t window) {
+void median_filter(uint8_t* data, int len, size_t window) {
     uint8_t temp[len];
     for (size_t i = 0; i < len; i++) {
         int half = window / 2;

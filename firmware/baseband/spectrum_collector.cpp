@@ -117,7 +117,7 @@ static typename T::value_type spectrum_window_hamming_3(const T& s, const size_t
     // Three point Hamming window.
     const auto prev = s[(i - 1) & mask];
     const auto next = s[(i + 1) & mask];
-    return s[i] * 0.54f + (prev + next) * -0.23f;
+    return s[i] * 0.5381f + (prev + next) * -0.2308f;
 };
 
 template <typename T>
@@ -127,8 +127,15 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     constexpr size_t mask = length - 1;
     // Three term Blackman window.
     constexpr float alpha = 0.42f;
-    constexpr float beta = 0.496f * 0.496f;
-    constexpr float gamma = 0.0768f * 0.0511f;
+    constexpr float beta = 0.496f * 0.5f;
+    constexpr float gamma = 0.0768f * 0.05f;
+
+    // The Blackman window is defined as:
+    // w[n] = a0 - a1 * cos(2 * pi * n / N) + a2 * cos(4 * pi * n / N)
+    // where:
+    // a0 = 0.42, a1 = 0.496, a2 = 0.0768
+    // n is the sample index, N is the total number of samples.
+
     // Blackman window coefficients.
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };

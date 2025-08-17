@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.ld": "cpp",
+			"*.hpp": "cpp",
+			"*.cpp": "cpp",
+			"system_error": "cpp"
+		}
+	}
+}

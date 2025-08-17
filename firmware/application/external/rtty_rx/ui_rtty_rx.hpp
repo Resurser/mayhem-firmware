@@ -118,10 +118,15 @@ class RTTYRxView : public View {
             {" 170", 170},
             {" 450", 450},
             {" 850", 850},
+            {" 225", 225},
+            {" 425", 425},
+
             {"-85", -85},
             {"-170", -170},
             {"-450", -450},
             {"-850", -850},
+            {"-225", -225},
+            {"-425", -425},
 
         }};
 
@@ -132,19 +137,28 @@ class RTTYRxView : public View {
             {"1275", 1275},
             {"1445", 1445},
             {"2125", 2125},
+            {"2225", 2225},
             {"2295", 2295},
+            {"1700", 1700},
+            {"800", 800},
         }};
-    Checkbox checkbox_disable_touchscreen{
-        {18 * 8, 1 * 16},
+    Checkbox checkbox_revert_bits{
+        {20 * 8, 1 * 16},
         10,
-        "Rev. bits"};
+        "Rev. bits"
+    };
+    Checkbox checkbox_revert_{
+        {20 * 8, 1 * 16},
+        10,
+        "Rev. bits"
+    };
 
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},
         LanguageHelper::currentMessages[LANG_DEBUG]};
     Console console{
         {0, 4 * 16, screen_width, screen_width}};
-    char BaudottoChar(const uint32_t data);
+    char BaudottoChar(const uint8_t data);
     void on_freqchg(int64_t freq);
     void apply_config();
 
