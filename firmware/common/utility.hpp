@@ -87,8 +87,8 @@ constexpr size_t log_2(const size_t n, const size_t p = 0) {
     return (n <= 1) ? p : log_2(n / 2, p + 1);
 }
 
-float fast_log2(const float val);
 float fast_log(const float val);
+float fast_log2(const float val);
 float fast_log10(const float val);
 float fast_pow2(const float val);
 
