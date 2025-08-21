@@ -142,16 +142,13 @@ class RTTYRxView : public View {
             {"1700", 1700},
             {"800", 800},
         }};
+    
     Checkbox checkbox_revert_bits{
         {20 * 8, 1 * 16},
         10,
         "Rev. bits"
     };
-    Checkbox checkbox_revert_{
-        {20 * 8, 1 * 16},
-        10,
-        "Rev. bits"
-    };
+    
 
     Text text_debug{
         {0 * 8, 12 + 2 * 16, screen_width, 16},

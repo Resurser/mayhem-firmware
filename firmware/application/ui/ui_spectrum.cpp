@@ -206,13 +206,13 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
                 mode = "savgol";
                 break;
             case 2:
-                mode = "log";
+                mode = "savgol + norm";
                 break;
             case 3:
-                mode = "norml";
+                mode = "savgol + log";
                 break;
             default:
-                mode = "none";
+                mode = "raw";
                 break;
         }
         painter.draw_string({4, screen_height - 16}, style(), mode);
@@ -335,41 +335,25 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     }
     // uint8_t min = spectrum.min_db;
     // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-    uint8_t noise_floor = spectrum.min_db + (spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
+    uint8_t noise_floor = spectrum.min_db + 10;
+    //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
     dsp_utils::suppress_noise(spectrum_db.data(), spectrum_db.size(), noise_floor);
     //update_heatmap(spectrum_db.data(), spectrum_db.size());
-    // if (pmem::spectrum_view_type()) {
-    switch (pmem::spectrum_view_type()) {
-        case 1:
-            savitzky_golay(spectrum_db.data(), spectrum_db.size());
-            break;
-        case 2:
-            for (size_t i = 0; i < 240; i++) {
-                spectrum_db[i] = LutLogIdx[spectrum_db[i]];  //, spectrum.min_db, spectrum.max_db)];
-                // gradient.lut[spectrum_db[240 - 120 + i]];
-                // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
-            }
-            break;
-
-            // spectrum_db_upd.data(), spectrum_db_upd.size());
-        case 3:
-            for (size_t i = 0; i < 240; i++) {
-                spectrum_db[i] = (spectrum_db[i] - noise_floor) * 255 / (spectrum.max_db - noise_floor);
-                // gradient.lut[spectrum_db[240 - 120 + i]];
-                // pixel_row[i + 120] = gradient.lut[spectrum_db[i]];
-            }
-            dival_waterfall(spectrum_db.data(), spectrum_db.size());
-            // 11 dsp_utils::dival_waterfall(spectrum_db_upd.data(), spectrum_db_upd.size());
-            //  clearNoise(spectrum_db, noise_floor, 15);
-            //  applySavitzkyGolay(spectrum_db, spectrum_db_upd);  // Initialize with the first value
-
-            break;
-        default:
-            break;
-    }
+    
+    uint8_t mode = pmem::spectrum_view_type();
+    // if (mode == 2) {
+    //     for (size_t i = 0; i < 240; i++) {
+    //         spectrum_db[i] = (spectrum_db[i] - spectrum.min_db) * 255 / (spectrum.max_db - spectrum.min_db);
+    //     }
+    // } else if (mode == 3) {
+        
     // }
 
+    if (mode >= 1) {
+        savitzky_golay(spectrum_db.data(), spectrum_db.size());
+    }
+    
     for (size_t i = 0; i < 240; i++) {
         pixel_row[i] = gradient.lut[spectrum_db[i]];  // Use the gradient LUT to get the color
         // gradient.lut[spectrum_db[240 - 120 + i]];

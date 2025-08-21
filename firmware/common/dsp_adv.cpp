@@ -25,9 +25,7 @@ void update_heatmap(uint8_t* spectrum, size_t len) {
     for (size_t i = 0; i < len; i++) {
         heatmap[i] = 0.95f * heatmap[i] + 0.05f * spectrum[i];  // EMA
     }
-    for (size_t i = 0; i < len; i++) {
-        spectrum[i] = heatmap[i];
-    }
+    
 }
 
 void erode_waterfall(uint8_t* row, size_t len) {
@@ -114,6 +112,19 @@ void gaussian_smooth(float* data, int len, float sigma) {
     }
 }
 
+/**
+ * @brief Estimates a noise threshold from a given spectrum.
+ *
+ * This function calculates the mean and variance of the input spectrum,
+ * then computes a normalized variance (Q). Based on Q, it returns a threshold
+ * value for noise estimation:
+ *   - If Q < 2.0, returns mean + 3.0
+ *   - Otherwise, returns mean + 6.0
+ *
+ * @param spectrum Pointer to the array containing spectrum data (uint8_t).
+ * @param len Number of elements in the spectrum array.
+ * @return Estimated noise threshold as a float.
+ */
 float estimate_noise_threshold(uint8_t* spectrum, size_t len) {
     uint32_t sum = 0;
     float var = 0.0f;
@@ -149,7 +160,7 @@ void savitzky_golay(uint8_t* data, size_t len) {
 
 void median_filter(uint8_t* data, int len, size_t window) {
     uint8_t temp[len];
-    for (size_t i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         int half = window / 2;
         uint8_t buf[15];
         int count = 0;
@@ -171,62 +182,9 @@ void median_filter(uint8_t* data, int len, size_t window) {
         }
         temp[i] = buf[count / 2];
     }
-    for (size_t i = 0; i < len; i++) data[i] = temp[i];
+    for (int i = 0; i < len; i++) data[i] = temp[i];
 }
 
-ColorRGB LUT[256];
-static ColorScheme active_scheme = LUT_JET;
-
-float scale_power(float raw, ScaleMode mode, float gain) {
-    static float avg = 0.0f;
-    switch (mode) {
-        case SCALE_LINEAR:
-            return raw * gain;
-        case SCALE_LOG:
-            return 10.0f * fast_log10(raw) * gain;
-        case SCALE_ADAPTIVE:
-            avg = 0.95f * avg + 0.05f * raw;
-            return (raw - avg) * gain;
-        default:
-            return raw;
-    }
-}
-void generate_lut(ColorScheme scheme) {
-    active_scheme = scheme;
-    for (uint8_t i = 0; i < 256; i++) {
-        float v = i / 255.0f;
-        switch (scheme) {
-            case LUT_GRAY:
-                LUT[i] = (ColorRGB){i, i, i};
-                break;
-            case LUT_COOL:
-                LUT[i] = (ColorRGB){(uint8_t)(255 * (1 - v)), (uint8_t)(255 * v), 255};
-                break;
-            case LUT_HOT:
-                LUT[i] = (ColorRGB){(uint8_t)(255 * v), (uint8_t)(128 * v), (uint8_t)(64 * v)};
-                break;
-            case LUT_JET:
-                LUT[i] = (ColorRGB){
-                    (uint8_t)(255 * fmax(0, fmin(1, 4 * (v - 0.75f)))),
-                    (uint8_t)(255 * fmax(0, fmin(1, 4 * fabs(v - 0.5f)))),
-                    (uint8_t)(255 * fmax(0, fmin(1, 4 * (0.25f - v))))};
-                break;
-            case LUT_MAGMA:
-                LUT[i] = (ColorRGB){
-                    (uint8_t)(255 * powf(v, 1.5f)),
-                    (uint8_t)(255 * powf(v, 0.8f)),
-                    (uint8_t)(255 * powf(v, 0.3f))};
-                break;
-        }
-    }
-}
-
-ColorRGB get_color(float db) {
-    int i = (int)(db * 2.5f + 100);
-    if (i < 0) i = 0;
-    if (i > 255) i = 255;
-    return LUT[i];
-}
 // Основна корекція дзеркала
 void mirror_signals_clear(int16_t* i_data, int16_t* q_data, size_t length, int32_t gain_fixed, int32_t phase_fixed) {
     for (size_t i = 0; i < length; ++i) {

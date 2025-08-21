@@ -57,7 +57,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
                   &field_volume,
                   &field_frequency,
                   &text_debug,
-                  &checkbox_disable_touchscreen,
+                  &checkbox_revert_bits,
                   &labels,
                   &options_shift,
                   &options_mark,
@@ -83,14 +83,12 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
 
     field_frequency.set_step(1000);
 
-    checkbox_disable_touchscreen.set_value(logging);
-    checkbox_disable_touchscreen.on_select = [this](Checkbox&, bool v) {
-        logging = v;
+    checkbox_revert_bits.set_value(logging);
+    checkbox_revert_bits.on_select = [this](Checkbox&, bool v) {
+        this->reverse_bits = v;
+        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
+        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
     };
-
-    // button_modem_setup.on_select = [&nav](Button&) {
-    //     nav.push<ModemSetupView>();
-    // };
 
     options_shift.on_change = [this](size_t index, int32_t v) {
         shift_index = (uint8_t)index;
@@ -99,8 +97,6 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
         uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
         // text_debug.set("--options_shift " + to_string_dec_int(val));
         baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
-
-        // on_settings_changed();
     };
 
     options_mark.on_change = [this](size_t index, int32_t v) {
@@ -114,9 +110,9 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     };
 
     logger = std::make_unique<RTTYLogger>();
-    if (logger)
-        logger->append(logs_dir / u"RTTY.TXT");
-
+    // if (logger)
+    //     logger->append(logs_dir / u"RTTY.TXT");
+    // receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
     options_mark.set_selected_index(mark_index, false);
     options_shift.set_selected_index(shift_index, true);
     // Auto-configure modem for LCR RX (will be removed later)
@@ -128,27 +124,6 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     // console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
 }
 
-// void RTTYRxView::apply_config(){
-//     audio::output::stop();
-//     receiver_model.disable();
-//     baseband::shutdown();
-
-// baseband::run_image(portapack::spi_flash::image_tag_capture);
-// receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
-
-// baseband::set_sample_rate(, get_oversample_rate(DETECTOR_BW));
-// // The radio needs to know the effective sampling rate.
-// auto actual_sampling_rate = get_actual_sample_rate(DETECTOR_BW);
-// receiver_model.set_sampling_rate(actual_sampling_rate);
-// receiver_model.set_baseband_bandwidth(filter_bandwidth_for_sampling_rate(actual_sampling_rate));
-
-// audio::set_rate(audio::Rate::Hz_12000);
-// audio::output::start();
-// receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
-
-// receiver_model.enable();
-
-// }
 char RTTYRxView::BaudottoChar(const uint8_t data) {
     int out = 0;
     const char letters[32] = {
