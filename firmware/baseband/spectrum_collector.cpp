@@ -128,6 +128,24 @@ static typename T::value_type spectrum_window_blackman_3(const T& s, const size_
     return s[i] * alpha - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma;
 };
 
+template <typename T>
+static typename T::value_type spectrum_window_blackman_4(const T& s, const size_t i) {
+    constexpr size_t length = sizeof(s) / sizeof(s[0]);
+    static_assert(power_of_two(length), "Array length must be power of 4");
+    constexpr size_t mask = length - 1;
+
+    // Four-term Blackman-Harris coefficients (approximate)
+    constexpr float alpha = 0.35875f;
+    constexpr float beta = 0.48829f * 0.5f;
+    constexpr float gamma = 0.14128f * 0.05f;
+    constexpr float delta = 0.01168f * 0.001f; // Added delta term
+
+    return s[i] * alpha
+           - (s[(i - 1) & mask] + s[(i + 1) & mask]) * beta
+           + (s[(i - 2) & mask] + s[(i + 2) & mask]) * gamma
+           - (s[(i - 3) & mask] + s[(i + 3) & mask]) * delta; // Added delta term
+}
+
 void SpectrumCollector::update() {
     // Called from idle thread (after EVT_MASK_SPECTRUM is flagged)
     if (streaming && channel_spectrum_request_update) {
