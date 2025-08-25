@@ -41,8 +41,8 @@
 #define TABLE_SIZE 256               // Reduced sine table size
 #define PHASE_MASK (TABLE_SIZE - 1)  // Mask to wrap phase index
 #define SAMPLE_RATE 12000            // Audio sample rate in Hz
-#define DEFAULT_MARK_FREQ 1275
-#define DEFAULT_SPACE_FREQ 1725
+#define DEFAULT_MARK_FREQ 1700
+#define DEFAULT_SPACE_FREQ 2125
 #define DEFAULT_BAUD_RATE 50                               // RTTY baud rate (bits per second)
 #define SAMPLES_PER_BIT (SAMPLE_RATE / DEFAULT_BAUD_RATE)  // Samples per bit duration
 #define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)          // 1.5 Stop bits duration
@@ -79,10 +79,11 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     // -------------------- Динамічні параметри --------------------
     uint16_t baudRate = DEFAULT_BAUD_RATE;
-    uint32_t markPhaseInc = 0;
-    uint32_t spacePhaseInc = 0;
     uint16_t markFreq = DEFAULT_MARK_FREQ;
     uint16_t spaceFreq = DEFAULT_SPACE_FREQ;
+    uint32_t markPhaseInc = 0;
+    uint32_t spacePhaseInc = 0;
+    
     bool reverseBits = false;  // Чи потрібно перевертати біти
     bool reverseFreq = false;  // Чи потрібно міняти місцями маркерну і просторову частоту
 
@@ -99,7 +100,6 @@ class RTTYRxProcessor : public BasebandProcessor {
     bool configured{false};
     bool bit_value{};
     
-    std::array<complex16_t, 256> spectrum{};
     RTTYRxDataMessage data_message{false, 0};
     RTTYRxLogMessage log_message{};
     

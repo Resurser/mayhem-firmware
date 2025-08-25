@@ -236,7 +236,7 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
         const int32_t sample_int = audio.p[c] * 32768.0f;
 
         int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format
-        decodeRTTYBit(sample_int);
+        decodeRTTYBit(current_sample);
     }
 }
 

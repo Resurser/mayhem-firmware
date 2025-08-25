@@ -335,11 +335,11 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     }
     // uint8_t min = spectrum.min_db;
     // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
-    uint8_t noise_floor = spectrum.min_db + 10;
+    // uint8_t noise_floor = spectrum.min_db + 10;
     //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
-    dsp_utils::suppress_noise(spectrum_db.data(), spectrum_db.size(), noise_floor);
-    //update_heatmap(spectrum_db.data(), spectrum_db.size());
+    // suppress_noise(spectrum_db.data(), spectrum_db.size(), noise_floor);
+    // update_heatmap(spectrum_db.data(), spectrum_db.size());
     
     uint8_t mode = pmem::spectrum_view_type();
     // if (mode == 2) {

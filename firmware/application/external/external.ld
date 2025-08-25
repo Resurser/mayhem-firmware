@@ -71,7 +71,7 @@ MEMORY
     ram_external_app_doom       (rwx) : org = 0xADDE0000, len = 32k
     ram_external_app_debug_pmem (rwx) : org = 0xADDF0000, len = 32k
     ram_external_app_scanner    (rwx) : org = 0xADE00000, len = 32k
-    ram_external_app_level      (rwx) : org = 0xADE10000, len = 32k    
+    ram_external_app_level      (rwx) : org = 0xADE10000, len = 32k
     ram_external_app_gfxeq      (rwx) : org = 0xADE20000, len = 32k
     ram_external_app_noaaapt_rx (rwx) : org = 0xADE30000, len = 32k
     ram_external_app_detector_rx (rwx) : org = 0xADE40000, len = 32k
