@@ -244,6 +244,10 @@ set(EXTCPPSRC
 	external/soundboard/main.cpp
 	external/soundboard/soundboard_app.cpp
 
+	#game2048
+	external/game2048/main.cpp
+	external/game2048/ui_game2048.cpp
+
 	#rtty_rx
 	external/rtty_rx/main.cpp
 	external/rtty_rx/ui_rtty_rx.cpp
@@ -313,6 +317,7 @@ set(EXTAPPLIST
 	ert
 	epirb_rx
 	soundboard
+	game2048
 	rtty_rx
 	waterfall_designer
 )

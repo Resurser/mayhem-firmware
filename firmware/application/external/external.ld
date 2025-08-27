@@ -82,6 +82,8 @@ MEMORY
     ram_external_app_ert        (rwx) : org = 0xADE90000, len = 32k
     ram_external_app_epirb_rx   (rwx) : org = 0xADEA0000, len = 32k
     ram_external_app_soundboard   (rwx) : org = 0xADEB0000, len = 32k
+    ram_external_app_game2048     (rwx) : org = 0xADEC0000, len = 32k
+
 
     ram_external_app_rtty_rx            (rwx) : org = 0xADEC0000, len = 32k
     ram_external_app_waterfall_designer (rwx) : org = 0xADED0000, len = 32k
@@ -443,6 +445,12 @@ SECTIONS
         *(*ui*external_app*soundboard*);
     } > ram_external_app_soundboard
     
+    .external_app_game2048 : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_game2048.application_information));
+        *(*ui*external_app*game2048*);
+    } > ram_external_app_game2048
+
     .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
     {
         KEEP(*(.external_app.app_rtty_rx.application_information));
