@@ -85,8 +85,8 @@ MEMORY
     ram_external_app_game2048     (rwx) : org = 0xADEC0000, len = 32k
 
 
-    ram_external_app_rtty_rx            (rwx) : org = 0xADEC0000, len = 32k
-    ram_external_app_waterfall_designer (rwx) : org = 0xADED0000, len = 32k
+    ram_external_app_rtty_rx            (rwx) : org = 0xADED0000, len = 32k
+    ram_external_app_waterfall_designer (rwx) : org = 0xADEE0000, len = 32k
 }
 
 SECTIONS

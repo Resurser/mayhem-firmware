@@ -350,9 +350,9 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
         
     // }
 
-    if (mode >= 1) {
-        savitzky_golay(spectrum_db.data(), spectrum_db.size());
-    }
+   
+    savitzky_golay(spectrum_db.data(), spectrum_db.size());
+    
     
     for (size_t i = 0; i < 240; i++) {
         pixel_row[i] = gradient.lut[spectrum_db[i]];  // Use the gradient LUT to get the color
