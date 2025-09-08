@@ -32,6 +32,10 @@ namespace pmem = portapack::persistent_memory;
 
 namespace ui {
 
+void SearchLogger::log_data(SearchRecentEntry& data) {
+    log_file.write_entry(";" + to_string_short_freq(data.frequency) + ";" + std::to_string(data.duration));
+}
+
 template <>
 void RecentEntriesTable<SearchRecentEntries>::draw(
     const Entry& entry,
@@ -76,6 +80,7 @@ SearchView::SearchView(
                   &check_snap,
                   &options_snap,
                   &big_display,
+                  &check_log,
                   &recent_entries_view});
 
     baseband::set_spectrum(SEARCH_SLICE_WIDTH, 31);
@@ -100,6 +105,14 @@ SearchView::SearchView(
     bind(field_frequency_max, settings_.freq_max, nav, [this](auto) {
         on_range_changed();
     });
+
+    check_log.on_select = [this](Checkbox&, bool v) {
+        logging = v;
+        if (logging) {
+            logger.append(logs_dir.string() + "/SEARCH_" + to_string_timestamp(rtc_time::now()) + ".CSV");
+            logger.write_header();
+        }
+    };
 
     bind(field_threshold, settings_.power_threshold);
     bind(check_snap, settings_.snap_search);
@@ -193,7 +206,6 @@ void SearchView::do_detection() {
 
                         locked = true;
                         locked_bin = bin_max;
-
                         // TODO: open Audio.
                     } else
                         text_infos.set("Out of range");
@@ -211,6 +223,7 @@ void SearchView::do_detection() {
 
                 auto& entry = ::on_packet(recent, resolved_frequency);
                 entry.set_duration(duration);
+                if (logging) logger.log_data(entry);
                 recent_entries_view.set_dirty();
 
                 text_infos.set("Listening");
