@@ -23,6 +23,8 @@
 
 #include "convert.hpp"
 #include "file_reader.hpp"
+#include "file_path.hpp"
+
 namespace fs = std::filesystem;
 
 const std::filesystem::path default_gradient_file = u"waterfall.txt";
@@ -32,13 +34,49 @@ Gradient::Gradient() {
     prev_r = 0;
     prev_g = 0;
     prev_b = 0;
+
+    
+    file_list = scan_root_files(waterfalls_dir, u"*.txt");
 }
 
-void Gradient::set_default() {
-    step(1, 0, 0, 1);
-    step(86, 0, 0, 255);
-    step(171, 0, 255, 0);
-    step(255, 255, 0, 0);
+void Gradient::set_default(const uint8_t index) {
+    if (index < file_list.size()) {
+        std::filesystem::path current_full_path = waterfalls_dir / file_list[index];
+        if (!fs::file_exists(current_full_path)) {
+            // If the file doesn't exist, fall back to the default gradient file
+            current_full_path = default_gradient_file;
+        }
+        prev_index = 0;
+        prev_r = 0;
+        prev_g = 0;
+        prev_b = 0;
+
+        load_file(current_full_path);
+        return;
+    }
+    
+    switch (index) {
+    case 1:
+        step(1, 0, 0, 0);
+        step(64, 0, 0, 155);
+        step(96, 0, 5, 255);
+        step(128, 0, 255, 20);
+        step(192, 255, 225, 0);
+        step(255, 240, 0, 0);
+        break;
+    
+    default:    
+        step(1, 0, 0, 0);
+        step(37, 0, 0, 80);
+        step(74, 0, 48, 150);
+        step(115, 0, 110, 220);
+        step(153, 50, 160, 110);
+        step(192, 150, 192, 50);
+        step(216, 245, 200, 0);
+        step(242, 245, 100, 0);
+        step(255, 255, 0, 0);
+        break;
+    }
 }
 
 bool Gradient::load_file(const std::filesystem::path& file_path) {

@@ -558,12 +558,12 @@ DeclareTargets(PUSB sd_over_usb)
 set(add_to_firmware FALSE)
 set(MODE_FLAGS "-O3")
 
-### ACARS RX
+# ### ACARS RX
 
-set(MODE_CPPSRC
-	proc_acars.cpp
-)
-DeclareTargets(PACA acars)
+# set(MODE_CPPSRC
+# 	proc_acars.cpp
+# )
+# DeclareTargets(PACA acars)
 
 
 ### AFSK RX

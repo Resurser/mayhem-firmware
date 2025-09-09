@@ -200,22 +200,8 @@ void FrequencyScale::draw_frequency_ticks(Painter& painter, const Rect r) {
         const Rect tick_high{offset_high, r.top(), 1, r.height()};
         painter.fill_rectangle(tick_high, Theme::getInstance()->bg_darkest->foreground);
         painter.draw_string({offset_high - 2 - label_width, r.top()}, style(), label);
-        std::string mode = "log";
-        switch (pmem::spectrum_view_type()) {
-            case 1:
-                mode = "savgol";
-                break;
-            case 2:
-                mode = "savgol + norm";
-                break;
-            case 3:
-                mode = "savgol + log";
-                break;
-            default:
-                mode = "raw";
-                break;
-        }
-        painter.draw_string({4, screen_height - 16}, style(), mode);
+        // std::string mode = to_string_dec_uint(pmem::spectrum_view_type());
+        // painter.draw_string({4, screen_height - 16}, style(), mode);
 
         tick_offset += tick_interval;
     }
@@ -313,6 +299,39 @@ void WaterfallWidget::on_hide() {
      */
     display.scroll_disable();
 }
+inline void updateDynamicRangeWithHistogram(uint8_t* data, size_t len, uint8_t& min, uint8_t& max, float percentile = 0.05f) {
+    // Create a histogram for the input signal
+    std::vector<int> histogram(256, 0);
+    for (size_t i = 0; i < len; ++i) {
+        histogram[data[i]]++;
+    }
+
+    // Calculate cumulative sums
+    std::vector<int> cumulativeSum(256, 0);
+    cumulativeSum[0] = histogram[0];
+    for (size_t i = 1; i < 256; ++i) {
+        cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
+    }
+
+    // Determine min and max based on the desired percentile
+    int totalCount = len;
+    int minCount = static_cast<int>(totalCount * percentile);
+    int maxCount = static_cast<int>(totalCount * (1.0f - percentile));
+
+    for (size_t i = 0; i < 256; ++i) {
+        if (cumulativeSum[i] > minCount) {
+            min = static_cast<uint8_t>(i);
+            break;
+        }
+    }
+
+    for (size_t i = 255; i > 0; --i) {
+        if (cumulativeSum[i] < maxCount) {
+            max = static_cast<uint8_t>(i);
+            break;
+        }
+    }
+}
 
 inline uint8_t intensityToLUTIndex(uint8_t intensity, uint8_t minDb, uint8_t maxDb) {
     static float normIntensity = (intensity - minDb) / (maxDb - minDb);                // Normalize to [0, 1]
@@ -333,15 +352,19 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
         spectrum_db[i] = spectrum.db[255 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
-    // uint8_t min = spectrum.min_db;
+    uint8_t min = 255;
+    uint8_t max = 0;
     // uint8_t noise_floor = estimateNoiseFloor(spectrum_db, min, max);
     // uint8_t noise_floor = spectrum.min_db + 10;
     //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
-    // suppress_noise(spectrum_db.data(), spectrum_db.size(), noise_floor);
+    updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.05f);
+    pmem::set_spectrum_view_type(max);
+    suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
     // update_heatmap(spectrum_db.data(), spectrum_db.size());
     
-    uint8_t mode = pmem::spectrum_view_type();
+    // uint8_t mode = pmem::spectrum_view_type();
+
     // if (mode == 2) {
     //     for (size_t i = 0; i < 240; i++) {
     //         spectrum_db[i] = (spectrum_db[i] - spectrum.min_db) * 255 / (spectrum.max_db - spectrum.min_db);
@@ -351,7 +374,7 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // }
 
    
-    savitzky_golay(spectrum_db.data(), spectrum_db.size());
+    // savitzky_golay(spectrum_db.data(), spectrum_db.size());
     
     
     for (size_t i = 0; i < 240; i++) {
@@ -368,21 +391,22 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
 }
 
 bool WaterfallWidget::on_touch(const TouchEvent event) {
-    uint8_t curr_view_type = pmem::spectrum_view_type();
-    curr_view_type++;
-
-    if (curr_view_type > 3) {  // Reset spectrum view type if out of bounds
-        curr_view_type = 0;
-    }
-    pmem::set_spectrum_view_type(curr_view_type);  // Reset spectrum view type on touch
-    
     if (event.type == TouchEvent::Type::Start) {
         if (on_touch_select) {
             on_touch_select(event.point.x(), event.point.y());
         }
     }
-    
-    return true;
+    static uint8_t curr_view_type = 0;
+        curr_view_type++;
+
+        if (curr_view_type >= gradient.file_list.size()) {  // Reset spectrum view type if out of bounds
+            curr_view_type = 0;
+        }
+          // Reset spectrum view type on touch
+        gradient.set_default(curr_view_type);
+        //clear();
+
+        return true;
 }
 
 void WaterfallWidget::clear() {
@@ -395,7 +419,7 @@ void WaterfallWidget::clear() {
 
 WaterfallView::WaterfallView(const bool cursor) {
     add_children({&waterfall_widget,
-                  &frequency_scale});
+                  &frequency_scale, &gradient_options});
 
     frequency_scale.set_focusable(cursor);
     // Making the event climb up all the way up to here kinda sucks
@@ -412,10 +436,15 @@ WaterfallView::WaterfallView(const bool cursor) {
             // screen x to frequency scale x, NB we need two widgets align
             int32_t cursor_position = x - (screen_width / 2);
             frequency_scale.set_cursor_position(cursor_position);
-        }
+        }        
     };
 
     load_gradient();
+    int idx = 0;
+    for (const auto& file_name : waterfall_widget.gradient.file_list) {
+        gradient_options.options().emplace_back(file_name.stem().string(), idx++);
+    }
+    
 }
 
 void WaterfallView::load_gradient() {
@@ -469,6 +498,7 @@ void WaterfallView::update_widgets_rect() {
         frequency_scale.set_parent_rect({0, 0, screen_rect().width(), scale_height});
         waterfall_widget.set_parent_rect(waterfall_normal_rect);
     }
+    gradient_options.set_parent_rect({4, screen_height - 16, screen_rect().width() - 8, 12});
     waterfall_widget.on_show();
 }
 

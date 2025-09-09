@@ -360,6 +360,18 @@ std::filesystem::filesystem_error make_new_directory(
     return {f_mkdir(reinterpret_cast<const TCHAR*>(dir_path.c_str()))};
 }
 
+
+/**
+ * @brief Ensures that the specified directory exists, creating it and its parent directories if necessary.
+ *
+ * This function recursively checks if the given directory path exists. If it does not,
+ * it attempts to create the parent directory first, then creates the specified directory.
+ * If any error occurs during the process, it returns a std::filesystem::filesystem_error
+ * containing the error code and message.
+ *
+ * @param dir_path The path of the directory to ensure exists.
+ * @return std::filesystem::filesystem_error An error object if the operation fails; otherwise, a default-constructed error.
+ */
 std::filesystem::filesystem_error ensure_directory(
     const std::filesystem::path& dir_path) {
     if (dir_path.empty() || std::filesystem::file_exists(dir_path))

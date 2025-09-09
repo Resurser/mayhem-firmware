@@ -485,6 +485,15 @@ void SystemStatusView::on_bias_tee() {
 
 void SystemStatusView::on_camera() {
     ensure_directory(screenshots_dir);
+    /**
+     * @brief Finds the next filename in the specified screenshots directory that matches the pattern "SCR_????.PNG".
+     *
+     * This function searches for files in the given directory (`screenshots_dir`) whose names match the pattern,
+     * where "?" represents any single character. It returns the path to the next matching filename.
+     *
+     * @param screenshots_dir The directory to search for screenshot files.
+     * @return The path to the next filename matching the pattern "SCR_????.PNG".
+     */
     auto path = next_filename_matching_pattern(screenshots_dir / u"SCR_????.PNG");
 
     if (path.empty())

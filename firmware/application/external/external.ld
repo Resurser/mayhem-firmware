@@ -31,8 +31,8 @@ MEMORY
     ram_external_app_nrf_rx     (rwx) : org = 0xADB60000, len = 32k
     ram_external_app_coasterp   (rwx) : org = 0xADB70000, len = 32k
     ram_external_app_lge        (rwx) : org = 0xADB80000, len = 32k
-    ram_external_app_lcr        (rwx) : org = 0xADB90000, len = 32k
-    ram_external_app_jammer     (rwx) : org = 0xADBA0000, len = 32k
+    ram_external_app_jammer     (rwx) : org = 0xADB90000, len = 32k
+    ram_external_app_lcr        (rwx) : org = 0xADBA0000, len = 32k
     ram_external_app_gpssim     (rwx) : org = 0xADBB0000, len = 32k
     ram_external_app_spainter   (rwx) : org = 0xADBC0000, len = 32k
     ram_external_app_keyfob     (rwx) : org = 0xADBD0000, len = 32k
@@ -235,11 +235,11 @@ SECTIONS
         *(*ui*external_app*random_password*);
     } > ram_external_app_random_password
 
-    .external_app_acars_rx : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_acars_rx.application_information));
-        *(*ui*external_app*acars_rx*);
-    } > ram_external_app_acars_rx
+    // .external_app_acars_rx : ALIGN(4) SUBALIGN(4)
+    // {
+    //     KEEP(*(.external_app.app_acars_rx.application_information));
+    //     *(*ui*external_app*acars_rx*);
+    // } > ram_external_app_acars_rx
 
    .external_app_shoppingcart_lock : ALIGN(4) SUBALIGN(4)
     {

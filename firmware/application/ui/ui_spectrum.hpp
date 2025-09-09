@@ -159,6 +159,14 @@ class WaterfallView : public View {
 
     WaterfallWidget waterfall_widget{};
     FrequencyScale frequency_scale{};
+    OptionsField gradient_options{
+        {4, screen_height - 16},
+        12,
+        {
+            {"default", 0},  
+        }
+    };
+
     bool running_{false};
 
     ChannelSpectrumFIFO* channel_fifo{nullptr};

@@ -33,14 +33,14 @@ extern const std::filesystem::path default_gradient_file;
 class Gradient {
    public:
     std::array<ui::Color, 256> lut{};
-
+    std::vector<std::filesystem::path> file_list{};
     Gradient();
 
-    void set_default();
+    void set_default(const uint8_t index = 0);
     bool load_file(const std::filesystem::path& file_path);
 
    private:
-
+    
     
     int16_t prev_index = 0;
     int16_t prev_r = 0;
