@@ -31,8 +31,8 @@ MEMORY
     ram_external_app_nrf_rx     (rwx) : org = 0xADB60000, len = 32k
     ram_external_app_coasterp   (rwx) : org = 0xADB70000, len = 32k
     ram_external_app_lge        (rwx) : org = 0xADB80000, len = 32k
-    ram_external_app_jammer     (rwx) : org = 0xADB90000, len = 32k
-    ram_external_app_lcr        (rwx) : org = 0xADBA0000, len = 32k
+    ram_external_app_lcr        (rwx) : org = 0xADB90000, len = 32k
+    ram_external_app_jammer     (rwx) : org = 0xADBA0000, len = 32k
     ram_external_app_gpssim     (rwx) : org = 0xADBB0000, len = 32k
     ram_external_app_spainter   (rwx) : org = 0xADBC0000, len = 32k
     ram_external_app_keyfob     (rwx) : org = 0xADBD0000, len = 32k
@@ -73,8 +73,8 @@ MEMORY
     ram_external_app_scanner    (rwx) : org = 0xADE00000, len = 32k
     ram_external_app_level      (rwx) : org = 0xADE10000, len = 32k
     ram_external_app_gfxeq      (rwx) : org = 0xADE20000, len = 32k
-    ram_external_app_noaaapt_rx (rwx) : org = 0xADE30000, len = 32k
-    ram_external_app_detector_rx (rwx) : org = 0xADE40000, len = 32k
+    ram_external_app_noaaapt_rx   (rwx) : org = 0xADE30000, len = 32k
+    ram_external_app_detector_rx   (rwx) : org = 0xADE40000, len = 32k
     ram_external_app_dinogame   (rwx) : org = 0xADE50000, len = 32k
     ram_external_app_spaceinv   (rwx) : org = 0xADE60000, len = 32k
     ram_external_app_blackjack  (rwx) : org = 0xADE70000, len = 32k
@@ -235,11 +235,11 @@ SECTIONS
         *(*ui*external_app*random_password*);
     } > ram_external_app_random_password
 
-    // .external_app_acars_rx : ALIGN(4) SUBALIGN(4)
-    // {
-    //     KEEP(*(.external_app.app_acars_rx.application_information));
-    //     *(*ui*external_app*acars_rx*);
-    // } > ram_external_app_acars_rx
+    .external_app_acars_rx : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_acars_rx.application_information));
+        *(*ui*external_app*acars_rx*);
+    } > ram_external_app_acars_rx
 
    .external_app_shoppingcart_lock : ALIGN(4) SUBALIGN(4)
     {
@@ -312,13 +312,7 @@ SECTIONS
         KEEP(*(.external_app.app_hopper.application_information));
         *(*ui*external_app*hopper*);
     } > ram_external_app_hopper
-
-    .external_app_playlist_editor : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_playlist_editor.application_information));
-        *(*ui*external_app*playlist_editor*);
-    } > ram_external_app_playlist_editor
-
+    
     .external_app_antenna_length : ALIGN(4) SUBALIGN(4)
     {
         KEEP(*(.external_app.app_antenna_length.application_information));
@@ -330,12 +324,18 @@ SECTIONS
         KEEP(*(.external_app.app_view_wav.application_information));
         *(*ui*external_app*view_wav*);
     } > ram_external_app_view_wav
-
+    
     .external_app_sd_wipe : ALIGN(4) SUBALIGN(4)
     {
         KEEP(*(.external_app.app_sd_wipe.application_information));
         *(*ui*external_app*sd_wipe*);
     } > ram_external_app_sd_wipe
+
+    .external_app_playlist_editor : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_playlist_editor.application_information));
+        *(*ui*external_app*playlist_editor*);
+    } > ram_external_app_playlist_editor
 
     .external_app_snake : ALIGN(4) SUBALIGN(4)
     {

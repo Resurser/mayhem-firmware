@@ -68,8 +68,10 @@ void AudioSpectrumView::paint(Painter& painter) {
 
     // Cursor
     const Rect r_cursor{
-        field_frequency.value() / (48000 / 240), r.bottom() - 32 - cursor_band_height,
+        field_frequency.value() / (48000 / 240), 
+        r.bottom() - 32 - cursor_band_height,
         1, cursor_band_height};
+
     painter.fill_rectangle(
         r_cursor,
         Color::red());
@@ -140,6 +142,7 @@ void FrequencyScale::paint(Painter& painter) {
         const Rect r_cursor{
             118 + cursor_position, r.bottom() - filter_band_height,
             5, filter_band_height};
+        
         painter.fill_rectangle(
             r_cursor,
             Color::red());
@@ -229,6 +232,7 @@ void FrequencyScale::draw_filter_ranges(Painter& painter, const Rect r) {
         const Rect r_pass{
             r.left() + x_low, r.bottom() - filter_band_height,
             x_high - x_low, filter_band_height};
+
         painter.fill_rectangle(
             r_pass,
             Color::green());
@@ -282,13 +286,7 @@ bool FrequencyScale::on_touch(const TouchEvent touch) {
 
 void WaterfallWidget::on_show() {
     clear();
-    // if (logLUT[0] == 0) {
-    //     // Initialize logLUT only once
-    //     for (int i = 0; i < 256; i++) {
-    //         logLUT[i] = static_cast<uint8_t>(20 * fast_log10((i + 1) / 256.0f) * 5.05 + 255);
-    //     }
-    // }
-
+    
     const auto screen_r = screen_rect();
     display.scroll_set_area(screen_r.top(), screen_r.bottom());
 }
@@ -299,6 +297,7 @@ void WaterfallWidget::on_hide() {
      */
     display.scroll_disable();
 }
+
 inline void updateDynamicRangeWithHistogram(uint8_t* data, size_t len, uint8_t& min, uint8_t& max, float percentile = 0.05f) {
     // Create a histogram for the input signal
     std::vector<int> histogram(256, 0);
@@ -359,7 +358,6 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
     updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.05f);
-    pmem::set_spectrum_view_type(max);
     suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
     // update_heatmap(spectrum_db.data(), spectrum_db.size());
     
@@ -393,20 +391,23 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
 bool WaterfallWidget::on_touch(const TouchEvent event) {
     if (event.type == TouchEvent::Type::Start) {
         if (on_touch_select) {
-            on_touch_select(event.point.x(), event.point.y());
+            // on_touch_select(event.point.x(), event.point.y());
         }
     }
-    static uint8_t curr_view_type = 0;
-        curr_view_type++;
+    static uint8_t curr_view_type = pmem::spectrum_view_type();
+    curr_view_type++;
 
-        if (curr_view_type >= gradient.file_list.size()) {  // Reset spectrum view type if out of bounds
-            curr_view_type = 0;
-        }
-          // Reset spectrum view type on touch
-        gradient.set_default(curr_view_type);
-        //clear();
+    if (curr_view_type >= gradient.file_list.size()) {  // Reset spectrum view type if out of bounds
+        curr_view_type = 0;
+    }
+    // Reset spectrum view type on touch
+    gradient.set_default(curr_view_type);
+    
+    pmem::set_spectrum_view_type(curr_view_type);
+    set_dirty();
+    // clear();
 
-        return true;
+    return true;
 }
 
 void WaterfallWidget::clear() {
@@ -419,7 +420,14 @@ void WaterfallWidget::clear() {
 
 WaterfallView::WaterfallView(const bool cursor) {
     add_children({&waterfall_widget,
-                  &frequency_scale, &gradient_options});
+                  &frequency_scale,
+                  &gradient_options});
+
+
+    gradient_options.set_focusable(true);
+    gradient_options.on_change = [this](size_t, OptionsField::value_t n) {
+        waterfall_widget.gradient.set_default(n);
+    };
 
     frequency_scale.set_focusable(cursor);
     // Making the event climb up all the way up to here kinda sucks
@@ -428,7 +436,7 @@ WaterfallView::WaterfallView(const bool cursor) {
     };
 
     waterfall_widget.on_touch_select = [this](int32_t x, int32_t y) {
-        if (y > screen_height - screen_height * 0.1) return;  // prevent ghost touch
+        if (y > screen_height - screen_height * 0.12) return;  // prevent ghost touch
 
         frequency_scale.focus();  // focus on frequency scale to show cursor
 
@@ -439,17 +447,18 @@ WaterfallView::WaterfallView(const bool cursor) {
         }        
     };
 
-    load_gradient();
+    
     int idx = 0;
     for (const auto& file_name : waterfall_widget.gradient.file_list) {
         gradient_options.options().emplace_back(file_name.stem().string(), idx++);
     }
+    load_gradient();
     
 }
 
 void WaterfallView::load_gradient() {
     if (!waterfall_widget.gradient.load_file(default_gradient_file)) {
-        waterfall_widget.gradient.set_default();
+        waterfall_widget.gradient.set_default(pmem::spectrum_view_type());
     }
 }
 
@@ -498,7 +507,7 @@ void WaterfallView::update_widgets_rect() {
         frequency_scale.set_parent_rect({0, 0, screen_rect().width(), scale_height});
         waterfall_widget.set_parent_rect(waterfall_normal_rect);
     }
-    gradient_options.set_parent_rect({4, screen_height - 16, screen_rect().width() - 8, 12});
+    gradient_options.set_parent_rect({0, screen_height-24, screen_rect().width() - 8, scale_height});
     waterfall_widget.on_show();
 }
 

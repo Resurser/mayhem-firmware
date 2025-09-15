@@ -34,7 +34,9 @@ class Gradient {
    public:
     std::array<ui::Color, 256> lut{};
     std::vector<std::filesystem::path> file_list{};
+    std::filesystem::path current_gradient_file{};
     Gradient();
+    ~Gradient();
 
     void set_default(const uint8_t index = 0);
     bool load_file(const std::filesystem::path& file_path);

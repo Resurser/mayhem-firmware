@@ -93,8 +93,6 @@ class RTTYRxView : public View {
         {15 * 8, 0 * 16}};
     VGAGainField field_vga{
         {18 * 8, 0 * 16}};
-    RSSI rssi{
-        {21 * 8, 0, 6 * 8, 4}};
     Channel channel{
         {21 * 8, 5, 6 * 8, 4}};
 

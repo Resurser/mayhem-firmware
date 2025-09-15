@@ -46,7 +46,7 @@ class AudioSpectrumView : public View {
     void on_audio_spectrum(const AudioSpectrum* spectrum);
 
    private:
-    static constexpr int cursor_band_height = 4;
+    static constexpr int cursor_band_height = 2;
 
     int16_t audio_spectrum[128]{0};
 
@@ -90,7 +90,7 @@ class FrequencyScale : public Widget {
     void paint(Painter& painter) override;
 
    private:
-    static constexpr int filter_band_height = 4;
+    static constexpr int filter_band_height = 2;
 
     int32_t cursor_position{0};
     int spectrum_sampling_rate{0};
@@ -160,10 +160,10 @@ class WaterfallView : public View {
     WaterfallWidget waterfall_widget{};
     FrequencyScale frequency_scale{};
     OptionsField gradient_options{
-        {4, screen_height - 16},
+        {0, screen_height-24},
         12,
         {
-            {"default", 0},  
+            {"      default", 0},  
         }
     };
 

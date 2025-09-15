@@ -49,8 +49,7 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     : nav_{nav} {
     baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
-    add_children({&rssi,
-                  &channel,
+    add_children({&channel,
                   &field_rf_amp,
                   &field_lna,
                   &field_vga,
