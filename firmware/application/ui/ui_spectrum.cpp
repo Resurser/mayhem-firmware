@@ -514,10 +514,11 @@ void WaterfallView::update_widgets_rect() {
 void WaterfallView::set_parent_rect(const Rect new_parent_rect) {
     View::set_parent_rect(new_parent_rect);
 
-    waterfall_normal_rect = {20, scale_height, new_parent_rect.width(),
-                             new_parent_rect.height() - scale_height - 20};
-    waterfall_reduced_rect = {20, audio_spectrum_height + scale_height, new_parent_rect.width(),
-                              new_parent_rect.height() - scale_height - audio_spectrum_height - 20};
+    waterfall_normal_rect = {0, scale_height, new_parent_rect.width(),
+                             new_parent_rect.height() - scale_height - 24};
+    waterfall_reduced_rect = {0, audio_spectrum_height + scale_height, new_parent_rect.width(),
+                              new_parent_rect.height() - scale_height - audio_spectrum_height - 24
+                            };
 
     update_widgets_rect();
 }

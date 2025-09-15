@@ -153,14 +153,14 @@ class WaterfallView : public View {
    private:
     void update_widgets_rect();
 
-    const Rect audio_spectrum_view_rect{0 * 8, 0 * 16, screen_width, 2 * 16 + 20};
+    const Rect audio_spectrum_view_rect{0 * 8, 2 * 16, screen_width, 2 * 16 + 20};
     static constexpr Dim audio_spectrum_height = 16 * 2 + 20;
     static constexpr Dim scale_height = 20;
 
     WaterfallWidget waterfall_widget{};
     FrequencyScale frequency_scale{};
     OptionsField gradient_options{
-        {0, screen_height-24},
+        {0, UI_POS_Y_BOTTOM(1)},
         12,
         {
             {"      default", 0},  
