@@ -255,6 +255,15 @@ set(EXTCPPSRC
 	#waterfall designer
 	external/waterfall_designer/main.cpp
 	external/waterfall_designer/ui_waterfall_designer.cpp
+
+	#bht_tx
+	external/bht_tx/main.cpp
+	external/bht_tx/ui_bht_tx.cpp
+	external/bht_tx/bht.cpp
+
+	#morse_practice
+	external/morse_practice/main.cpp
+	external/morse_practice/ui_morse_practice.cpp
 )
 
 set(EXTAPPLIST
@@ -320,4 +329,6 @@ set(EXTAPPLIST
 	game2048
 	rtty_rx
 	waterfall_designer
+	bht_tx
+	morse_practice
 )

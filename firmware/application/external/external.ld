@@ -83,6 +83,8 @@ MEMORY
     ram_external_app_epirb_rx   (rwx) : org = 0xADEA0000, len = 32k
     ram_external_app_soundboard   (rwx) : org = 0xADEB0000, len = 32k
     ram_external_app_game2048     (rwx) : org = 0xADEC0000, len = 32k
+    ram_external_app_bht_tx          (rwx) : org = 0xADED0000, len = 32k
+    ram_external_app_morse_practice  (rwx) : org = 0xADEE0000, len = 32k
 
 
     ram_external_app_rtty_rx            (rwx) : org = 0xADED0000, len = 32k
@@ -462,5 +464,20 @@ SECTIONS
         KEEP(*(.external_app.app_waterfall_designer.application_information));
         *(*ui*external_app*waterfall_designer*);
     } > ram_external_app_waterfall_designer
+
+    .external_app_bht_tx : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_bht_tx.application_information));
+        *(*ui*external_app*bht_tx*);
+    } > ram_external_app_bht_tx
+
+
+    .external_app_morse_practice : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_morse_practice.application_information));
+        *(*ui*external_app*morse_practice*);
+    } > ram_external_app_morse_practice
+
+
 }
 

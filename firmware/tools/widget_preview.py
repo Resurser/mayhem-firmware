@@ -94,7 +94,8 @@ class WidgetParser:
             'Text': re.compile(
                 r'Text\s+(\w+)\s*\{\s*\{([^}]+)\}(?:\s*,\s*"([^"]*)")?\s*\};',
                 re.MULTILINE
-            ),'OptionsField': re.compile(
+            ),
+            'OptionsField': re.compile(
                 r'OptionsField\s+(\w+)\s*\{\s*(?:\{([^}]+)\}|{}),\s\d.*?};',
                 re.MULTILINE
             ),
