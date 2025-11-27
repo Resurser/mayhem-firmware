@@ -80,7 +80,8 @@ void set_fifo_data(const int8_t* data);
 void set_pitch_rssi(int32_t avg, bool enabled);
 void set_afsk_data(const uint32_t afsk_samples_per_bit, const uint32_t afsk_phase_inc_mark, const uint32_t afsk_phase_inc_space, const uint8_t afsk_repeat, const uint32_t afsk_bw, const uint8_t symbol_count);
 void kill_afsk();
-void set_fsk(const uint32_t samplesPerSymbol, const uint32_t syncWord, const uint8_t syncWordLength, const uint32_t preamble, const uint8_t preambleLength, uint16_t numDataBytes);
+void set_afsk(const uint32_t baudrate, const uint32_t word_length, const uint32_t trigger_value, const bool trigger_word);
+void set_fsk(const uint8_t samplesPerSymbol, const uint32_t syncWord, const uint8_t syncWordLength, const uint32_t preamble, const uint8_t preambleLength, uint16_t numDataBytes);
 void set_aprs(const uint32_t baudrate);
 
 void set_rtty(const uint32_t baudrate, const uint32_t word_length, const uint32_t freq_mark, const uint32_t freq_space, const bool reverse_bits, const bool reverse_freq);
@@ -95,7 +96,7 @@ void set_nrf(const uint32_t baudrate, const uint32_t word_length, const uint32_t
 void set_ook_data(const uint32_t stream_length, const uint32_t samples_per_bit, const uint8_t repeat, const uint32_t pause_symbols, const uint8_t de_bruijn_length = 0);
 void kill_ook();
 void set_fsk_data(const uint32_t stream_length, const uint32_t samples_per_bit, const uint32_t shift, const uint32_t progress_notice);
-void set_pocsag();
+void set_pocsag(int8_t baud_config = -1);
 void set_adsb();
 void set_jammer(const bool run, const jammer::JammerType type, const uint32_t speed);
 void set_rds_data(const uint16_t message_length);
