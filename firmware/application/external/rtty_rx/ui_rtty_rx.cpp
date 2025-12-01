@@ -21,15 +21,10 @@
  */
 
 #include "ui_rtty_rx.hpp"
-#include <unordered_map>
-
 #include "modems.hpp"
 #include "audio.hpp"
-#include "rtc_time.hpp"
 #include "baseband_api.hpp"
-#include "string_format.hpp"
 #include "portapack_persistent_memory.hpp"
-#include "file_path.hpp"
 
 using namespace portapack;
 using namespace modems;
@@ -37,190 +32,113 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-void RTTYLogger::log_raw_data(const std::string& data) {
-    log_file.write_entry(data);
-}
-
 void RTTYRxView::focus() {
     field_frequency.focus();
 }
 
-RTTYRxView::RTTYRxView(NavigationView& nav)
+RTTYRxView::RTTYRxViewNavigationView& nav)
     : nav_{nav} {
     baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
-    add_children({&channel,
+    add_children({&rssi,
+                  &channel,
                   &field_rf_amp,
                   &field_lna,
                   &field_vga,
                   &field_volume,
                   &field_frequency,
-                  &text_debug,
-                  &checkbox_revert_bits,
-                  &labels,
-                  &options_shift,
-                  &options_mark,
-                  &console});
+        &labels,
+        &field_mark,
+        &field_space,
+        &field_baud,
+        &tuning_bar, // [НОВЕ] Додаємо бар до списку дочірніх елементів
+        &console
+    });
 
-    // Auto-configure modem for LCR RX (TODO remove)
-    field_frequency.set_value(settings_.raw().rx_frequency);
-
-    // auto receiver_modem = &modem_defs[5];
-    // persistent_memory::set_modem_baudrate(receiver_modem->baudrate);
-    // serial_format_t serial_format;
-
-    // // serial_format.data_bits = 7;
-    // // serial_format.parity = EVEN;
-    // // serial_format.stop_bits = 2;
-    // // serial_format.bit_order = LSB_FIRST;
-    // serial_format.data_bits = 5;
-    // serial_format.parity = NONE;
-    // serial_format.stop_bits = 1;
-    // serial_format.bit_order = MSB_FIRST;
-
-    // persistent_memory::set_serial_format(serial_format);
-
+    // Налаштування меж для бару (0 .. 65535, як приходить з Baseband)
+    tuning_bar.set_max(65535); 
+    tuning_bar.set_value(0);
+    
     field_frequency.set_step(1000);
+	field_frequency.set_value(settings_.raw().rx_frequency);
 
-    checkbox_revert_bits.set_value(logging);
-    checkbox_revert_bits.on_select = [this](Checkbox&, bool v) {
-        this->reverse_bits = v;
-        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
-    };
+    // --- Ініціалізація значень ---
+    //field_frequency.set_value(receiver_model.tuning_frequency());
+    //field_lna.set_value(receiver_model.lna());
+    //field_vga.set_value(receiver_model.vga());
+    
+    field_mark.set_value(RTTY_DEF_MARK_FREQ);
+    field_space.set_value(RTTY_DEF_SPACE_FREQ);
+    field_baud.set_value(RTTY_DEF_BAUD);
 
-    options_shift.on_change = [this](size_t index, int32_t v) {
-        shift_index = (uint8_t)index;
-        (void)v;
+    //field_lna.on_change = [this](int32_t v) { receiver_model.set_lna(v); };
+    //field_vga.on_change = [this](int32_t v) { receiver_model.set_vga(v); };
+    //field_volume.on_change = [this](int32_t v) { audio::output::set_stream_volume(v); };
+    field_mark.on_change = [this](int32_t) { update_config(); };
+    field_space.on_change = [this](int32_t) { update_config(); };
+    field_baud.on_change = [this](int32_t) { update_config(); };
 
-        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
-        // text_debug.set("--options_shift " + to_string_dec_int(val));
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
-    };
-
-    options_mark.on_change = [this](size_t index, int32_t v) {
-        mark_index = (uint8_t)index;
-        (void)v;
-        uint16_t val = (int32_t)this->options_shift.selected_index_value() + (int32_t)this->options_mark.selected_index_value();
-        // text_debug.set("--options_shift " + to_string_dec_int(val));
-        baseband::set_rtty(50, 5, options_mark.selected_index_value(), val, this->reverse_bits, false);
-
-        // on_settings_changed();
-    };
-
-    logger = std::make_unique<RTTYLogger>();
-    // if (logger)
-    //     logger->append(logs_dir / u"RTTY.TXT");
-    // receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
-    options_mark.set_selected_index(mark_index, false);
-    options_shift.set_selected_index(shift_index, true);
-    // Auto-configure modem for LCR RX (will be removed later)
-    baseband::set_rtty(50, 5, options_mark.selected_index_value(), options_shift.selected_index_value(), reverse_bits, false);
+    // --- Старт ---
+    update_config();
+    
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
-    receiver_model.set_headphone_volume(receiver_model.headphone_volume());  // WM8731 hack.
+    
+    //receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
+    receiver_model.set_sampling_rate(3072000); 
+    receiver_model.set_baseband_bandwidth(1750000);
     receiver_model.enable();
-    // console.writeln("--- ---- " + lookup_ita2(rand() & 0x1F, is_in_figures_mode));
 }
 
-char RTTYRxView::BaudottoChar(const uint8_t data) {
-    int out = 0;
-    const char letters[32] = {
-        '\0', 'E', '\n', 'A', ' ', 'S', 'I', 'U',
-        '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',
-        'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q',
-        'O', 'B', 'G', ' ', 'M', 'X', 'V', ' '};
-    const char figures[32] = {
-        '\0', '3', '\n', '-', ' ', '\a', '8', '7',
-        '\r', '$', '4', '\'', ',', '!', ':', '(',
-        '5', '"', ')', '2', '#', '6', '0', '1',
-        '9', '?', '&', ' ', '.', '/', ';', ' '};
-
-    switch (data) {
-        case 0x1F: /* letters */
-            rxmode = 1;
-            break;
-        case 0x1B: /* figures */
-            rxmode = 2;
-            break;
-        case 0x04: /* unshift-on-space */
-                   // if (progdefaults.UOSrx)
-            // rxmode = LETTERS;
-            return ' ';
-            break;
-        default:
-            if (rxmode == 2)
-                out = figures[data];
-            else
-                out = letters[data];
-            break;
-    }
-
-    return out;
-}
-
-void RTTYRxView::on_log(RTTYRxLogMessage msg) {
-    text_debug.set(" ");
-    std::string str_log = "";
-
-    for (uint16_t i = 0; i < msg.cnt; i++) {
-        str_log += BaudottoChar(msg.samples[i]) + ", ";
-    }
-    text_debug.set(str_log);
-}
-
-void RTTYRxView::on_data(uint8_t value, bool is_data) {
-    std::string str_console = "\x1B";
-    std::string str_byte = "";
-
-    if (is_data) {
-        // Colorize differently after message splits
-        str_console += (char)((console_color & 3) + 11);
-        // text_debug.set("~ " + to_string_dec_uint(value));
-
-        // value = deframe_word(value);
-
-        // value &= 0x1F;
-        // uint32_t alt_val = deframe_word(value, is_in_figures_mode);                                  // ABCDEFGH
-        // text_debug.set("<<" + to_string_dec_uint(value));
-
-        // text_debug.set("Origin: " + to_string_dec_uint(value, 2)+
-        // " > "+to_string_hex(alt_val, 2));
-
-        if (value >= 32) {
-            str_console += "[" + to_string_hex(value, 2) + "]";  // Not printable
-        } else {
-            str_console += BaudottoChar(value) + ", ";  //(value, is_in_figures_mode);
-        }
-
-        console.write(str_console);
-
-        if ((value != 10) && (prev_value == 10)) {
-            // Message split
-            console.writeln("");
-            console_color++;
-
-            if (logging) {
-                logger->log_raw_data(to_string_dec_uint(value));
-                str_log = "";
-            }
-        }
-        prev_value = value;
-    } else {
-        // Baudrate estimation
-
-        text_debug.set(" ..[" + to_string_hex(value, 2) + "]");
-    }
-}
-
-void RTTYRxView::on_freqchg(int64_t freq) {
-    field_frequency.set_value(freq);
-}
 
 RTTYRxView::~RTTYRxView() {
     audio::output::stop();
     receiver_model.disable();
     baseband::shutdown();
 }
+
+void RTTYRxView::focus() {
+    field_frequency.focus();
+}
+
+void RTTYRxView::on_tuning_frequency_changed(rf::Frequency f) {
+    receiver_model.set_tuning_frequency(f);
+}
+
+void RTTYRxView::update_config() {
+    RTTYConfigMessage message(
+        field_mark.value(),
+        field_space.value(),
+        field_baud.value()
+    );
+    baseband::send_message(&message);
+}
+
+void RTTYRxView::on_char(const RTTYCharMessage& message) {
+    std::string text(1, message.character);
+    console.write(text);
+}
+
+// [НОВЕ] Обробка статистики для візуалізації
+void RTTYRxView::on_stats(const RTTYStatsMessage& message) {
+    // Відображаємо сильніший з двох сигналів (Mark або Space).
+    // Це дає візуальне розуміння, що ми "піймали" тон RTTY.
+    // Якщо приймається шум - значення буде малим.
+    // Якщо приймається сигнал - смужка буде стрибати високо.
+    
+    uint32_t max_energy = message.mark_energy > message.space_energy
+		? message.mark_energy
+		: message.space_energy;
+    // Оновлюємо значення бару
+    tuning_bar.set_value(max_energy > 65535 ? 65535 : max_energy);
+    
+    // Опціонально: Можна змінювати колір смужки, якщо сигнал дуже сильний
+    // (Але ProgressBar у Mayhem зазвичай одноколірний за замовчуванням)
+}
+
+void RTTYRxView::on_freqchg(int64_t freq) {
+    field_frequency.set_value(freq);
+}
+
 
 }  // namespace ui::external_app::rtty_rx

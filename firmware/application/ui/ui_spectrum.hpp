@@ -160,7 +160,7 @@ class WaterfallView : public View {
     WaterfallWidget waterfall_widget{};
     FrequencyScale frequency_scale{};
     OptionsField gradient_options{
-        {0, UI_POS_Y_BOTTOM(1)},
+        {UI_POS_X(0), UI_POS_Y_BOTTOM(1)},
         12,
         {
             {"      default", 0},  
