@@ -128,9 +128,11 @@ class Message {
         I2CDevListChanged = 71,
         LightData = 72,
         DDCConfig = 73,
+        
         RTTYRxConfigure = 74,
         RTTYRxData = 75,
         RTTYRxLogData = 76,
+
         WeFaxRxConfigure = 77,
         WeFaxRxStatusData = 78,
         WeFaxRxImageData = 79,
@@ -141,6 +143,10 @@ class Message {
 
         FSKPacket = 84,
         EPIRBPacket = 85,
+
+        RTTYConfig = 86, // Налаштування параметрів
+        RTTYChar = 87,   // Декодований символ
+        RTTYStats = 88,  // Статистика прийому
         MAX
     };
 
@@ -1565,14 +1571,8 @@ class RTTYRxConfigureMessage : public Message {
 
 class RTTYRxDataMessage : public Message {
    public:
-    constexpr RTTYRxDataMessage(const bool is_data = false, const uint8_t value = 0)
-        : Message{ID::RTTYRxData},
-          is_data{is_data},
-          value{value} {
-    }
-
-    bool is_data = false;
-    uint8_t value = 0;
+    constexpr RTTYRxDataMessage(char value): Message{ID::RTTYRxData}, value{value} {}
+    char value;
 };
 
 class RTTYRxLogMessage : public Message {
@@ -1633,6 +1633,30 @@ class NoaaAptRxImageDataMessage : public Message {
         : Message{ID::NoaaAptRxImageData} {}
     uint8_t image[400]{0};
     uint32_t cnt = 0;
+};
+
+// Повідомлення для передачі декодованого символу в UI
+struct RTTYCharMessage : public Message {
+    char character;
+    RTTYCharMessage(char c) : Message(ID::RTTYChar), character(c) {}
+};
+
+// Повідомлення конфігурації (частоти, швидкість)
+struct RTTYConfigMessage : public Message {
+    uint32_t mark_freq;
+    uint32_t space_freq;
+    uint32_t baud_rate;
+    
+    RTTYConfigMessage(uint32_t m, uint32_t s, uint32_t b) 
+        : Message(ID::RTTYConfig), mark_freq(m), space_freq(s), baud_rate(b) {}
+};
+
+// Додати структуру повідомлення
+struct RTTYStatsMessage : public Message {
+    uint32_t mark_energy; // Усереднена енергія Mark (масштабовано до 65535)
+    uint32_t space_energy; // Усереднена енергія Space
+    RTTYStatsMessage(uint32_t m, uint32_t s) 
+        : Message(ID::RTTYStats), mark_energy(m), space_energy(s) {}
 };
 
 #endif /*__MESSAGE_H__*/

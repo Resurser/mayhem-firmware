@@ -94,7 +94,8 @@
 			"**/.DS_Store": true,
 			"**/Thumbs.db": true,
 			"**/.docs": true,
-			".history/firmware/*.*": true
+			".history/firmware/*.*": true,
+			"firmware/application/external/rtty_rx/*.zip": true
 		},
 		"explorerExclude.backup": {}
 	}

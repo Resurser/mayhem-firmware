@@ -87,8 +87,8 @@ MEMORY
     ram_external_app_morse_practice  (rwx) : org = 0xADEE0000, len = 32k
     ram_external_app_adult_toys_controller  (rwx) : org = 0xADEF0000, len = 32k
 
-    ram_external_app_rtty_rx            (rwx) : org = 0xADED0000, len = 32k
-    ram_external_app_waterfall_designer (rwx) : org = 0xADEE0000, len = 32k
+    ram_external_app_rtty_rx            (rwx) : org = 0xADF00000, len = 32k
+    ram_external_app_waterfall_designer (rwx) : org = 0xADF10000, len = 32k
 }
 
 SECTIONS

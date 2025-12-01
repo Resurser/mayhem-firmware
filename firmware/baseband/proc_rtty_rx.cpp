@@ -30,188 +30,28 @@
 
 #include <complex.h>
 #include <cstring>
-#include <vector>
 
 #include "utility.hpp"
 
 // --- Константи ITA-2 ---
-constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F;  // 11111
-constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B;  // 11011
-constexpr uint8_t ITA2_CODE_MASK = 0x1F;        // Маска для 5 біт
-
-// --- Таблиці символів ITA-2 (Baudot) ---
-static const char ita2_letters_table[32] = {
-    // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
-    '?', 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K',  // 0x00 - 0x0F
-    'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', '?', 'M', 'X', 'V', '?'     // 0x10 - 0x1F (0x1F = LTRS)
-};
-
-static const char ita2_figures_table[32] = {
-    // 0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F
-    '?', '3', '\n', '-', ' ', '\'', '8', '7', '\r', '?', '4', '\a', ',', '!', ':', '(',  // 0x00 - 0x0F (\a = BEL) ('?' для $ в US варіанті)
-    '5', '+', ')', '2', '$', '6', '0', '1', '9', '?', '=', '?', '.', '/', ';', '?'       // 0x10 - 0x1F ('?' для £, =, FIG) (0x1B = FIGS)
-};
-
-// --- Функція пошуку символу ITA-2 ---
-inline char lookup_ita2(uint8_t code, bool& is_in_figures_mode) {
-    code &= ITA2_CODE_MASK;
-
-    if (code == ITA2_LTRS_SHIFT_CODE) {
-        is_in_figures_mode = false;
-        return 0;
-    }
-    if (code == ITA2_FIGS_SHIFT_CODE) {
-        is_in_figures_mode = true;
-        return 0;
-    }
-
-    if (is_in_figures_mode) {
-        return ita2_figures_table[code];
-    } else {
-        return ita2_letters_table[code];
-    }
-}
-
-// Інверсія порядку бітів у 5-бітному символі Бодо
-uint8_t RTTYRxProcessor::reverseBitsFunction(uint8_t val) {
-    uint8_t result = 0;
-    for (int i = 0; i < 5; ++i) {
-        result <<= 1;
-        result |= (val & 1);
-        val >>= 1;
-    }
-    return result;
-}
+// constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F;  // 11111
+// constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B;  // 11011
+// constexpr uint8_t ITA2_CODE_MASK = 0x1F;        // Маска для 5 біт
+// Таблиця кодів Baudot для букв (Letters shift)
+static const char baudot_ltrs[] = { 0, 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K', 'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', 0, 'M', 'X', 'V', 0 };
+// Таблиця кодів Baudot для цифр та знаків (Figures shift)
+static const char baudot_figs[] = { 0, '3', '\n', '-', ' ', 0x7, '8', '7', '\r', '$', '4', 0x27, ',', '!', ':', '(', '5', '+', ')', '2', '#', '6', '0', '1', '9', '?', '&', 0, '.', '/', '=', 0 };
 
 RTTYRxProcessor::RTTYRxProcessor() {
-    decim_0.configure(taps_200k_decim_0.taps);
-    decim_1.configure(taps_16k0_decim_1.taps);
-    channel_filter.configure(taps_11k0_channel.taps, 2);
-    audio_output.configure(audio_12k_hpf_300hz_config);
-
-    // samples_per_bit = audio_fs / BAUD_RATE;
-
-    // phase_inc = (0x10000 * BAUD_RATE) / audio_fs;
-    // phase = 0;
-    // freq_mark = MARK_FREQ;
-    // freq_space = SPACE_FREQ;
-
-    // trigger_word = 0;
-    // word_length = 5;
-    // trigger_value = 0;
-    // word_mask = (1 << word_length) - 1;
-
-    // // Delay line
-    // delay_line_index = 0;
-    // triggered = false;
-
-    // configured = false;
-}
-
-// Process a single audio sample and decode it into an RTTY bit
-void RTTYRxProcessor::decodeRTTYBit(int32_t sample) {
-    // Increment the phases for MARK and SPACE tones
-    // markPhase   = (markPhase + markPhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
-    // spacePhase  = (spacePhase + spacePhaseInc) & 0xFFFFFFFF;  // Wrap around 32 bits
-    markPhase = (markPhase + markPhaseInc) % 65536;
-    spacePhase = (spacePhase + spacePhaseInc) % 65536;
-
-    // Instead of indexing the huge table, we reduce the phase by shifting:
-    // Since PHASE_RESOLUTION is 65536 and SINE_TABLE_SIZE is 256, we use the high 8 bits.
-    uint16_t markIndex = markPhase >> 8;  // Equivalent to dividing by 256
-    uint16_t spaceIndex = spacePhase >> 8;
-
-    // Accumulate the contributions for the current sample.
-    // Multiply the sample (int16) by the sine table value (Q15) then adjust back by dividing by SCALE.
-    accumulatedMark += (sample * sine_table_i16[markIndex]) / SCALE;
-    accumulatedSpace += (sample * sine_table_i16[spaceIndex]) / SCALE;
-    // // Accumulate the contributions of the current sample
-    // accumulatedMark += (sample * fastSin(markPhase)) / SCALE;
-    // accumulatedSpace += (sample * fastSin(spacePhase)) / SCALE;
-
-    // Process a bit after accumulating enough samples
-    if (++sampleCount >= SAMPLES_PER_BIT) {
-        bool bit = (accumulatedMark > accumulatedSpace);  // Determine MARK or SPACE
-        if (reverseFreq) {
-            bit = !bit;
-        }
-        // Handle start bit synchronization
-        if (!isStartBit) {
-            if (!bit) {  // Start bit must be SPACE (0)
-                isStartBit = true;
-                resetAccumulators();
-            }
-            return;
-        }
-
-        // Shift the detected bit into the current character
-        currentChar >>= 1;
-        if (bit) currentChar |= 0x10;  // Set the MSB if MARK (1)
-
-        // If 5 data bits are complete, process stop bits
-        if (++bitCount == 5) {
-            stopBitCount = 0;  // Reset stop bit counter
-            resetAccumulators();
-            return;
-        }
-
-        log_message.cnt++;
-        log_message.samples[log_message.cnt - 1] = currentChar;
-        
-        // Validate 1.5 stop bits
-        if (bitCount == 5 && ++stopBitCount >= SAMPLES_STOP_BITS) {
-            // char decodedChar = decodeBaudot(currentChar);
-            // if (decodedChar != '\0') decodedMessage += decodedChar;
-            if (reverseBits) {
-                currentChar = reverseBitsFunction(currentChar);
-            }
-            if (log_message.cnt == 8) {
-                shared_memory.application_queue.push(log_message);
-                log_message.cnt = 0;
-            }
-
-            data_message.is_data = true;
-            data_message.value = currentChar;
-            shared_memory.application_queue.push(data_message);
-
-            // Reset for the next character
-            currentChar = 0;
-            bitCount = 0;
-            isStartBit = false;  // Wait for the next start bit
-        }
-
-        // Reset accumulators for the next bit
-        resetAccumulators();
-    }
-}
-
-int32_t RTTYRxProcessor::fastSin(uint32_t phase) {
-    uint16_t index = (phase >> 16) & PHASE_MASK;    // Extract table index
-    uint16_t nextIndex = (index + 1) & PHASE_MASK;  // Next index (wrap around)
-    uint16_t fractional = (phase & 0xFFFF) >> 8;    // Fractional part (8-bit resolution)
-
-    // Perform linear interpolation
-    int16_t value1 = sine_table_i16[index];
-    int16_t value2 = sine_table_i16[nextIndex];
-    return value1 + ((value2 - value1) * fractional / 256);
-}
-
-// Calculate phase increment dynamically based on frequency
-uint32_t RTTYRxProcessor::calculatePhaseIncrement(uint32_t frequency) {
-    return (frequency * TABLE_SIZE) / SAMPLE_RATE;
-}
-
-// Reset the accumulators after processing each bit or character
-void RTTYRxProcessor::resetAccumulators() {
-    accumulatedMark = 0;
-    accumulatedSpace = 0;
-    sampleCount = 0;
+    decim_0.configure(taps_6k0_decim_0.taps);
+    decim_1.configure(taps_6k0_decim_1.taps);
+    decim_2.configure(taps_6k0_decim_2.taps, 4);
+    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    audio_output.configure(audio_12k_hpf_300hz_config);  //, audio_12k_deemph_300_6_config);
 }
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
-    // This is called at 3072000 / 2048 = 1500Hz
-    if (!configured) return;
-
+    
     // SSB demodulation
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);              // 2048 / 8 = 256 (512 I/Q samples)
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
@@ -236,43 +76,187 @@ void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
         const int32_t sample_int = audio.p[c] * 32768.0f;
 
         int32_t current_sample = __SSAT(sample_int, 16);  // Scale to Q15 format
-        decodeRTTYBit(current_sample);
+        process_sample_pair(current_sample, channel_out.p[c]);
     }
+}
+// --- Обробка одного семпла (12кГц) ---
+void RTTYRxProcessor::process_sample_pair(int16_t audio_sample, complex16_t iq_sample) {
+    // 1. Нормалізація амплітуди
+    float s = (float)audio_sample / 32768.0f;
+
+    // 2. Goertzel (Амплітудний детектор)
+    float s0_m = s + coeff_mark * s1_mark - s2_mark;
+    s2_mark = s1_mark; s1_mark = s0_m;
+
+    float s0_s = s + coeff_space * s1_space - s2_space;
+    s2_space = s1_space; s1_space = s0_s;
+
+    float mag_sq_mark = s1_mark * s1_mark + s2_mark * s2_mark - coeff_mark * s1_mark * s2_mark;
+    float mag_sq_space = s1_space * s1_space + s2_space * s2_space - coeff_space * s1_space * s2_space;
+
+    // Статистика для UI
+    mark_energy_accumulator += std::min(mag_sq_mark, 100.0f);
+    space_energy_accumulator += std::min(mag_sq_space, 100.0f);
+    
+    // 3. AFC: Розрахунок миттєвої частоти через Delta Phase
+    if (afc_enabled) {
+        float re = (float)iq_sample.real() * last_iq_sample.real() + (float)iq_sample.imag() * last_iq_sample.imag();
+        float im = (float)iq_sample.imag() * last_iq_sample.real() - (float)iq_sample.real() * last_iq_sample.imag();
+        
+        float phase_delta = std::atan2(im, re);
+        float inst_freq = (phase_delta * 12000.0f) / (2.0f * 3.1415926535f);
+
+        measured_freq_accumulator += inst_freq;
+        measured_samples_count++;
+
+        last_iq_sample = iq_sample;
+    }
+
+    sample_count++;
+    stats_send_counter++;
+    afc_update_counter++;
+
+    // Періодична відправка статистики енергії
+    if (stats_send_counter >= STATS_SEND_PERIOD) {
+        send_stats();
+        stats_send_counter = 0;
+        mark_energy_accumulator = space_energy_accumulator = 0.0f;
+    }
+
+    // Періодичне застосування AFC
+    if (afc_update_counter >= AFC_UPDATE_PERIOD) {
+        apply_afc();
+        afc_update_counter = 0;
+    }
+
+    // --- RTTY State Machine ---
+    if (state == IDLE) {
+        if (sample_count >= (samples_per_bit / 4)) {
+            if (mag_sq_space > mag_sq_mark) { // Start bit (Space) detected
+                state = DATA;
+                bit_buffer = bits_received = sample_count = 0;
+                s1_mark = s2_mark = s1_space = s2_space = 0;
+                measured_freq_accumulator = 0;
+                measured_samples_count = 0;
+            } else {
+                sample_count = 0;
+                s1_mark = s2_mark = s1_space = s2_space = 0;
+            }
+        }
+    } 
+    else {
+        if (sample_count >= samples_per_bit) {
+            bool bit = (mag_sq_mark > mag_sq_space);
+            
+            // --- Збір даних для AFC ---
+            if (afc_enabled && measured_samples_count > 0) {
+                float avg_freq = measured_freq_accumulator / measured_samples_count;
+                
+                if (bit && (mag_sq_mark > 0.001f)) { 
+                    afc_mark_sum += avg_freq;
+                    afc_mark_count++;
+                } 
+                else if (!bit && (mag_sq_space > 0.001f)) {
+                    afc_space_sum += avg_freq;
+                    afc_space_count++;
+                }
+            }
+            
+            measured_freq_accumulator = 0;
+            measured_samples_count = 0;
+
+            handle_bit(bit);
+            
+            sample_count = 0;
+            s1_mark = s2_mark = 0;
+            s1_space = s2_space = 0;
+        }
+    }
+}
+
+void RTTYRxProcessor::apply_afc() {
+    if (!afc_enabled) return;
+    const float alpha = 0.1f; 
+    bool updated = false;
+
+    if (afc_mark_count > 5) { 
+        float measured_mark = afc_mark_sum / afc_mark_count;
+        if (std::abs(measured_mark - (float)mark_freq) < 200.0f) {
+            mark_freq = (uint32_t)((float)mark_freq * (1.0f - alpha) + measured_mark * alpha);
+            updated = true;
+        }
+    }
+
+    if (afc_space_count > 5) {
+        float measured_space = afc_space_sum / afc_space_count;
+        if (std::abs(measured_space - (float)space_freq) < 200.0f) {
+            space_freq = (uint32_t)((float)space_freq * (1.0f - alpha) + measured_space * alpha);
+            updated = true;
+        }
+    }
+
+    afc_mark_sum = 0; afc_mark_count = 0;
+    afc_space_sum = 0; afc_space_count = 0;
+
+    if (updated) {
+        update_coeffs();
+    }
+}
+
+void RTTYRxProcessor::send_stats() {
+    uint32_t scaled_mark = (uint32_t)((mark_energy_accumulator / (float)STATS_SEND_PERIOD) * 1000.0f);
+    uint32_t scaled_space = (uint32_t)((space_energy_accumulator / (float)STATS_SEND_PERIOD) * 1000.0f);
+    RTTYStatsMessage msg(scaled_mark, scaled_space);
+    shared_memory.application_queue.push(msg);
+}
+
+void RTTYRxProcessor::handle_bit(bool bit) {
+     if (state == DATA) {
+        if (bit) bit_buffer |= (1 << bits_received);
+        bits_received++;
+        if (bits_received >= 5) state = STOP;
+    } else if (state == STOP) {
+        if (bit) decode_baudot(bit_buffer);
+        state = IDLE;
+    }
+}
+
+void RTTYRxProcessor::decode_baudot(uint8_t bits) {
+    if (bits == 0x1B) { shift_figs = true; return; }
+    if (bits == 0x1F) { shift_figs = false; return; }
+    char c = shift_figs ? baudot_figs[bits] : baudot_ltrs[bits];
+    if (c != 0) {
+        RTTYCharMessage msg(c);
+        shared_memory.application_queue.push(msg);
+    }
+}
+
+void RTTYRxProcessor::update_coeffs() {
+    const float k = 2.0f * 3.1415926535f / (float)sample_rate;
+    coeff_mark = 2.0f * cosf(k * (float)mark_freq);
+    coeff_space = 2.0f * cosf(k * (float)space_freq);
 }
 
 void RTTYRxProcessor::on_message(const Message* const message) {
-    if (message->id == Message::ID::RTTYRxConfigure)
-        configure(*reinterpret_cast<const RTTYRxConfigureMessage*>(message));
-    if (message->id == Message::ID::CaptureConfig)
-        capture_config(*reinterpret_cast<const CaptureConfigMessage*>(message));
-}
-
-void RTTYRxProcessor::configure(const RTTYRxConfigureMessage& message) {
-    configured = false;
-    markFreq = message.freq_mark;
-    spaceFreq = message.freq_space;
-    baudRate = message.baudrate;
-    reverseBits = message.reverse_bits;
-    reverseFreq = message.reverse_freq;
-
-    decim_0.configure(taps_6k0_decim_0.taps);
-    decim_1.configure(taps_6k0_decim_1.taps);
-    decim_2.configure(taps_6k0_decim_2.taps, 4);
-    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
-    audio_output.configure(audio_12k_hpf_300hz_config);  //, audio_12k_deemph_300_6_config);
-
-    markPhaseInc = calculatePhaseIncrement(markFreq);    // Calculate MARK phase increment dynamically
-    spacePhaseInc = calculatePhaseIncrement(spaceFreq);  // Calculate SPACE phase increment dynamically
-
-    configured = true;
-}
-
-void RTTYRxProcessor::capture_config(const CaptureConfigMessage& message) {
-    if (message.config) {
-        audio_output.set_stream(std::make_unique<StreamInput>(message.config));
-    } else {
-        audio_output.set_stream(nullptr);
+    if (message->id == Message::ID::RTTYConfig) {
+        const auto* config = reinterpret_cast<const RTTYConfigMessage*>(message);
+        mark_freq = config->mark_freq;
+        space_freq = config->space_freq;
+        baud_rate = (float)config->baud_rate;
+        if (baud_rate > 0) samples_per_bit = sample_rate / baud_rate;
+        update_coeffs();
     }
+}
+
+void RTTYRxProcessor::configure(const RTTYConfigMessage& message) {
+    mark_freq = message.mark_freq;
+    space_freq = message.space_freq;
+    baud_rate = (float)message.baud_rate;
+    if (baud_rate > 0) {
+        samples_per_bit = sample_rate / baud_rate;
+    }
+    
+    update_coeffs();
 }
 
 int main() {

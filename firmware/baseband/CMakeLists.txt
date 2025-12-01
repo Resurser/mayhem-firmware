@@ -666,7 +666,7 @@ DeclareTargets(POSK ookstream)
 set(MODE_CPPSRC
 	proc_rtty_rx.cpp
 )
-DeclareTargets(PRTY rttyrx)
+DeclareTargets(PRTY rtty)
 
 
 ### WeFax Rx

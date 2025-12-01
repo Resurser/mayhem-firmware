@@ -32,20 +32,7 @@
 
 #include "audio_output.hpp"
 
-#include "fifo.hpp"
-#include "sine_table_int16.hpp"
 #include "message.hpp"
-
-// -------------------- Configuration Constants --------------------
-#define SCALE 32768                  // Fixed-point scale factor (Q15)
-#define TABLE_SIZE 256               // Reduced sine table size
-#define PHASE_MASK (TABLE_SIZE - 1)  // Mask to wrap phase index
-#define SAMPLE_RATE 12000            // Audio sample rate in Hz
-#define DEFAULT_MARK_FREQ 1700
-#define DEFAULT_SPACE_FREQ 2125
-#define DEFAULT_BAUD_RATE 50                               // RTTY baud rate (bits per second)
-#define SAMPLES_PER_BIT (SAMPLE_RATE / DEFAULT_BAUD_RATE)  // Samples per bit duration
-#define SAMPLES_STOP_BITS (1.5 * SAMPLES_PER_BIT)          // 1.5 Stop bits duration
 
 class RTTYRxProcessor : public BasebandProcessor {
    public:
@@ -77,41 +64,61 @@ class RTTYRxProcessor : public BasebandProcessor {
 
     AudioOutput audio_output{};
 
-    // -------------------- Динамічні параметри --------------------
-    uint16_t baudRate = DEFAULT_BAUD_RATE;
-    uint16_t markFreq = DEFAULT_MARK_FREQ;
-    uint16_t spaceFreq = DEFAULT_SPACE_FREQ;
-    uint32_t markPhaseInc = 0;
-    uint32_t spacePhaseInc = 0;
+   // Нова частота дискретизації для розрахунків
+    uint32_t sample_rate = 12000; 
     
-    bool reverseBits = false;  // Чи потрібно перевертати біти
-    bool reverseFreq = false;  // Чи потрібно міняти місцями маркерну і просторову частоту
-
-    uint32_t markPhase = 0, spacePhase = 0;             // Fixed-point phases for MARK and SPACE tones
-    int32_t accumulatedMark = 0, accumulatedSpace = 0;  // Accumulators for signal strength
-
-    uint8_t currentChar = 0;  // Character under construction (5-bit Baudot + stop bits)
-
-    int bitCount = 0;         // Bits processed for the current character
-    size_t sampleCount = 0;   // Samples processed for the current bit
-    size_t stopBitCount = 0;  // Counter for stop bit samples
-    bool isStartBit = false;  // Start bit synchronization flag
-
-    bool configured{false};
-    bool bit_value{};
+    uint32_t mark_freq = 2125;      // Частота логічної одиниці (Mark)
+    uint32_t space_freq = 2295;     // Частота логічного нуля (Space)
+    float baud_rate = 45.45f;       // Швидкість передачі (Бод)
     
-    RTTYRxDataMessage data_message{false, 0};
-    RTTYRxLogMessage log_message{};
+    // Кількість семплів на один біт при 12кГц (12000 / 45.45 ≈ 264)
+    uint32_t samples_per_bit = 264; 
+
+    // --- Змінні алгоритму Герцеля (Goertzel) ---
+    float coeff_mark = 0.0f;    // Розрахований коефіцієнт для Mark
+    float coeff_space = 0.0f;   // Розрахований коефіцієнт для Space
+    float s1_mark = 0, s2_mark = 0; // Стан фільтру Mark
+    float s1_space = 0, s2_space = 0; // Стан фільтру Space
     
-    uint32_t calculatePhaseIncrement(uint32_t frequency);
-    int32_t fastSin(uint32_t phase);
-    void resetAccumulators();
-    void decodeRTTYBit(int32_t sample);
+    // --- Стан машини декодера (State Machine) ---
+    enum State { IDLE, DATA, STOP }; // Можливі стани: Очікування, Дані, Стоп-біт
+    State state = IDLE;              // Початковий стан
+    uint32_t sample_count = 0;       // Лічильник семплів всередині поточного біта
+    uint8_t bit_buffer = 0;          // Буфер для накопичення бітів символу
+    uint8_t bits_received = 0;       // Кількість прийнятих бітів
+    bool shift_figs = false;         // Прапор перемикання регістру (Цифри/Букви)
+    
+    float mark_energy_accumulator = 0.0f; 
+    float space_energy_accumulator = 0.0f;
+    uint32_t stats_send_counter = 0;
+    static constexpr uint32_t STATS_SEND_PERIOD = 600; 
 
-    uint8_t reverseBitsFunction(uint8_t val);
-    void configure(const RTTYRxConfigureMessage& message);
-    void capture_config(const CaptureConfigMessage& message);
+    // --- AFC (Автопідлаштування частоти) ---
+    bool afc_enabled = true;           // Чи увімкнено AFC
+    complex16_t last_iq_sample {0, 0}; // Попередній семпл для розрахунку дельти фази
+    
+    // Накопичувачі для виміряних частот
+    float measured_freq_accumulator = 0.0f; 
+    uint32_t measured_samples_count = 0;
 
+    // Середні значення частот (Mark/Space), виміряні з ефіру
+    float afc_mark_sum = 0.0f;
+    uint32_t afc_mark_count = 0;
+    float afc_space_sum = 0.0f;
+    uint32_t afc_space_count = 0;
+
+    // Лічильник для періодичного оновлення коефіцієнтів
+    uint32_t afc_update_counter = 0;
+    static constexpr uint32_t AFC_UPDATE_PERIOD = 12000; // Раз на секунду (12к семплів)
+
+    // --- Внутрішні функції ---
+    void configure(const RTTYConfigMessage& message); // Застосування налаштувань
+    void process_sample_pair(int16_t audio_sample, complex16_t iq_sample); 
+    void handle_bit(bool bit);                        // Логіка обробки біта (0 або 1)
+    void decode_baudot(uint8_t bits);                 // Конвертація 5 біт в символ
+    void update_coeffs();                             // Перерахунок коефіцієнтів Герцеля
+    void send_stats();                             // Відправка статистики
+    void apply_afc();                              // Застосування AFC
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
 };
