@@ -55,15 +55,11 @@ class RTTYRxView : public View {
    private:
     NavigationView& nav_;
     RxRadioState radio_state_{};
-
     app_settings::SettingsManager settings_{
         "rtty_rx",
         app_settings::Mode::RX,
-        {
-            {"mark"sv, &mark_index},
-            {"space"sv, &shift_index},
-            {"baud"sv, &reverse_bits},
-        }};
+        {}
+    };
 
     RFAmpField field_rf_amp{
         {13 * 8, 0 * 16}};

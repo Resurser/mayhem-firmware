@@ -46,7 +46,7 @@ RTTYRxProcessor::RTTYRxProcessor() {
     decim_0.configure(taps_6k0_decim_0.taps);
     decim_1.configure(taps_6k0_decim_1.taps);
     decim_2.configure(taps_6k0_decim_2.taps, 4);
-    channel_filter.configure(taps_2k8_lsb_channel.taps, 1);
+    channel_filter.configure(taps_2k8_usb_channel.taps, 1);
     audio_output.configure(audio_12k_hpf_300hz_config);  //, audio_12k_deemph_300_6_config);
 }
 

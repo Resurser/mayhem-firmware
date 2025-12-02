@@ -32,11 +32,7 @@ using namespace ui;
 
 namespace ui::external_app::rtty_rx {
 
-void RTTYRxView::focus() {
-    field_frequency.focus();
-}
-
-RTTYRxView::RTTYRxViewNavigationView& nav)
+RTTYRxView::RTTYRxView(NavigationView& nav)
     : nav_{nav} {
     baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
@@ -102,16 +98,13 @@ void RTTYRxView::focus() {
 }
 
 void RTTYRxView::on_tuning_frequency_changed(rf::Frequency f) {
-    receiver_model.set_tuning_frequency(f);
+    receiver_model.set_target_frequency(f);
 }
 
 void RTTYRxView::update_config() {
-    RTTYConfigMessage message(
-        field_mark.value(),
-        field_space.value(),
-        field_baud.value()
-    );
-    baseband::send_message(&message);
+    baseband::set_rtty(field_mark.value(),
+                       field_space.value(),
+                       field_baud.value());
 }
 
 void RTTYRxView::on_char(const RTTYCharMessage& message) {

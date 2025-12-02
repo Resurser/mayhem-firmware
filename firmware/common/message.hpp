@@ -128,11 +128,9 @@ class Message {
         I2CDevListChanged = 71,
         LightData = 72,
         DDCConfig = 73,
-        
-        RTTYRxConfigure = 74,
-        RTTYRxData = 75,
-        RTTYRxLogData = 76,
-
+        RTTYConfig = 74, // Налаштування параметрів
+        RTTYChar = 75,   // Декодований символ
+        RTTYStats = 76,  // Статистика прийому
         WeFaxRxConfigure = 77,
         WeFaxRxStatusData = 78,
         WeFaxRxImageData = 79,
@@ -144,9 +142,7 @@ class Message {
         FSKPacket = 84,
         EPIRBPacket = 85,
 
-        RTTYConfig = 86, // Налаштування параметрів
-        RTTYChar = 87,   // Декодований символ
-        RTTYStats = 88,  // Статистика прийому
+        
         MAX
     };
 
@@ -1541,47 +1537,6 @@ class DDCConfigMessage : public Message {
     }
 
     int32_t freq = 0;
-};
-
-class RTTYRxConfigureMessage : public Message {
-   public:
-    constexpr RTTYRxConfigureMessage(
-        const uint32_t baudrate,
-        const uint32_t word_length,
-        const uint32_t freq_mark,
-        const uint32_t freq_space,
-        const bool reverse_bits,
-        const bool reverse_freq)
-        : Message{ID::RTTYRxConfigure},
-          baudrate(baudrate),
-          word_length(word_length),
-          freq_mark(freq_mark),
-          freq_space(freq_space),
-          reverse_bits(reverse_bits),
-          reverse_freq(reverse_freq) {
-    }
-
-    uint32_t baudrate{50};
-    uint32_t word_length{5};
-    uint32_t freq_mark{2125};
-    uint32_t freq_space{1675};
-    bool reverse_bits{false};
-    bool reverse_freq{false};
-};
-
-class RTTYRxDataMessage : public Message {
-   public:
-    constexpr RTTYRxDataMessage(char value): Message{ID::RTTYRxData}, value{value} {}
-    char value;
-};
-
-class RTTYRxLogMessage : public Message {
-   public:
-    constexpr RTTYRxLogMessage()
-        : Message{ID::RTTYRxLogData} {}
-
-    uint8_t samples[8]{0};
-    uint8_t cnt = 0;
 };
 
 class WeFaxRxConfigureMessage : public Message {

@@ -347,8 +347,8 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     std::array<Color, 240> pixel_row;
     std::array<uint8_t, 240> spectrum_db;
 
-    for (size_t i = 0; i < screen_width; i++) {
-        spectrum_db[i] = spectrum.db[255 - 120 + i];
+    for (size_t i = 0; i < screen_width/2; i++) {
+        spectrum_db[i] = spectrum.db[256 - 120 + i];
         spectrum_db[i + 120] = spectrum.db[i];
     }
     uint8_t min = 255;
@@ -357,8 +357,8 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // uint8_t noise_floor = spectrum.min_db + 10;
     //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
-    updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.05f);
-    suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
+    //updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.05f);
+    //suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
     // update_heatmap(spectrum_db.data(), spectrum_db.size());
     
     // uint8_t mode = pmem::spectrum_view_type();

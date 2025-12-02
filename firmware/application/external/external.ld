@@ -453,17 +453,7 @@ SECTIONS
         *(*ui*external_app*game2048*);
     } > ram_external_app_game2048
 
-    .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_rtty_rx.application_information));
-        *(*ui*external_app*rtty_rx*);
-    } > ram_external_app_rtty_rx
-
-    .external_app_waterfall_designer : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_waterfall_designer.application_information));
-        *(*ui*external_app*waterfall_designer*);
-    } > ram_external_app_waterfall_designer
+    
 
     .external_app_bht_tx : ALIGN(4) SUBALIGN(4)
     {
@@ -483,6 +473,18 @@ SECTIONS
         KEEP(*(.external_app.app_adult_toys_controller.application_information));
         *(*ui*external_app*adult_toys_controller*);
     } > ram_external_app_adult_toys_controller
+
+    .external_app_rtty_rx : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_rtty_rx.application_information));
+        *(*ui*external_app*rtty_rx*);
+    } > ram_external_app_rtty_rx
+
+    .external_app_waterfall_designer : ALIGN(4) SUBALIGN(4)
+    {
+        KEEP(*(.external_app.app_waterfall_designer.application_information));
+        *(*ui*external_app*waterfall_designer*);
+    } > ram_external_app_waterfall_designer
 
 }
 
