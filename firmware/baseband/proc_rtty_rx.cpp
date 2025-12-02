@@ -37,6 +37,11 @@
 // constexpr uint8_t ITA2_LTRS_SHIFT_CODE = 0x1F;  // 11111
 // constexpr uint8_t ITA2_FIGS_SHIFT_CODE = 0x1B;  // 11011
 // constexpr uint8_t ITA2_CODE_MASK = 0x1F;        // Маска для 5 біт
+// Для константи M_PI
+#define _USE_MATH_DEFINES
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 // Таблиця кодів Baudot для букв (Letters shift)
 static const char baudot_ltrs[] = { 0, 'E', '\n', 'A', ' ', 'S', 'I', 'U', '\r', 'D', 'R', 'J', 'N', 'F', 'C', 'K', 'T', 'Z', 'L', 'W', 'H', 'Y', 'P', 'Q', 'O', 'B', 'G', 0, 'M', 'X', 'V', 0 };
 // Таблиця кодів Baudot для цифр та знаків (Figures shift)
@@ -104,7 +109,7 @@ void RTTYRxProcessor::process_sample_pair(int16_t audio_sample, complex16_t iq_s
         float im = (float)iq_sample.imag() * last_iq_sample.real() - (float)iq_sample.real() * last_iq_sample.imag();
         
         float phase_delta = std::atan2(im, re);
-        float inst_freq = (phase_delta * 12000.0f) / (2.0f * 3.1415926535f);
+        float inst_freq = (phase_delta * (float)sample_rate) / (2.0f * (float)M_PI);
 
         measured_freq_accumulator += inst_freq;
         measured_samples_count++;
@@ -128,11 +133,13 @@ void RTTYRxProcessor::process_sample_pair(int16_t audio_sample, complex16_t iq_s
         apply_afc();
         afc_update_counter = 0;
     }
+    static constexpr float SQUELCH_THRESHOLD = 0.005f; 
+
 
     // --- RTTY State Machine ---
     if (state == IDLE) {
         if (sample_count >= (samples_per_bit / 4)) {
-            if (mag_sq_space > mag_sq_mark) { // Start bit (Space) detected
+            if ((mag_sq_space > SQUELCH_THRESHOLD) && (mag_sq_space > mag_sq_mark)) { // Start bit (Space) detected
                 state = DATA;
                 bit_buffer = bits_received = sample_count = 0;
                 s1_mark = s2_mark = s1_space = s2_space = 0;

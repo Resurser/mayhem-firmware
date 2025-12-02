@@ -69,10 +69,10 @@ class RTTYRxProcessor : public BasebandProcessor {
     
     uint32_t mark_freq = 2125;      // Частота логічної одиниці (Mark)
     uint32_t space_freq = 2295;     // Частота логічного нуля (Space)
-    float baud_rate = 45.45f;       // Швидкість передачі (Бод)
+    float baud_rate = 50.0f;       // Швидкість передачі (Бод)
     
     // Кількість семплів на один біт при 12кГц (12000 / 45.45 ≈ 264)
-    uint32_t samples_per_bit = 264; 
+    uint32_t samples_per_bit = 240; 
 
     // --- Змінні алгоритму Герцеля (Goertzel) ---
     float coeff_mark = 0.0f;    // Розрахований коефіцієнт для Mark

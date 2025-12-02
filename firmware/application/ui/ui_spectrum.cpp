@@ -445,13 +445,15 @@ WaterfallView::WaterfallView(const bool cursor) {
         }        
     };
 
-    
-    int idx = 0;
+    OptionsField::options_t new_categories;
     for (const auto& file_name : waterfall_widget.gradient.file_list) {
-        gradient_options.options().emplace_back(file_name.stem().string(), idx++);
+        new_categories.emplace_back(file_name.stem().string(), new_categories.size());
     }
-    load_gradient();
-    
+
+    // Preserve last selection; ensure in range.
+    gradient_options.set_options(std::move(new_categories));
+    gradient_options.set_selected_index(0);
+    load_gradient();    
 }
 
 void WaterfallView::load_gradient() {
