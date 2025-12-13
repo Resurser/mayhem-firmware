@@ -47,7 +47,7 @@ MEMORY
     ram_external_app_morse_tx   (rwx) : org = 0xADC60000, len = 32k
     ram_external_app_sstvtx     (rwx) : org = 0xADC70000, len = 32k
     ram_external_app_random_password(rwx): org = 0xADC80000, len = 32k
-    ram_external_app_acars_rx   (rwx) : org = 0xADC90000, len = 32k
+    ram_external_app_waterfall_designer   (rwx) : org = 0xADC90000, len = 32k
     ram_external_app_shoppingcart_lock(rwx): org = 0xADCA0000, len = 32k
     ram_external_app_cvs_spam   (rwx) : org = 0xADCB0000, len = 32k
     ram_external_app_ookbrute   (rwx) : org = 0xADCC0000, len = 32k
@@ -63,6 +63,7 @@ MEMORY
     ram_external_app_antenna_length(rwx): org = 0xADD60000, len = 32k
     ram_external_app_view_wav   (rwx) : org = 0xADD70000, len = 32k
     ram_external_app_sd_wipe    (rwx) : org = 0xADD80000, len = 32k
+    
     ram_external_app_playlist_editor(rwx): org = 0xADD90000, len = 32k
     ram_external_app_snake      (rwx) : org = 0xADDA0000, len = 32k
     ram_external_app_stopwatch  (rwx) : org = 0xADDB0000, len = 32k
@@ -88,7 +89,6 @@ MEMORY
     ram_external_app_adult_toys_controller  (rwx) : org = 0xADEF0000, len = 32k
 
     ram_external_app_rtty_rx            (rwx) : org = 0xADF00000, len = 32k
-    ram_external_app_waterfall_designer (rwx) : org = 0xADF10000, len = 32k
 }
 
 SECTIONS
@@ -236,12 +236,12 @@ SECTIONS
         KEEP(*(.external_app.app_random_password.application_information));
         *(*ui*external_app*random_password*);
     } > ram_external_app_random_password
-
-    .external_app_acars_rx : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_acars_rx.application_information));
-        *(*ui*external_app*acars_rx*);
-    } > ram_external_app_acars_rx
+    
+    .external_app_waterfall_designer : ALIGN(4) SUBALIGN(4)
+     {
+          KEEP(*(.external_app.app_waterfall_designer.application_information));
+          *(*ui*external_app*waterfall_designer*);
+     } > ram_external_app_waterfall_designer
 
    .external_app_shoppingcart_lock : ALIGN(4) SUBALIGN(4)
     {
@@ -479,12 +479,5 @@ SECTIONS
         KEEP(*(.external_app.app_rtty_rx.application_information));
         *(*ui*external_app*rtty_rx*);
     } > ram_external_app_rtty_rx
-
-    .external_app_waterfall_designer : ALIGN(4) SUBALIGN(4)
-    {
-        KEEP(*(.external_app.app_waterfall_designer.application_information));
-        *(*ui*external_app*waterfall_designer*);
-    } > ram_external_app_waterfall_designer
-
 }
 

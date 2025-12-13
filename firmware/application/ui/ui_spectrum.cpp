@@ -299,36 +299,22 @@ void WaterfallWidget::on_hide() {
 }
 
 inline void updateDynamicRangeWithHistogram(uint8_t* data, size_t len, uint8_t& min, uint8_t& max, float percentile = 0.05f) {
-    // Create a histogram for the input signal
+    if (len == 0) return;
     std::vector<int> histogram(256, 0);
-    for (size_t i = 0; i < len; ++i) {
-        histogram[data[i]]++;
-    }
-
-    // Calculate cumulative sums
+    for (size_t i = 0; i < len; ++i) histogram[data[i]]++;
     std::vector<int> cumulativeSum(256, 0);
     cumulativeSum[0] = histogram[0];
-    for (size_t i = 1; i < 256; ++i) {
-        cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
-    }
-
-    // Determine min and max based on the desired percentile
-    int totalCount = len;
+    for (int i = 1; i < 256; ++i) cumulativeSum[i] = cumulativeSum[i - 1] + histogram[i];
+    int totalCount = static_cast<int>(len);
     int minCount = static_cast<int>(totalCount * percentile);
     int maxCount = static_cast<int>(totalCount * (1.0f - percentile));
-
-    for (size_t i = 0; i < 256; ++i) {
-        if (cumulativeSum[i] > minCount) {
-            min = static_cast<uint8_t>(i);
-            break;
-        }
+    // Lower cutoff: first index where cumulative >= minCount
+    for (int i = 0; i < 256; ++i) {
+        if (cumulativeSum[i] >= minCount) { min = static_cast<uint8_t>(i); break; }
     }
-
-    for (size_t i = 255; i > 0; --i) {
-        if (cumulativeSum[i] < maxCount) {
-            max = static_cast<uint8_t>(i);
-            break;
-        }
+    // Upper cutoff: first index where cumulative >= maxCount
+    for (int i = 0; i < 256; ++i) {
+        if (cumulativeSum[i] >= maxCount) { max = static_cast<uint8_t>(i); break; }
     }
 }
 
@@ -357,8 +343,8 @@ void WaterfallWidget::on_channel_spectrum(const ChannelSpectrum& spectrum) {
     // uint8_t noise_floor = spectrum.min_db + 10;
     //(spectrum.max_db - spectrum.min_db) / 3;  // Use a fixed offset for noise floor, can be adjusted
     // dsp_utils::estimate_noise_threshold(spectrum_db.data(), spectrum_db.size());
-    //updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.05f);
-    //suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
+    updateDynamicRangeWithHistogram(spectrum_db.data(), spectrum_db.size(), min, max, 0.1f);
+    suppress_noise(spectrum_db.data(), spectrum_db.size(), min);
     // update_heatmap(spectrum_db.data(), spectrum_db.size());
     
     // uint8_t mode = pmem::spectrum_view_type();
@@ -447,7 +433,7 @@ WaterfallView::WaterfallView(const bool cursor) {
 
     OptionsField::options_t new_categories;
     for (const auto& file_name : waterfall_widget.gradient.file_list) {
-        new_categories.emplace_back(file_name.stem().string(), new_categories.size());
+        new_categories.emplace_back(file_name.string(), new_categories.size());
     }
 
     // Preserve last selection; ensure in range.
@@ -503,11 +489,12 @@ void WaterfallView::update_widgets_rect() {
     if (audio_spectrum_view) {
         frequency_scale.set_parent_rect({0, audio_spectrum_height, screen_rect().width(), scale_height});
         waterfall_widget.set_parent_rect(waterfall_reduced_rect);
+        gradient_options.set_parent_rect({0, waterfall_normal_rect.bottom(), screen_rect().width(), 16});
     } else {
         frequency_scale.set_parent_rect({0, 0, screen_rect().width(), scale_height});
         waterfall_widget.set_parent_rect(waterfall_normal_rect);
+        gradient_options.set_parent_rect({0, waterfall_normal_rect.bottom(), screen_rect().width(), 16});
     }
-    gradient_options.set_parent_rect({0, screen_height-24, screen_rect().width() - 8, scale_height});
     waterfall_widget.on_show();
 }
 
@@ -517,8 +504,7 @@ void WaterfallView::set_parent_rect(const Rect new_parent_rect) {
     waterfall_normal_rect = {0, scale_height, new_parent_rect.width(),
                              new_parent_rect.height() - scale_height - 24};
     waterfall_reduced_rect = {0, audio_spectrum_height + scale_height, new_parent_rect.width(),
-                              new_parent_rect.height() - scale_height - audio_spectrum_height - 24
-                            };
+                              new_parent_rect.height() - scale_height - audio_spectrum_height - 24};
 
     update_widgets_rect();
 }

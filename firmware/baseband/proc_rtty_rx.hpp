@@ -55,7 +55,7 @@ class RTTYRxProcessor : public BasebandProcessor {
         audio.data(),
         audio.size()};
 
-    dsp::decimate::FIRC8xR16x24FS4Decim8 decim_0{};
+    dsp::decimate::FIRC8xR16x24FS4Decim4 decim_0{};
     dsp::decimate::FIRC16xR16x32Decim8 decim_1{};
     dsp::decimate::FIRAndDecimateComplex decim_2{};
     dsp::decimate::FIRAndDecimateComplex channel_filter{};
@@ -91,7 +91,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     float mark_energy_accumulator = 0.0f; 
     float space_energy_accumulator = 0.0f;
     uint32_t stats_send_counter = 0;
-    static constexpr uint32_t STATS_SEND_PERIOD = 600; 
+    static constexpr uint32_t STATS_SEND_PERIOD = 800; 
 
     // --- AFC (Автопідлаштування частоти) ---
     bool afc_enabled = true;           // Чи увімкнено AFC
@@ -121,6 +121,7 @@ class RTTYRxProcessor : public BasebandProcessor {
     void apply_afc();                              // Застосування AFC
     /* NB: Threads should be the last members in the class definition. */
     BasebandThread baseband_thread{baseband_fs, this, baseband::Direction::Receive};
+    RSSIThread rssi_thread{};
 };
 
 #endif /*__PROC_RTTYRX_H__*/

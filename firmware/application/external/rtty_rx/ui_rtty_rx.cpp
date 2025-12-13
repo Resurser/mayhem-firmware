@@ -75,15 +75,17 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     field_baud.on_change = [this](int32_t) { update_config(); };
 
     // --- Старт ---
-    update_config();
+    
     
     audio::set_rate(audio::Rate::Hz_12000);
     audio::output::start();
     
-    //receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
+    receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);
     receiver_model.set_sampling_rate(3072000); 
     receiver_model.set_baseband_bandwidth(1750000);
     receiver_model.enable();
+
+    update_config();
 }
 
 

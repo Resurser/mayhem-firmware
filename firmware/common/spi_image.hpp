@@ -76,7 +76,6 @@ struct image_tag_t {
 constexpr image_tag_t image_tag_none{0, 0, 0, 0};
 constexpr image_tag_t image_tag_rtty_rx{'P', 'R', 'T', 'Y'};
 constexpr image_tag_t image_tag_audio_beep{'P', 'A', 'B', 'P'};
-constexpr image_tag_t image_tag_acars{'P', 'A', 'C', 'A'};
 constexpr image_tag_t image_tag_adsb_rx{'P', 'A', 'D', 'R'};
 constexpr image_tag_t image_tag_afsk_rx{'P', 'A', 'F', 'R'};
 constexpr image_tag_t image_tag_aprs_rx{'P', 'A', 'P', 'R'};

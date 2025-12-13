@@ -103,11 +103,7 @@ set(EXTCPPSRC
 	external/random_password/main.cpp
 	external/random_password/ui_random_password.cpp
 	external/random_password/sha512.cpp
-
-	#acars
-	#external/acars_rx/main.cpp
-	#external/acars_rx/acars_app.cpp
-
+	
 	#wefax_rx 192 bytes
 	external/wefax_rx/main.cpp
 	external/wefax_rx/ui_wefax_rx.cpp

@@ -55,12 +55,13 @@ class AMOptionsView : public View {
         }};
 
     OptionsField zoom_config{
-        {UI_POS_X(3), UI_POS_Y(0)},
+        {UI_POS_X(7), UI_POS_Y(0)},
         9,
         {
             {"ZOOM   x1", 4},
             {"ZOOM x1.5", 6},
             {"ZOOM   x2", 8},
+            {"ZOOM x2.5", 10},
             {"ZOOM   x3", 12}
         }  // offset index array filters.
     };
@@ -84,13 +85,14 @@ class AMFMAptOptionsView : public View {
         }};
 
     OptionsField zoom_config{
-        {UI_POS_X_RIGHT(7), UI_POS_Y(0)},
+        {UI_POS_X(18), UI_POS_Y(0)},
         9,
         {
             {"ZOOM   x1", 4},
             {"ZOOM x1.5", 6},
             {"ZOOM   x2", 8},
-            {"ZOOM   x3", 12},
+            {"ZOOM x2.5", 10},
+            {"ZOOM   x3", 12}
         }  // offset index array filters.
     };
 };

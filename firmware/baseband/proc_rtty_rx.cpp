@@ -56,7 +56,7 @@ RTTYRxProcessor::RTTYRxProcessor() {
 }
 
 void RTTYRxProcessor::execute(const buffer_c8_t& buffer) {
-    
+    // if (!configured) return;
     // SSB demodulation
     const auto decim_0_out = decim_0.execute(buffer, dst_buffer);              // 2048 / 8 = 256 (512 I/Q samples)
     const auto decim_1_out = decim_1.execute(decim_0_out, dst_buffer);         // 256 / 8 = 32 (64 I/Q samples)
@@ -133,7 +133,7 @@ void RTTYRxProcessor::process_sample_pair(int16_t audio_sample, complex16_t iq_s
         apply_afc();
         afc_update_counter = 0;
     }
-    static constexpr float SQUELCH_THRESHOLD = 0.005f; 
+    static constexpr float SQUELCH_THRESHOLD = 0.0055f; 
 
 
     // --- RTTY State Machine ---
