@@ -276,6 +276,10 @@ set(EXTCPPSRC
 	#adult_toys_controller  144 bytes 
 	external/adult_toys_controller/main.cpp
 	external/adult_toys_controller/ui_adult_toys_controller.cpp
+
+	#flex_rx
+	external/flex_rx/main.cpp
+	external/flex_rx/ui_flex_rx.cpp	
 )
 
 set(EXTAPPLIST
@@ -344,4 +348,5 @@ set(EXTAPPLIST
 	bht_tx
 	morse_practice
 	adult_toys_controller
+	flex_rx
 )
