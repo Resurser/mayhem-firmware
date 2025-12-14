@@ -33,7 +33,7 @@ using namespace ui;
 namespace ui::external_app::rtty_rx {
 
 RTTYRxView::RTTYRxView(NavigationView& nav)
-    : nav_{nav} {
+: nav_(nav) { 
     baseband::run_prepared_image(portapack::memory::map::m4_code.base());
 
     add_children({&rssi,
@@ -57,6 +57,15 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
     
     field_frequency.set_step(1000);
 	field_frequency.set_value(settings_.raw().rx_frequency);
+    field_frequency.on_edit = [this, &nav]() {
+        // TODO: Provide separate modal method/scheme?
+        auto new_view = nav.push<FrequencyKeypadView>(receiver_model.target_frequency());
+        new_view->on_changed = [this](rf::Frequency f) {
+            
+            receiver_model.set_target_frequency(f);
+            this->field_frequency.set_value(f);
+        };
+    };
 
     // --- Ініціалізація значень ---
     //field_frequency.set_value(receiver_model.tuning_frequency());
