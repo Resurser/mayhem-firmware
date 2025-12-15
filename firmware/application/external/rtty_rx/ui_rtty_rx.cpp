@@ -43,13 +43,12 @@ RTTYRxView::RTTYRxView(NavigationView& nav)
                   &field_vga,
                   &field_volume,
                   &field_frequency,
-        &labels,
-        &field_mark,
-        &field_space,
-        &field_baud,
-        &tuning_bar, // [НОВЕ] Додаємо бар до списку дочірніх елементів
-        &console
-    });
+                  &labels,
+                  &field_mark,
+                  &field_space,
+                  &field_baud,
+                  &tuning_bar,  // [НОВЕ] Додаємо бар до списку дочірніх елементів
+                  &console});
 
     // Налаштування меж для бару (0 .. 65535, як приходить з Baseband)
     tuning_bar.set_max(65535); 
